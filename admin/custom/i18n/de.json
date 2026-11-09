@@ -36,5 +36,9 @@
     "sd_relay_state": "Heizungsrelais (optional, der Punkt)",
     "sd_step": "Schrittweite von − / +",
     "sd_bad_size": "Diese Art gibt es nicht in dieser Größe, die Kachel wird weggelassen: andere Größe wählen oder auf der Seite Platz schaffen.",
-    "sd_need_target": "Ein Thermostat braucht den Datenpunkt der Soll-Temperatur, bis dahin wird die Kachel weggelassen."
+    "sd_need_target": "Ein Thermostat braucht den Datenpunkt der Soll-Temperatur, bis dahin wird die Kachel weggelassen.",
+    "sd_swap": "Loslassen tauscht die beiden Kacheln",
+    "sd_no_swap": "Diese beiden Kacheln passen nicht auf den Platz der anderen",
+    "sd_duplicate": "Kachel duplizieren",
+    "sd_no_room": "Auf den Seiten ist kein Platz für eine Kopie dieser Größe frei"
 }

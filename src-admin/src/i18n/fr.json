@@ -36,5 +36,9 @@
     "sd_relay_state": "Relais du chauffage (facultatif, le point)",
     "sd_step": "Pas de − / +",
     "sd_bad_size": "Ce type n'existe pas dans cette taille, la tuile est omise : choisissez une autre taille ou libérez de la place sur la page.",
-    "sd_need_target": "Un thermostat a besoin de l'état de la température de consigne, la tuile est omise jusque-là."
+    "sd_need_target": "Un thermostat a besoin de l'état de la température de consigne, la tuile est omise jusque-là.",
+    "sd_swap": "Relâchez pour échanger les deux tuiles",
+    "sd_no_swap": "Ces deux tuiles ne tiennent pas à la place l'une de l'autre",
+    "sd_duplicate": "Dupliquer la tuile",
+    "sd_no_room": "Aucune place libre sur les pages pour une copie de cette taille"
 }

@@ -36,5 +36,9 @@
     "sd_relay_state": "Relé de la calefacción (opcional, el punto)",
     "sd_step": "Paso de − / +",
     "sd_bad_size": "Este tipo no existe en este tamaño, el mosaico se omite: elija otro tamaño o libere espacio en la página.",
-    "sd_need_target": "Un termostato necesita el estado de la temperatura deseada, hasta entonces el mosaico se omite."
+    "sd_need_target": "Un termostato necesita el estado de la temperatura deseada, hasta entonces el mosaico se omite.",
+    "sd_swap": "Suelte para intercambiar los dos mosaicos",
+    "sd_no_swap": "Estos dos mosaicos no caben en el lugar del otro",
+    "sd_duplicate": "Duplicar mosaico",
+    "sd_no_room": "No hay sitio libre en las páginas para una copia de este tamaño"
 }

@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "satellite-display",
-        "version": "0.0.3",
+        "version": "0.0.4",
         "news": {
+            "0.0.4": {
+                "en": "Tile editor: drag a tile onto another to swap them; a chosen state brings its name and unit",
+                "de": "Kachel-Editor: eine Kachel auf eine andere ziehen tauscht sie; ein gewählter Datenpunkt bringt Name und Einheit mit",
+                "ru": "Редактор плиток: перетащите плитку на другую, чтобы поменять их местами; выбранное состояние приносит имя и единицу",
+                "pt": "Editor de blocos: arrastar um bloco para outro troca-os; um estado escolhido traz o nome e a unidade",
+                "nl": "Tegeleditor: een tegel op een andere slepen verwisselt ze; een gekozen state brengt naam en eenheid mee",
+                "fr": "Éditeur de tuiles : glisser une tuile sur une autre les échange ; un état choisi apporte son nom et son unité",
+                "it": "Editor dei riquadri: trascinare un riquadro su un altro li scambia; uno stato scelto porta nome e unità",
+                "es": "Editor de mosaicos: arrastrar un mosaico sobre otro los intercambia; un estado elegido trae su nombre y unidad",
+                "pl": "Edytor kafelków: przeciągnięcie kafelka na inny zamienia je miejscami; wybrany stan przynosi nazwę i jednostkę",
+                "uk": "Редактор плиток: перетягніть плитку на іншу, щоб поміняти їх місцями; вибраний стан приносить ім'я та одиницю",
+                "zh-cn": "磁贴编辑器：将一个磁贴拖到另一个上即可交换；选择的状态会带入其名称和单位"
+            },
             "0.0.3": {
                 "en": "Small bar and chart tiles (1 x 1, satellite firmware 2.0.2); the editor marks tiles that would be left out",
                 "de": "Kleine Balken- und Verlaufskacheln (1 x 1, Satelliten-Firmware 2.0.2); der Editor markiert Kacheln, die weggelassen würden",

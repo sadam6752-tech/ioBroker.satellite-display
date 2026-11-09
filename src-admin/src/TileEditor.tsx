@@ -13,7 +13,12 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import { Add as IconAdd, Delete as IconDelete, ListAlt as IconPick } from '@mui/icons-material';
+import {
+    Add as IconAdd,
+    ContentCopy as IconCopy,
+    Delete as IconDelete,
+    ListAlt as IconPick,
+} from '@mui/icons-material';
 
 // from the package root, as the admin shares these modules
 import { DialogSelectID, I18n } from '@iobroker/gui-components';
@@ -31,6 +36,7 @@ import {
     newTile,
     problemOf,
     sameSatellite,
+    swapPlaces,
     tileAt,
     tooMany,
     type Kind,
@@ -75,8 +81,13 @@ interface TileEditorState extends ConfigGenericState {
     selected: number;
     pickFor: StateAttr | null;
     dragging: number;
+    /** Tile under the dragged one, and whether they can trade places */
+    dropOn: { index: number; ok: boolean } | null;
+    /** Content of a state field when it got the focus */
+    typedFrom: string;
     values: Record<string, ioBroker.StateValue | undefined>;
     names: Record<string, string>;
+    units: Record<string, string>;
 }
 
 class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
@@ -89,8 +100,11 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             selected: -1,
             pickFor: null,
             dragging: -1,
+            dropOn: null,
+            typedFrom: '',
             values: {},
             names: {},
+            units: {},
         };
     }
 
@@ -152,19 +166,64 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         }
         const values: Record<string, ioBroker.StateValue | undefined> = {};
         const names: Record<string, string> = {};
-        const lang = I18n.getLanguage();
+        const units: Record<string, string> = {};
         for (const id of ids) {
             try {
                 const state = await socket.getState(id);
                 values[id] = state?.val;
-                const obj = await socket.getObject(id);
-                const name = obj?.common?.name;
-                names[id] = typeof name === 'object' && name ? name[lang] || name.en || '' : String(name || '');
+                ({ name: names[id], unit: units[id] } = await this.readObject(id));
             } catch {
                 values[id] = undefined;
             }
         }
-        this.setState(s => ({ values: { ...s.values, ...values }, names: { ...s.names, ...names } }));
+        this.setState(s => ({
+            values: { ...s.values, ...values },
+            names: { ...s.names, ...names },
+            units: { ...s.units, ...units },
+        }));
+    }
+
+    /** Name (in the language of the admin) and unit of the object of a state */
+    async readObject(id: string): Promise<{ name: string; unit: string }> {
+        const lang = I18n.getLanguage();
+        const obj = await this.props.oContext.socket.getObject(id);
+        const name = obj?.common?.name;
+        const unit = (obj?.common as { unit?: string } | undefined)?.unit;
+        return {
+            name: typeof name === 'object' && name ? name[lang] || name.en || '' : String(name || ''),
+            unit: typeof unit === 'string' ? unit : '',
+        };
+    }
+
+    /**
+     * A state was chosen: the name and the unit of its object go into the fields, unless the user wrote their own
+     * (a field that still holds what the previous state brought is replaced). One update for all fields.
+     *
+     * @param old - The state before (its name and unit count as not written by the user)
+     */
+    async takeState(index: number, attr: StateAttr, id: string, old: string): Promise<void> {
+        let info: { name: string; unit: string } = { name: '', unit: '' };
+        try {
+            info = await this.readObject(id);
+        } catch {
+            // the id alone
+        }
+        const t = this.tiles()[index];
+        if (!t) {
+            return;
+        }
+        const change: Partial<TileRow> = { [attr]: id };
+        const autoName = !t.label || t.label === (this.state.names[old] || '');
+        const autoUnit = !t.unit || t.unit === (this.state.units[old] || '');
+        // the name of a tile comes from its main state; a thermostat takes the unit of its target when it has none
+        if (attr === 'state' && autoName && info.name) {
+            change.label = info.name.slice(0, 24);
+        }
+        if (info.unit && ((attr === 'state' && autoUnit) || (attr === 'state2' && t.type === 'thermostat' && !t.unit))) {
+            change.unit = info.unit.slice(0, 8);
+        }
+        this.setState(s => ({ names: { ...s.names, [id]: info.name }, units: { ...s.units, [id]: info.unit } }));
+        this.update(index, change);
     }
 
     pageTiles(): { tile: TileRow; index: number }[] {
@@ -184,11 +243,109 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         this.setTiles(tiles, tiles.length - 1);
     }
 
+    /** The cell of the screen under the pointer */
+    cellAt(e: React.DragEvent<HTMLDivElement>): { col: number; row: number } {
+        const box = e.currentTarget.getBoundingClientRect();
+        return {
+            col: Math.min(COLS - 1, Math.max(0, Math.floor((e.clientX - box.left) / px(157)))),
+            row: Math.min(ROWS - 1, Math.max(0, Math.floor((e.clientY - box.top) / px(58.5)))),
+        };
+    }
+
+    /** The other tile under the pointer while a tile is dragged, or -1 */
+    dropTarget(e: React.DragEvent<HTMLDivElement>): number {
+        const from = this.state.dragging;
+        if (from === -1) {
+            return -1;
+        }
+        const { col, row } = this.cellAt(e);
+        const target = tileAt(this.tiles(), this.state.satellite, this.state.page, col, row);
+        return target === from ? -1 : target;
+    }
+
+    onScreenDragOver(e: React.DragEvent<HTMLDivElement>): void {
+        if (this.state.dragging === -1) {
+            return;
+        }
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const target = this.dropTarget(e);
+        const current = this.state.dropOn;
+        if (target === -1) {
+            if (current) {
+                this.setState({ dropOn: null });
+            }
+        } else if (current?.index !== target) {
+            this.setState({ dropOn: { index: target, ok: !!swapPlaces(this.tiles(), this.state.dragging, target) } });
+        }
+    }
+
+    /** On another tile: the two trade places; on a free cell (or on itself): the tile moves there */
+    onScreenDrop(e: React.DragEvent<HTMLDivElement>): void {
+        const from = this.state.dragging;
+        if (from === -1) {
+            return;
+        }
+        e.preventDefault();
+        const target = this.dropTarget(e);
+        this.setState({ dropOn: null, dragging: -1 });
+        if (target !== -1) {
+            this.swapWith(target, from);
+        } else {
+            const { col, row } = this.cellAt(e);
+            this.moveTo(from, col, row);
+        }
+    }
+
+    /** The dragged tile and the one it was dropped on trade places */
+    swapWith(target: number, from: number): void {
+        const places = swapPlaces(this.tiles(), from, target);
+        if (places) {
+            const tiles = this.tiles().map((t, i) =>
+                i === from ? { ...t, ...places.a } : i === target ? { ...t, ...places.b } : t,
+            );
+            this.setTiles(tiles, from);
+        }
+    }
+
     moveTo(index: number, col: number, row: number): void {
         const t = this.tiles()[index];
         if (t && fits(this.tiles(), this.state.satellite, this.state.page, t.size, col, row, index)) {
             this.update(index, { col, row });
         }
+    }
+
+    /** Where a copy of the tile goes: the first free cell of its page, else of the next pages; null when full */
+    copyPlace(index: number): { page: number; col: number; row: number } | null {
+        const t = this.tiles()[index];
+        if (!t) {
+            return null;
+        }
+        const first = Number(t.page);
+        for (let i = 0; i < PAGES; i++) {
+            const page = ((first - 1 + i) % PAGES) + 1;
+            const cell = freeCell(this.tiles(), t.satellite, page, t.size);
+            if (cell && tooMany(this.tiles(), t.satellite, page).length === 0) {
+                const onPage = this.tiles().filter(
+                    x => x.enabled !== false && sameSatellite(x.satellite, t.satellite) && Number(x.page) === page,
+                ).length;
+                if (onPage < 8) {
+                    return { page, ...cell };
+                }
+            }
+        }
+        return null;
+    }
+
+    /** A copy of the tile, with the same states and settings, on the first free place; it is selected */
+    duplicate(index: number): void {
+        const place = this.copyPlace(index);
+        if (!place) {
+            return;
+        }
+        const tiles = [...this.tiles(), { ...this.tiles()[index], ...place }];
+        this.setTiles(tiles, tiles.length - 1);
+        this.setState({ page: place.page });
     }
 
     remove(index: number): void {
@@ -607,11 +764,6 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                     >
                         <div
                             onClick={() => this.addAt(col, row)}
-                            onDragOver={e => e.preventDefault()}
-                            onDrop={e => {
-                                e.preventDefault();
-                                this.moveTo(this.state.dragging, col, row);
-                            }}
                             style={{
                                 position: 'absolute',
                                 left: px(colX(col)),
@@ -636,6 +788,14 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         }
         return (
             <div
+                onDragOver={e => this.onScreenDragOver(e)}
+                onDragLeave={e => {
+                    // only when the pointer leaves the screen, not when it moves onto a child
+                    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                        this.setState({ dropOn: null });
+                    }
+                }}
+                onDrop={e => this.onScreenDrop(e)}
                 style={{
                     position: 'relative',
                     width: px(320),
@@ -655,26 +815,21 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                     const h = px(rowY(tile.row + rows) - 6 - rowY(tile.row));
                     const selected = index === this.state.selected;
                     const problem = extra.has(index) ? 'sd_too_many' : problemOf(tile);
+                    const dropOn = this.state.dropOn?.index === index ? this.state.dropOn : null;
                     const on = tile.type === 'switch' && (this.state.values[tile.state] === true || Number(this.state.values[tile.state]) > 0);
                     return (
                         <div
                             key={index}
                             draggable
-                            onDragStart={() => this.setState({ dragging: index, selected: index })}
-                            onDragEnd={() => this.setState({ dragging: -1 })}
-                            onDragOver={e => e.preventDefault()}
-                            onDrop={e => {
-                                // dropped on itself: move by the cell under the pointer
-                                e.preventDefault();
-                                const box = e.currentTarget.parentElement?.getBoundingClientRect();
-                                if (box) {
-                                    const col = Math.min(COLS - 1, Math.max(0, Math.floor((e.clientX - box.left) / px(157))));
-                                    const row = Math.min(ROWS - 1, Math.max(0, Math.floor((e.clientY - box.top) / px(58.5))));
-                                    this.moveTo(this.state.dragging, col, row);
-                                }
+                            onDragStart={e => {
+                                // Firefox starts a drag only with data
+                                e.dataTransfer.setData('text/plain', String(index));
+                                e.dataTransfer.effectAllowed = 'move';
+                                this.setState({ dragging: index, selected: index });
                             }}
+                            onDragEnd={() => this.setState({ dragging: -1, dropOn: null })}
                             onClick={() => this.setState({ selected: index })}
-                            title={problem ? I18n.t(problem) : ''}
+                            title={dropOn ? I18n.t(dropOn.ok ? 'sd_swap' : 'sd_no_swap') : problem ? I18n.t(problem) : ''}
                             style={{
                                 position: 'absolute',
                                 left: px(colX(tile.col)),
@@ -690,7 +845,17 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                 color: '#fff',
                                 cursor: 'grab',
                                 overflow: 'hidden',
-                                border: `2px solid ${selected ? COLOR.accent : problem ? '#EF4444' : 'transparent'}`,
+                                border: `2px ${dropOn ? 'dashed' : 'solid'} ${
+                                    dropOn
+                                        ? dropOn.ok
+                                            ? COLOR.accent
+                                            : '#EF4444'
+                                        : selected
+                                          ? COLOR.accent
+                                          : problem
+                                            ? '#EF4444'
+                                            : 'transparent'
+                                }`,
                                 opacity: problem ? 0.5 : 1,
                                 userSelect: 'none',
                             }}
@@ -712,6 +877,14 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                     label={I18n.t(label)}
                     value={t[attr] || ''}
                     onChange={e => this.update(index, { [attr]: e.target.value })}
+                    onFocus={e => this.setState({ typedFrom: e.target.value })}
+                    onBlur={e => {
+                        const id = e.target.value.trim();
+                        const from = this.state.typedFrom;
+                        if (id && id !== from) {
+                            void this.takeState(index, attr, id, from);
+                        }
+                    }}
                 />
                 <IconButton
                     size="small"
@@ -909,6 +1082,15 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                     ))}
                 </TextField>
                 <Button
+                    variant="outlined"
+                    startIcon={<IconCopy />}
+                    disabled={!this.copyPlace(index)}
+                    title={this.copyPlace(index) ? '' : I18n.t('sd_no_room')}
+                    onClick={() => this.duplicate(index)}
+                >
+                    {I18n.t('sd_duplicate')}
+                </Button>
+                <Button
                     color="error"
                     variant="outlined"
                     startIcon={<IconDelete />}
@@ -940,7 +1122,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                     const id = Array.isArray(selected) ? selected[0] : selected;
                     this.setState({ pickFor: null });
                     if (id) {
-                        this.update(index, { [attr]: id });
+                        void this.takeState(index, attr, id, t[attr] || '');
                     }
                 }}
             />

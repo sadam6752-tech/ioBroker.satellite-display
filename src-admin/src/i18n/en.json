@@ -36,5 +36,9 @@
     "sd_relay_state": "Heating relay (optional, the dot)",
     "sd_step": "Step of − / +",
     "sd_bad_size": "This kind does not come in this size, the tile is left out: choose another size, or make room on the page.",
-    "sd_need_target": "A thermostat needs the state of its target temperature, the tile is left out until it has one."
+    "sd_need_target": "A thermostat needs the state of its target temperature, the tile is left out until it has one.",
+    "sd_swap": "Drop to swap the two tiles",
+    "sd_no_swap": "These two tiles do not fit into each other's place",
+    "sd_duplicate": "Duplicate tile",
+    "sd_no_room": "No free place for a copy of this size on the pages"
 }

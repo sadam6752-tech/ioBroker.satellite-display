@@ -36,5 +36,9 @@
     "sd_relay_state": "Relè del riscaldamento (facoltativo, il punto)",
     "sd_step": "Passo di − / +",
     "sd_bad_size": "Questo tipo non esiste in questa dimensione, il riquadro viene omesso: scegli un'altra dimensione o libera spazio nella pagina.",
-    "sd_need_target": "Un termostato ha bisogno dello stato della temperatura desiderata, fino ad allora il riquadro viene omesso."
+    "sd_need_target": "Un termostato ha bisogno dello stato della temperatura desiderata, fino ad allora il riquadro viene omesso.",
+    "sd_swap": "Rilascia per scambiare i due riquadri",
+    "sd_no_swap": "Questi due riquadri non entrano l'uno al posto dell'altro",
+    "sd_duplicate": "Duplica riquadro",
+    "sd_no_room": "Nessun posto libero nelle pagine per una copia di questa dimensione"
 }

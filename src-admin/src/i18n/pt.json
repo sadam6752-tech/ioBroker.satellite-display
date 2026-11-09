@@ -36,5 +36,9 @@
     "sd_relay_state": "Relé do aquecimento (opcional, o ponto)",
     "sd_step": "Passo de − / +",
     "sd_bad_size": "Este tipo não existe neste tamanho, o bloco é omitido: escolha outro tamanho ou liberte espaço na página.",
-    "sd_need_target": "Um termóstato precisa do estado da temperatura desejada, até lá o bloco é omitido."
+    "sd_need_target": "Um termóstato precisa do estado da temperatura desejada, até lá o bloco é omitido.",
+    "sd_swap": "Solte para trocar os dois blocos",
+    "sd_no_swap": "Estes dois blocos não cabem no lugar um do outro",
+    "sd_duplicate": "Duplicar bloco",
+    "sd_no_room": "Não há lugar livre nas páginas para uma cópia deste tamanho"
 }

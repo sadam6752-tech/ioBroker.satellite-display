@@ -36,5 +36,9 @@
     "sd_relay_state": "Verwarmingsrelais (optioneel, de stip)",
     "sd_step": "Stap van − / +",
     "sd_bad_size": "Dit soort bestaat niet in deze grootte, de tegel wordt weggelaten: kies een andere grootte of maak ruimte op de pagina.",
-    "sd_need_target": "Een thermostaat heeft de state van de gewenste temperatuur nodig, tot dan wordt de tegel weggelaten."
+    "sd_need_target": "Een thermostaat heeft de state van de gewenste temperatuur nodig, tot dan wordt de tegel weggelaten.",
+    "sd_swap": "Loslaten verwisselt de twee tegels",
+    "sd_no_swap": "Deze twee tegels passen niet op elkaars plaats",
+    "sd_duplicate": "Tegel dupliceren",
+    "sd_no_room": "Op de pagina's is geen plaats vrij voor een kopie van deze grootte"
 }

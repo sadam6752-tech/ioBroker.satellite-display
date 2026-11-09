@@ -133,7 +133,7 @@ function overlaps(a: Pick<TileRow, 'size' | 'col' | 'row'>, b: Pick<TileRow, 'si
  * @param size - Size
  * @param col - Column of the top left cell
  * @param row - Row of the top left cell
- * @param skip - Index of the row that moves (not counted)
+ * @param skip - Index (or indexes) of the rows that move (not counted)
  */
 export function fits(
     tiles: TileRow[],
@@ -142,20 +142,48 @@ export function fits(
     size: Size,
     col: number,
     row: number,
-    skip = -1,
+    skip: number | number[] = -1,
 ): boolean {
     if (!inGrid(size, col, row)) {
         return false;
     }
+    const skipped = Array.isArray(skip) ? skip : [skip];
     return !tiles.some(
         (t, i) =>
-            i !== skip &&
+            !skipped.includes(i) &&
             t.enabled !== false &&
             sameSatellite(t.satellite, satellite) &&
             Number(t.page) === page &&
             SIZES[t.size] &&
             overlaps(t, { size, col, row }),
     );
+}
+
+/**
+ * Two tiles of a page trade places (each takes the top left cell of the other). Null when one of them would leave
+ * the grid, cover a third tile or the two would cover each other.
+ */
+export function swapPlaces(
+    tiles: TileRow[],
+    a: number,
+    b: number,
+): { a: { col: number; row: number }; b: { col: number; row: number } } | null {
+    const ta = tiles[a];
+    const tb = tiles[b];
+    if (!ta || !tb || a === b || !SIZES[ta.size] || !SIZES[tb.size]) {
+        return null;
+    }
+    const na = { col: tb.col, row: tb.row };
+    const nb = { col: ta.col, row: ta.row };
+    const page = Number(ta.page);
+    if (
+        !fits(tiles, ta.satellite, page, ta.size, na.col, na.row, [a, b]) ||
+        !fits(tiles, tb.satellite, page, tb.size, nb.col, nb.row, [a, b]) ||
+        overlaps({ size: ta.size, ...na }, { size: tb.size, ...nb })
+    ) {
+        return null;
+    }
+    return { a: na, b: nb };
 }
 
 /** The first cell where a tile of this size fits, or null */

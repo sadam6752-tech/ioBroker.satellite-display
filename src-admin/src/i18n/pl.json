@@ -36,5 +36,9 @@
     "sd_relay_state": "Przekaźnik ogrzewania (opcjonalnie, kropka)",
     "sd_step": "Krok − / +",
     "sd_bad_size": "Ten rodzaj nie występuje w tym rozmiarze, kafelek zostanie pominięty: wybierz inny rozmiar lub zwolnij miejsce na stronie.",
-    "sd_need_target": "Termostat potrzebuje stanu temperatury zadanej, do tego czasu kafelek jest pomijany."
+    "sd_need_target": "Termostat potrzebuje stanu temperatury zadanej, do tego czasu kafelek jest pomijany.",
+    "sd_swap": "Upuść, aby zamienić kafelki miejscami",
+    "sd_no_swap": "Te dwa kafelki nie mieszczą się na swoich miejscach",
+    "sd_duplicate": "Powiel kafelek",
+    "sd_no_room": "Na stronach nie ma wolnego miejsca na kopię tego rozmiaru"
 }
