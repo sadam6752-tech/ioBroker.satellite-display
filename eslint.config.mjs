@@ -13,6 +13,8 @@ export default [
             'test/**/*.js',
             '*.config.mjs',
             'build',
+            'src-admin/',
+            'admin/custom/',
             'dist',
             'admin/words.js',
             'admin/admin.d.ts',

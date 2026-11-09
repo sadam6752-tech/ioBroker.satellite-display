@@ -143,12 +143,19 @@ describe('layout', () => {
         assert.ok(ICONS.includes('coffee'));
     });
 
-    it('lists exactly the icons of the admin page', () => {
-        const config = require('../../admin/jsonConfig.json');
-        const icon = config.items._tiles.items.tiles.items.find(i => i.attr === 'icon');
-        assert.deepEqual(
-            icon.options.map(o => o.value).filter(Boolean),
-            ICONS,
-        );
+    it('the tile editor of the admin has the same icons, kinds and sizes', () => {
+        const fs = require('node:fs');
+        const path = require('node:path');
+        const { TYPES, SIZES } = require('../../lib/layout');
+        const src = fs.readFileSync(path.join(__dirname, '..', '..', 'src-admin', 'src', 'layout.ts'), 'utf8');
+        const block = name => src.slice(src.indexOf(`export const ${name}`), src.indexOf(';', src.indexOf(`export const ${name}`)));
+        const icons = [...block('ICONS').matchAll(/'([a-z-]+)'/g)].map(m => m[1]);
+        assert.deepEqual(icons, ICONS);
+        for (const [kind, sizes] of Object.entries(TYPES)) {
+            assert.ok(block('KINDS').includes(`${kind}: [${sizes.map(s => `'${s}'`).join(', ')}]`), kind);
+        }
+        for (const [size, [c, r]] of Object.entries(SIZES)) {
+            assert.ok(block('SIZES').includes(`${size}: [${c}, ${r}]`), size);
+        }
     });
 });

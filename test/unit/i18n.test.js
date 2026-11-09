@@ -74,3 +74,28 @@ describe('translations', () => {
         assert.notDeepEqual(Object.keys(en).sort(), [...broken].sort());
     });
 });
+
+describe('translations of the tile editor', () => {
+    const dir = path.join(ROOT, 'src-admin', 'src', 'i18n');
+    const en = JSON.parse(fs.readFileSync(path.join(dir, 'en.json'), 'utf8'));
+    const source = fs.readFileSync(path.join(ROOT, 'src-admin', 'src', 'TileEditor.tsx'), 'utf8');
+
+    it('every key the editor uses is translated, and no other', () => {
+        const used = [...new Set([...source.matchAll(/'(sd_[a-z_]+)'/g)].map(m => m[1]))].sort();
+        assert.deepEqual(Object.keys(en).sort(), used);
+    });
+
+    for (const lang of LANGS) {
+        it(`src-admin/src/i18n/${lang}.json has the keys of en.json`, () => {
+            const file = JSON.parse(fs.readFileSync(path.join(dir, `${lang}.json`), 'utf8'));
+            assert.deepEqual(Object.keys(file).sort(), Object.keys(en).sort());
+            for (const [key, value] of Object.entries(file)) {
+                assert.ok(typeof value === 'string' && value.trim(), `${lang}: empty value for "${key}"`);
+                if (en[key].includes('%s')) {
+                    assert.ok(value.includes('%s'), `${lang}: "${key}" lost %s`);
+                }
+            }
+        });
+    }
+});
+

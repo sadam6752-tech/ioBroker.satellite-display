@@ -51,9 +51,10 @@ to 8 tiles. Swipe left from the clock to reach them; a page without tiles is ski
 
 1. **Satellites:** name (room), IP address and API port (6053) of each satellite. An API encryption key is only needed
    when you built the firmware with one; the ready-made firmware has none.
-2. **Tiles:** one row per tile - satellite (its name from the first table), page, column, row, size, kind and the
-   state. Name, unit and scale may stay empty: they come from the object of the state. The tiles of a page are
-   numbered in the order of the table; a tile that does not fit or covers another one is reported in the log.
+2. **Tiles:** a graphical editor. Choose the satellite and the page; the preview shows the screen with the current
+   values. Click a free cell to add a tile, drag a tile to move it, click a tile to edit it on the right: kind,
+   size, the state (with the object browser of the admin), name, unit, icon and scale. Name, unit and scale may stay
+   empty: they come from the object of the state. A tile beyond the eight a page takes is marked red.
 3. **Charts (optional):** a history adapter (history, sql, influxdb). A chart then starts with the last hours of its
    state instead of empty.
 
@@ -99,7 +100,7 @@ again by itself.
 
 ### **WORK IN PROGRESS**
 
-- First version: tile pages on the touch display of ESPHome voice satellites
+- First version: tile pages on the touch display of ESPHome voice satellites, with a graphical tile editor
 
 ## License
 
