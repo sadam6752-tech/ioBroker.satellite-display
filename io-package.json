@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "satellite-display",
-        "version": "0.0.4",
+        "version": "0.0.5",
         "news": {
+            "0.0.5": {
+                "en": "Tile editor: copy a page to another page or satellite, the icons are shown, undo with Ctrl+Z",
+                "de": "Kachel-Editor: Seite auf eine andere Seite oder einen anderen Satelliten kopieren, die Symbole werden angezeigt, Rückgängig mit Strg+Z",
+                "ru": "Редактор плиток: копирование страницы на другую страницу или сателлит, показ иконок, отмена через Ctrl+Z",
+                "pt": "Editor de blocos: copiar uma página para outra página ou satélite, os ícones são mostrados, desfazer com Ctrl+Z",
+                "nl": "Tegeleditor: een pagina naar een andere pagina of satelliet kopiëren, de pictogrammen worden getoond, ongedaan maken met Ctrl+Z",
+                "fr": "Éditeur de tuiles : copier une page vers une autre page ou un autre satellite, les icônes sont affichées, annuler avec Ctrl+Z",
+                "it": "Editor dei riquadri: copiare una pagina su un'altra pagina o satellite, le icone vengono mostrate, annullare con Ctrl+Z",
+                "es": "Editor de mosaicos: copiar una página a otra página o satélite, se muestran los iconos, deshacer con Ctrl+Z",
+                "pl": "Edytor kafelków: kopiowanie strony na inną stronę lub satelitę, wyświetlanie ikon, cofanie przez Ctrl+Z",
+                "uk": "Редактор плиток: копіювання сторінки на іншу сторінку або сателіт, показ іконок, скасування через Ctrl+Z",
+                "zh-cn": "磁贴编辑器：将页面复制到其他页面或卫星，显示图标，使用 Ctrl+Z 撤销"
+            },
             "0.0.4": {
                 "en": "Tile editor: drag a tile onto another to swap them; a chosen state brings its name and unit",
                 "de": "Kachel-Editor: eine Kachel auf eine andere ziehen tauscht sie; ein gewählter Datenpunkt bringt Name und Einheit mit",

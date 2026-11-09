@@ -40,5 +40,13 @@
     "sd_swap": "Loslassen tauscht die beiden Kacheln",
     "sd_no_swap": "Diese beiden Kacheln passen nicht auf den Platz der anderen",
     "sd_duplicate": "Kachel duplizieren",
-    "sd_no_room": "Auf den Seiten ist kein Platz für eine Kopie dieser Größe frei"
+    "sd_no_room": "Auf den Seiten ist kein Platz für eine Kopie dieser Größe frei",
+    "sd_copy_page": "Seite kopieren",
+    "sd_copy_page_title": "Seite %s kopieren",
+    "sd_target_satellite": "Auf Satellit",
+    "sd_target_page": "Auf Seite",
+    "sd_copy_replace": "%s Kacheln auf dieser Seite werden ersetzt.",
+    "sd_copy": "Kopieren",
+    "sd_cancel": "Abbrechen",
+    "sd_undo": "Rückgängig"
 }

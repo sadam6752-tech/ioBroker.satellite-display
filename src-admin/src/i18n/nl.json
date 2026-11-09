@@ -40,5 +40,13 @@
     "sd_swap": "Loslaten verwisselt de twee tegels",
     "sd_no_swap": "Deze twee tegels passen niet op elkaars plaats",
     "sd_duplicate": "Tegel dupliceren",
-    "sd_no_room": "Op de pagina's is geen plaats vrij voor een kopie van deze grootte"
+    "sd_no_room": "Op de pagina's is geen plaats vrij voor een kopie van deze grootte",
+    "sd_copy_page": "Pagina kopiëren",
+    "sd_copy_page_title": "Pagina %s kopiëren",
+    "sd_target_satellite": "Naar satelliet",
+    "sd_target_page": "Naar pagina",
+    "sd_copy_replace": "%s tegels op die pagina worden vervangen.",
+    "sd_copy": "Kopiëren",
+    "sd_cancel": "Annuleren",
+    "sd_undo": "Ongedaan maken"
 }

@@ -40,5 +40,13 @@
     "sd_swap": "Drop to swap the two tiles",
     "sd_no_swap": "These two tiles do not fit into each other's place",
     "sd_duplicate": "Duplicate tile",
-    "sd_no_room": "No free place for a copy of this size on the pages"
+    "sd_no_room": "No free place for a copy of this size on the pages",
+    "sd_copy_page": "Copy page",
+    "sd_copy_page_title": "Copy page %s",
+    "sd_target_satellite": "To satellite",
+    "sd_target_page": "To page",
+    "sd_copy_replace": "%s tiles on that page are replaced.",
+    "sd_copy": "Copy",
+    "sd_cancel": "Cancel",
+    "sd_undo": "Undo"
 }

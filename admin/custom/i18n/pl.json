@@ -40,5 +40,13 @@
     "sd_swap": "Upuść, aby zamienić kafelki miejscami",
     "sd_no_swap": "Te dwa kafelki nie mieszczą się na swoich miejscach",
     "sd_duplicate": "Powiel kafelek",
-    "sd_no_room": "Na stronach nie ma wolnego miejsca na kopię tego rozmiaru"
+    "sd_no_room": "Na stronach nie ma wolnego miejsca na kopię tego rozmiaru",
+    "sd_copy_page": "Kopiuj stronę",
+    "sd_copy_page_title": "Kopiuj stronę %s",
+    "sd_target_satellite": "Na satelitę",
+    "sd_target_page": "Na stronę",
+    "sd_copy_replace": "%s kafelków na tej stronie zostanie zastąpionych.",
+    "sd_copy": "Kopiuj",
+    "sd_cancel": "Anuluj",
+    "sd_undo": "Cofnij"
 }

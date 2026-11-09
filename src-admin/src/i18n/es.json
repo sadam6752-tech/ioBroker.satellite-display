@@ -40,5 +40,13 @@
     "sd_swap": "Suelte para intercambiar los dos mosaicos",
     "sd_no_swap": "Estos dos mosaicos no caben en el lugar del otro",
     "sd_duplicate": "Duplicar mosaico",
-    "sd_no_room": "No hay sitio libre en las páginas para una copia de este tamaño"
+    "sd_no_room": "No hay sitio libre en las páginas para una copia de este tamaño",
+    "sd_copy_page": "Copiar página",
+    "sd_copy_page_title": "Copiar página %s",
+    "sd_target_satellite": "Al satélite",
+    "sd_target_page": "A la página",
+    "sd_copy_replace": "Se reemplazan %s mosaicos de esa página.",
+    "sd_copy": "Copiar",
+    "sd_cancel": "Cancelar",
+    "sd_undo": "Deshacer"
 }

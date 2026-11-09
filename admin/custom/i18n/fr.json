@@ -40,5 +40,13 @@
     "sd_swap": "Relâchez pour échanger les deux tuiles",
     "sd_no_swap": "Ces deux tuiles ne tiennent pas à la place l'une de l'autre",
     "sd_duplicate": "Dupliquer la tuile",
-    "sd_no_room": "Aucune place libre sur les pages pour une copie de cette taille"
+    "sd_no_room": "Aucune place libre sur les pages pour une copie de cette taille",
+    "sd_copy_page": "Copier la page",
+    "sd_copy_page_title": "Copier la page %s",
+    "sd_target_satellite": "Vers le satellite",
+    "sd_target_page": "Vers la page",
+    "sd_copy_replace": "%s tuiles de cette page sont remplacées.",
+    "sd_copy": "Copier",
+    "sd_cancel": "Annuler",
+    "sd_undo": "Défaire"
 }

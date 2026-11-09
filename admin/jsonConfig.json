@@ -72,7 +72,7 @@
                 "_tileEditor": {
                     "type": "custom",
                     "i18n": true,
-                    "url": "custom/customComponents.js?v=0.0.4",
+                    "url": "custom/customComponents.js?v=0.0.5",
                     "name": "SatDisplay/Components/TileEditor",
                     "guiApi": 2,
                     "bundlerType": "module",

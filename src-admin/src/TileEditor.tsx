@@ -4,6 +4,10 @@ import {
     Box,
     Button,
     Checkbox,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
     FormControlLabel,
     IconButton,
     MenuItem,
@@ -17,7 +21,9 @@ import {
     Add as IconAdd,
     ContentCopy as IconCopy,
     Delete as IconDelete,
+    FileCopy as IconCopyPage,
     ListAlt as IconPick,
+    Undo as IconUndo,
 } from '@mui/icons-material';
 
 // from the package root, as the admin shares these modules
@@ -43,6 +49,12 @@ import {
     type Size,
     type TileRow,
 } from './layout';
+import { TileIcon } from './icons';
+
+/** Changes kept for undo */
+const UNDO_STEPS = 50;
+/** Changes of the same field within this time are one undo step (typing a name) */
+const UNDO_MERGE_MS = 1000;
 
 /** The screen is 320 x 240; the preview is drawn this much bigger */
 const SCALE = 1.5;
@@ -85,6 +97,10 @@ interface TileEditorState extends ConfigGenericState {
     dropOn: { index: number; ok: boolean } | null;
     /** Content of a state field when it got the focus */
     typedFrom: string;
+    /** Number of steps that can be undone */
+    undoCount: number;
+    /** The dialog "copy page": open, target satellite and page */
+    copy: { satellite: string; page: number } | null;
     values: Record<string, ioBroker.StateValue | undefined>;
     names: Record<string, string>;
     units: Record<string, string>;
@@ -102,13 +118,42 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             dragging: -1,
             dropOn: null,
             typedFrom: '',
+            undoCount: 0,
+            copy: null,
             values: {},
             names: {},
             units: {},
         };
     }
 
+    /** Earlier versions of the tiles, newest last */
+    private history: TileRow[][] = [];
+    private lastChange = { key: '', ts: 0 };
+    private root = React.createRef<HTMLDivElement>();
+
+    private onKey = (e: KeyboardEvent): void => {
+        if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.key.toLowerCase() !== 'z') {
+            return;
+        }
+        // a text field undoes its own typing; the editor only while it is on screen
+        const target = e.target as HTMLElement | null;
+        if (target && (target.closest('input, textarea, [contenteditable="true"]') || target.closest('[role="dialog"]'))) {
+            return;
+        }
+        if (!this.root.current || this.root.current.offsetParent === null || !this.history.length) {
+            return;
+        }
+        e.preventDefault();
+        this.undo();
+    };
+
+    componentWillUnmount(): void {
+        window.removeEventListener('keydown', this.onKey);
+        super.componentWillUnmount?.();
+    }
+
     async componentDidMount(): Promise<void> {
+        window.addEventListener('keydown', this.onKey);
         await super.componentDidMount();
         const names = this.satelliteNames();
         if (names.length) {
@@ -141,13 +186,133 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         return (Array.isArray(sats) ? sats : []).some((s: { name?: string }) => sameSatellite(s?.name || '', name));
     }
 
-    setTiles(tiles: TileRow[], selected = this.state.selected): void {
-        this.setState({ selected }, () => void this.onChange('tiles', tiles, () => void this.readStates()));
+    /**
+     * @param mergeKey - Changes with the same key in quick succession (typing) are one undo step
+     */
+    setTiles(tiles: TileRow[], selected = this.state.selected, mergeKey = ''): void {
+        const now = Date.now();
+        const merge = !!mergeKey && mergeKey === this.lastChange.key && now - this.lastChange.ts < UNDO_MERGE_MS;
+        if (!merge) {
+            this.history.push(this.tiles());
+            if (this.history.length > UNDO_STEPS) {
+                this.history.shift();
+            }
+        }
+        this.lastChange = { key: mergeKey, ts: now };
+        this.setState({ selected, undoCount: this.history.length }, () =>
+            void this.onChange('tiles', tiles, () => void this.readStates()),
+        );
     }
 
     update(index: number, change: Partial<TileRow>): void {
         const tiles = this.tiles().map((t, i) => (i === index ? { ...t, ...change } : t));
-        this.setTiles(tiles);
+        this.setTiles(tiles, this.state.selected, `${index}:${Object.keys(change).sort().join(',')}`);
+    }
+
+    /** Back to the tiles before the last change */
+    undo(): void {
+        const previous = this.history.pop();
+        if (!previous) {
+            return;
+        }
+        this.lastChange = { key: '', ts: 0 };
+        const selected = this.state.selected < previous.length ? this.state.selected : -1;
+        this.setState({ selected, undoCount: this.history.length }, () =>
+            void this.onChange('tiles', previous, () => void this.readStates()),
+        );
+    }
+
+    /** The tiles of a page of a satellite (also the inactive ones) */
+    tilesOf(satellite: string, page: number): number[] {
+        return this.tiles()
+            .map((t, i) => ({ t, i }))
+            .filter(x => sameSatellite(x.t.satellite, satellite) && Number(x.t.page) === page)
+            .map(x => x.i);
+    }
+
+    /** Copies the visible page to the page of the dialog; the tiles that were there are replaced */
+    copyPage(): void {
+        const copy = this.state.copy;
+        if (!copy) {
+            return;
+        }
+        const source = new Set(this.tilesOf(this.state.satellite, this.state.page));
+        const replaced = new Set(this.tilesOf(copy.satellite, copy.page));
+        const copies = this.tiles()
+            .filter((_t, i) => source.has(i))
+            .map(t => ({ ...t, satellite: copy.satellite, page: copy.page }));
+        const tiles = [...this.tiles().filter((_t, i) => !replaced.has(i)), ...copies];
+        this.setTiles(tiles, -1);
+        this.setState({ copy: null, satellite: copy.satellite, page: copy.page });
+    }
+
+    renderCopyDialog(names: string[]): React.JSX.Element | null {
+        const copy = this.state.copy;
+        if (!copy) {
+            return null;
+        }
+        const same = sameSatellite(copy.satellite, this.state.satellite) && copy.page === this.state.page;
+        const replaced = same ? 0 : this.tilesOf(copy.satellite, copy.page).length;
+        return (
+            <Dialog
+                open
+                onClose={() => this.setState({ copy: null })}
+            >
+                <DialogTitle>{I18n.t('sd_copy_page_title', this.state.page)}</DialogTitle>
+                <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 320 }}>
+                    <TextField
+                        select
+                        variant="standard"
+                        label={I18n.t('sd_target_satellite')}
+                        value={copy.satellite}
+                        onChange={e => this.setState({ copy: { ...copy, satellite: e.target.value } })}
+                    >
+                        {names.map(n => (
+                            <MenuItem
+                                key={n}
+                                value={n}
+                            >
+                                {n}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                    <TextField
+                        select
+                        variant="standard"
+                        label={I18n.t('sd_target_page')}
+                        value={copy.page}
+                        onChange={e => this.setState({ copy: { ...copy, page: Number(e.target.value) } })}
+                    >
+                        {Array.from({ length: PAGES }, (_v, i) => i + 1).map(p => (
+                            <MenuItem
+                                key={p}
+                                value={p}
+                            >
+                                {p}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                    {replaced ? (
+                        <Typography
+                            variant="body2"
+                            color="warning.main"
+                        >
+                            {I18n.t('sd_copy_replace', replaced)}
+                        </Typography>
+                    ) : null}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => this.setState({ copy: null })}>{I18n.t('sd_cancel')}</Button>
+                    <Button
+                        variant="contained"
+                        disabled={same}
+                        onClick={() => this.copyPage()}
+                    >
+                        {I18n.t('sd_copy')}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        );
     }
 
     /** Current values and names of the states of the visible page, for the preview */
@@ -694,7 +859,23 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                 return (
                     <div style={{ display: 'flex', alignItems: big ? 'flex-start' : 'center', gap: px(6), height: '100%', flexDirection: big ? 'column' : 'row', justifyContent: 'space-between' }}>
                         <div style={{ flex: 1, minWidth: 0 }}>{label}</div>
-                        <div style={{ alignSelf: 'flex-end' }}>{toggle}</div>
+                        {big ? (
+                            // a square switch: its icon bottom left, the toggle bottom right
+                            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', width: '100%' }}>
+                                {t.icon ? (
+                                    <TileIcon
+                                        name={t.icon}
+                                        size={px(20)}
+                                        color={COLOR.label}
+                                    />
+                                ) : (
+                                    <span />
+                                )}
+                                {toggle}
+                            </div>
+                        ) : (
+                            toggle
+                        )}
                     </div>
                 );
             case 'dimmer':
@@ -729,7 +910,13 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                             flexDirection: big ? 'column' : 'row',
                         }}
                     >
-                        {t.icon ? <span style={{ color: COLOR.accent, fontSize: px(9) }}>◉ {t.icon}</span> : null}
+                        {t.icon ? (
+                            <TileIcon
+                                name={t.icon}
+                                size={px(20)}
+                                color={COLOR.accent}
+                            />
+                        ) : null}
                         <span style={{ fontSize: px(11) }}>{name}</span>
                     </div>
                 );
@@ -1014,7 +1201,13 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                             <MenuItem
                                 key={icon}
                                 value={icon}
+                                sx={{ gap: 1.5 }}
                             >
+                                <TileIcon
+                                    name={icon}
+                                    size={22}
+                                    color="currentColor"
+                                />
                                 {icon}
                             </MenuItem>
                         ))}
@@ -1145,7 +1338,10 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             t => t.enabled === false && sameSatellite(t.satellite, satellite) && Number(t.page) === this.state.page,
         ).length;
         return (
-            <Box sx={{ width: '100%' }}>
+            <Box
+                sx={{ width: '100%' }}
+                ref={this.root}
+            >
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap', mb: 2 }}>
                     <TextField
                         select
@@ -1184,6 +1380,33 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                             </ToggleButton>
                         ))}
                     </ToggleButtonGroup>
+                    <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<IconCopyPage />}
+                        disabled={!this.tilesOf(satellite, this.state.page).length}
+                        onClick={() =>
+                            this.setState({
+                                copy: {
+                                    satellite,
+                                    page: (this.state.page % PAGES) + 1,
+                                },
+                            })
+                        }
+                    >
+                        {I18n.t('sd_copy_page')}
+                    </Button>
+                    <Tooltip title={`${I18n.t('sd_undo')} (Ctrl+Z)`}>
+                        <span>
+                            <IconButton
+                                size="small"
+                                disabled={!this.state.undoCount}
+                                onClick={() => this.undo()}
+                            >
+                                <IconUndo />
+                            </IconButton>
+                        </span>
+                    </Tooltip>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                     <Box>
@@ -1200,6 +1423,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                     {this.renderPanel()}
                 </Box>
                 {this.renderPicker()}
+                {this.renderCopyDialog(names)}
             </Box>
         );
     }

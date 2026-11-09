@@ -40,5 +40,13 @@
     "sd_swap": "松开即可交换这两个磁贴",
     "sd_no_swap": "这两个磁贴无法放到彼此的位置",
     "sd_duplicate": "复制磁贴",
-    "sd_no_room": "页面上没有可放置此尺寸副本的空位"
+    "sd_no_room": "页面上没有可放置此尺寸副本的空位",
+    "sd_copy_page": "复制页面",
+    "sd_copy_page_title": "复制第 %s 页",
+    "sd_target_satellite": "复制到卫星",
+    "sd_target_page": "复制到页面",
+    "sd_copy_replace": "该页面上的 %s 个磁贴将被替换。",
+    "sd_copy": "复制",
+    "sd_cancel": "取消",
+    "sd_undo": "撤销"
 }

@@ -56,8 +56,9 @@ to 8 tiles. Swipe left from the clock to reach them; a page without tiles is ski
    values. Click a free cell to add a tile, drag a tile to a free cell to move it or onto another tile to swap the
    two, click a tile to edit it on the right: kind, size, the state (with the object browser of the admin), name,
    unit, icon and scale. Choosing a state fills in its name and unit; you can change them. Name, unit and scale may
-   also stay empty: they come from the object of the state. A tile the adapter would leave out is marked red, with
-   the reason (a size its kind does not come in, a thermostat without its target, more than eight tiles on a page).
+   also stay empty: they come from the object of the state. "Copy page" copies the page to another page or
+   satellite, Ctrl+Z undoes the last changes. A tile the adapter would leave out is marked red, with the reason (a
+   size its kind does not come in, a thermostat without its target, more than eight tiles on a page).
 3. **Charts (optional):** a history adapter (history, sql, influxdb). A chart then starts with the last hours of its
    state instead of empty.
 
@@ -109,6 +110,13 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+
+### 0.0.5 (2026-11-09)
+
+- Tile editor: "Copy page" copies the visible page to another page or another satellite (the tiles there are
+  replaced)
+- The icons are shown in the list and in the preview
+- Undo with Ctrl+Z or the undo button (the last 50 changes)
 
 ### 0.0.4 (2026-11-09)
 

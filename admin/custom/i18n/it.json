@@ -40,5 +40,13 @@
     "sd_swap": "Rilascia per scambiare i due riquadri",
     "sd_no_swap": "Questi due riquadri non entrano l'uno al posto dell'altro",
     "sd_duplicate": "Duplica riquadro",
-    "sd_no_room": "Nessun posto libero nelle pagine per una copia di questa dimensione"
+    "sd_no_room": "Nessun posto libero nelle pagine per una copia di questa dimensione",
+    "sd_copy_page": "Copia pagina",
+    "sd_copy_page_title": "Copia pagina %s",
+    "sd_target_satellite": "Al satellite",
+    "sd_target_page": "Alla pagina",
+    "sd_copy_replace": "%s riquadri di quella pagina vengono sostituiti.",
+    "sd_copy": "Copia",
+    "sd_cancel": "Annulla",
+    "sd_undo": "Annulla modifica"
 }

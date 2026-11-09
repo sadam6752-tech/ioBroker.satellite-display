@@ -170,6 +170,15 @@ describe('layout', () => {
         assert.ok(ICONS.includes('coffee'));
     });
 
+    it('the tile editor draws every icon of the firmware', () => {
+        const fs = require('node:fs');
+        const path = require('node:path');
+        const src = fs.readFileSync(path.join(__dirname, '..', '..', 'src-admin', 'src', 'icons.tsx'), 'utf8');
+        const block = src.slice(src.indexOf('ICON_PATHS'), src.indexOf('};', src.indexOf('ICON_PATHS')));
+        const names = [...block.matchAll(/^\s+'?([a-z-]+)'?: mdi/gm)].map(m => m[1]);
+        assert.deepEqual(names, ICONS);
+    });
+
     it('the tile editor of the admin has the same icons, kinds and sizes', () => {
         const fs = require('node:fs');
         const path = require('node:path');
