@@ -182,8 +182,8 @@ class SatelliteDisplay extends utils.Adapter {
             const b = {
                 tile,
                 args: tileArgs(tile, obj, this.lang),
-                common: /** @type {any} */ (obj?.common || {}),
-                common2: /** @type {any} */ (obj2?.common || {}),
+                common: /** @type {Partial<ioBroker.StateCommon>} */ (obj?.common || {}),
+                common2: /** @type {Partial<ioBroker.StateCommon>} */ (obj2?.common || {}),
                 lastLevel: 100,
             };
             this.bound.push(b);
@@ -346,7 +346,7 @@ class SatelliteDisplay extends utils.Adapter {
                 }),
                 10_000,
             );
-            const rows = /** @type {any} */ (answer)?.result;
+            const rows = /** @type {{result?: {val?: unknown}[]} | undefined} */ (answer)?.result;
             const points = (Array.isArray(rows) ? rows : [])
                 .map(r => toNumber(r?.val))
                 .filter(v => v !== null)
