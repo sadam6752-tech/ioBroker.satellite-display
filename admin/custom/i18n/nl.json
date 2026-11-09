@@ -34,5 +34,7 @@
     "sd_current_state": "Huidige temperatuur",
     "sd_target_state": "Gewenste temperatuur",
     "sd_relay_state": "Verwarmingsrelais (optioneel, de stip)",
-    "sd_step": "Stap van − / +"
+    "sd_step": "Stap van − / +",
+    "sd_bad_size": "Dit soort bestaat niet in deze grootte, de tegel wordt weggelaten: kies een andere grootte of maak ruimte op de pagina.",
+    "sd_need_target": "Een thermostaat heeft de state van de gewenste temperatuur nodig, tot dan wordt de tegel weggelaten."
 }

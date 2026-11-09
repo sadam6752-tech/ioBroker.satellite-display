@@ -34,5 +34,7 @@
     "sd_current_state": "Temperatura attuale",
     "sd_target_state": "Temperatura desiderata",
     "sd_relay_state": "Relè del riscaldamento (facoltativo, il punto)",
-    "sd_step": "Passo di − / +"
+    "sd_step": "Passo di − / +",
+    "sd_bad_size": "Questo tipo non esiste in questa dimensione, il riquadro viene omesso: scegli un'altra dimensione o libera spazio nella pagina.",
+    "sd_need_target": "Un termostato ha bisogno dello stato della temperatura desiderata, fino ad allora il riquadro viene omesso."
 }

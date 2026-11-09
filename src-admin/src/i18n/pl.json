@@ -34,5 +34,7 @@
     "sd_current_state": "Temperatura bieżąca",
     "sd_target_state": "Temperatura zadana",
     "sd_relay_state": "Przekaźnik ogrzewania (opcjonalnie, kropka)",
-    "sd_step": "Krok − / +"
+    "sd_step": "Krok − / +",
+    "sd_bad_size": "Ten rodzaj nie występuje w tym rozmiarze, kafelek zostanie pominięty: wybierz inny rozmiar lub zwolnij miejsce na stronie.",
+    "sd_need_target": "Termostat potrzebuje stanu temperatury zadanej, do tego czasu kafelek jest pomijany."
 }

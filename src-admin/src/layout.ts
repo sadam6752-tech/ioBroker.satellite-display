@@ -15,8 +15,8 @@ export const SIZES: Record<Size, [number, number]> = { s: [1, 1], q: [1, 2], w: 
 export const KINDS: Record<Kind, Size[]> = {
     value: ['s', 'q', 'w', 'l'],
     gauge: ['q', 'l'],
-    bar: ['q', 'w', 'l'],
-    chart: ['w', 'l'],
+    bar: ['s', 'q', 'w', 'l'],
+    chart: ['s', 'w', 'l'],
     switch: ['s', 'q', 'w'],
     dimmer: ['w', 'l'],
     button: ['s', 'q', 'w'],
@@ -86,6 +86,20 @@ export interface TileRow {
     min: number | '' | null;
     max: number | '' | null;
     step?: number | '' | null;
+}
+
+/**
+ * Why the adapter would leave this tile out (an i18n key), or '' when it is fine. A tile without a state is not
+ * marked: it is being set up.
+ */
+export function problemOf(t: TileRow): string {
+    if (!KINDS[t.type] || !KINDS[t.type].includes(t.size)) {
+        return 'sd_bad_size';
+    }
+    if (t.type === 'thermostat' && !String(t.state2 || '').trim()) {
+        return 'sd_need_target';
+    }
+    return '';
 }
 
 export function sameSatellite(a: string, b: string): boolean {

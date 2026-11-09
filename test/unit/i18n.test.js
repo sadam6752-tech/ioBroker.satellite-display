@@ -75,10 +75,24 @@ describe('translations', () => {
     });
 });
 
+describe('tile editor in the admin', () => {
+    it('loads the editor with the version of the adapter, so that a browser does not keep an old one', () => {
+        const config = fs.readFileSync(path.join(ROOT, 'admin', 'jsonConfig.json'), 'utf8');
+        const { version } = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+        assert.ok(
+            config.includes(`"custom/customComponents.js?v=${version}"`),
+            'run npm run build after the version bump',
+        );
+    });
+});
+
 describe('translations of the tile editor', () => {
     const dir = path.join(ROOT, 'src-admin', 'src', 'i18n');
     const en = JSON.parse(fs.readFileSync(path.join(dir, 'en.json'), 'utf8'));
-    const source = fs.readFileSync(path.join(ROOT, 'src-admin', 'src', 'TileEditor.tsx'), 'utf8');
+    // the editor and the reasons of layout.ts (problemOf)
+    const source = ['TileEditor.tsx', 'layout.ts']
+        .map(f => fs.readFileSync(path.join(ROOT, 'src-admin', 'src', f), 'utf8'))
+        .join('\n');
 
     it('every key the editor uses is translated, and no other', () => {
         const used = [...new Set([...source.matchAll(/'(sd_[a-z_]+)'/g)].map(m => m[1]))].sort();

@@ -34,5 +34,7 @@
     "sd_current_state": "当前温度",
     "sd_target_state": "目标温度",
     "sd_relay_state": "供暖继电器（可选，圆点）",
-    "sd_step": "− / + 的步长"
+    "sd_step": "− / + 的步长",
+    "sd_bad_size": "此类型没有这个尺寸，该磁贴将被忽略：请选择其他尺寸或在页面上腾出空间。",
+    "sd_need_target": "恒温器需要目标温度的状态，在此之前该磁贴将被忽略。"
 }

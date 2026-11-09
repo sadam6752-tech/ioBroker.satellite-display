@@ -29,6 +29,7 @@ import {
     fits,
     freeCell,
     newTile,
+    problemOf,
     sameSatellite,
     tileAt,
     tooMany,
@@ -441,6 +442,74 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                 );
             }
             case 'bar':
+            case 'chart':
+                if (t.size === 's') {
+                    return (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: px(4) }}>
+                                <div style={{ flex: 1, minWidth: 0 }}>{label}</div>
+                                <div style={{ fontSize: px(14) }}>{shown}</div>
+                            </div>
+                            {t.type === 'bar' ? (
+                                <div
+                                    style={{
+                                        height: px(4),
+                                        background: COLOR.track,
+                                        borderRadius: px(2),
+                                        marginTop: 'auto',
+                                        marginBottom: px(4),
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            width: `${frac * 100}%`,
+                                            height: '100%',
+                                            background: COLOR.accent,
+                                            borderRadius: px(2),
+                                        }}
+                                    />
+                                </div>
+                            ) : (
+                                <svg
+                                    width={w - px(16)}
+                                    height={px(14)}
+                                    style={{ display: 'block', marginTop: 'auto', marginBottom: px(2) }}
+                                >
+                                    <polyline
+                                        fill="none"
+                                        stroke={COLOR.accent}
+                                        strokeWidth={2}
+                                        points={[0, 0.6, 0.4, 0.7, 0.3, 0.5, 0.2, 0.45, 0.35]
+                                            .map((v, i) => `${(i * (w - px(16))) / 8},${v * px(14)}`)
+                                            .join(' ')}
+                                    />
+                                </svg>
+                            )}
+                        </div>
+                    );
+                }
+                if (t.type === 'chart') {
+                    return (
+                        <>
+                            {label}
+                            {valueText}
+                            <svg
+                                width={w - px(16)}
+                                height={px(18)}
+                                style={{ display: 'block' }}
+                            >
+                                <polyline
+                                    fill="none"
+                                    stroke={COLOR.accent}
+                                    strokeWidth={2}
+                                    points={[0, 0.6, 0.4, 0.7, 0.3, 0.5, 0.2, 0.45, 0.35]
+                                        .map((v, i) => `${(i * (w - px(16))) / 8},${v * px(18)}`)
+                                        .join(' ')}
+                                />
+                            </svg>
+                        </>
+                    );
+                }
                 return (
                     <>
                         {label}
@@ -462,27 +531,6 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                 }}
                             />
                         </div>
-                    </>
-                );
-            case 'chart':
-                return (
-                    <>
-                        {label}
-                        {valueText}
-                        <svg
-                            width={w - px(16)}
-                            height={px(18)}
-                            style={{ display: 'block' }}
-                        >
-                            <polyline
-                                fill="none"
-                                stroke={COLOR.accent}
-                                strokeWidth={2}
-                                points={[0, 0.6, 0.4, 0.7, 0.3, 0.5, 0.2, 0.45, 0.35]
-                                    .map((v, i) => `${(i * (w - px(16))) / 8},${v * px(18)}`)
-                                    .join(' ')}
-                            />
-                        </svg>
                     </>
                 );
             case 'switch':
@@ -606,6 +654,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                     const w = px(cols === 2 ? 308 : 151);
                     const h = px(rowY(tile.row + rows) - 6 - rowY(tile.row));
                     const selected = index === this.state.selected;
+                    const problem = extra.has(index) ? 'sd_too_many' : problemOf(tile);
                     const on = tile.type === 'switch' && (this.state.values[tile.state] === true || Number(this.state.values[tile.state]) > 0);
                     return (
                         <div
@@ -625,7 +674,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                 }
                             }}
                             onClick={() => this.setState({ selected: index })}
-                            title={extra.has(index) ? I18n.t('sd_too_many') : ''}
+                            title={problem ? I18n.t(problem) : ''}
                             style={{
                                 position: 'absolute',
                                 left: px(colX(tile.col)),
@@ -641,8 +690,8 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                 color: '#fff',
                                 cursor: 'grab',
                                 overflow: 'hidden',
-                                border: `2px solid ${selected ? COLOR.accent : extra.has(index) ? '#EF4444' : 'transparent'}`,
-                                opacity: extra.has(index) ? 0.5 : 1,
+                                border: `2px solid ${selected ? COLOR.accent : problem ? '#EF4444' : 'transparent'}`,
+                                opacity: problem ? 0.5 : 1,
                                 userSelect: 'none',
                             }}
                         >
@@ -695,6 +744,14 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             t.type === 'dimmer' ? 'sd_level_state' : t.type === 'thermostat' ? 'sd_current_state' : 'sd_state';
         return (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, minWidth: 260, maxWidth: 360, flex: 1 }}>
+                {problemOf(t) ? (
+                    <Typography
+                        variant="body2"
+                        color="error"
+                    >
+                        {I18n.t(problemOf(t))}
+                    </Typography>
+                ) : null}
                 <FormControlLabel
                     control={
                         <Checkbox

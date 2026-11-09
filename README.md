@@ -41,8 +41,8 @@ to 8 tiles. Swipe left from the clock to reach them; a page without tiles is ski
 | --- | --- | --- | --- |
 | Value | name, number with unit, or a text | all | – |
 | Gauge | name, arc from the scale start to its end, number | square, large | – |
-| Value with bar | name, number, bar along the scale | square, wide, large | – |
-| Value with chart | name, number, line of the last 60 values | wide, large | – |
+| Value with bar | name, number, bar along the scale | all | – |
+| Value with chart | name, number, line of the last 60 values | small, wide, large | – |
 | Switch | name, toggle; the tile lights up when on | small, square, wide | toggles the state |
 | Dimmer | name, toggle, slider, percent | wide, large | toggle and slider write the states |
 | Button | icon, name | small, square, wide | writes `true` to the state |
@@ -55,7 +55,8 @@ to 8 tiles. Swipe left from the clock to reach them; a page without tiles is ski
 2. **Tiles:** a graphical editor. Choose the satellite and the page; the preview shows the screen with the current
    values. Click a free cell to add a tile, drag a tile to move it, click a tile to edit it on the right: kind,
    size, the state (with the object browser of the admin), name, unit, icon and scale. Name, unit and scale may stay
-   empty: they come from the object of the state. A tile beyond the eight a page takes is marked red.
+   empty: they come from the object of the state. A tile the adapter would leave out is marked red, with the reason
+   (a size its kind does not come in, a thermostat without its target, more than eight tiles on a page).
 3. **Charts (optional):** a history adapter (history, sql, influxdb). A chart then starts with the last hours of its
    state instead of empty.
 
@@ -91,6 +92,8 @@ again by itself.
 
 ## Notes
 
+- The small bar and chart tiles (1 × 1) need the satellite firmware **2.0.2**; an older one leaves them empty and
+  writes a warning into its own log.
 - The satellite firmware must be **2.0.0** or newer; an older firmware is reported in the log ("tile pages need the
   satellite firmware 2.0.0").
 - The format between adapter and firmware is described in
@@ -105,6 +108,12 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+
+### 0.0.3 (2026-11-09)
+
+- Small bar and chart tiles (1 × 1): the name and the value on one line, the bar or the line below (satellite
+  firmware 2.0.2)
+- The tile editor marks a tile the adapter would leave out, with the reason
 
 ### 0.0.2 (2026-11-09)
 

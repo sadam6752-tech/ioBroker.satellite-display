@@ -34,5 +34,7 @@
     "sd_current_state": "Temperatura actual",
     "sd_target_state": "Temperatura deseada",
     "sd_relay_state": "Relé de la calefacción (opcional, el punto)",
-    "sd_step": "Paso de − / +"
+    "sd_step": "Paso de − / +",
+    "sd_bad_size": "Este tipo no existe en este tamaño, el mosaico se omite: elija otro tamaño o libere espacio en la página.",
+    "sd_need_target": "Un termostato necesita el estado de la temperatura deseada, hasta entonces el mosaico se omite."
 }

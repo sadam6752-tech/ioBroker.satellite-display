@@ -34,5 +34,7 @@
     "sd_current_state": "Temperatura atual",
     "sd_target_state": "Temperatura desejada",
     "sd_relay_state": "Relé do aquecimento (opcional, o ponto)",
-    "sd_step": "Passo de − / +"
+    "sd_step": "Passo de − / +",
+    "sd_bad_size": "Este tipo não existe neste tamanho, o bloco é omitido: escolha outro tamanho ou liberte espaço na página.",
+    "sd_need_target": "Um termóstato precisa do estado da temperatura desejada, até lá o bloco é omitido."
 }
