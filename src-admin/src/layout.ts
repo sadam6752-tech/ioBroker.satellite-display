@@ -6,7 +6,7 @@ export const COLS = 2;
 export const ROWS = 4;
 
 export type Size = 's' | 'q' | 'w' | 'l';
-export type Kind = 'value' | 'gauge' | 'bar' | 'chart' | 'switch' | 'dimmer' | 'button';
+export type Kind = 'value' | 'gauge' | 'bar' | 'chart' | 'switch' | 'dimmer' | 'button' | 'thermostat';
 
 /** Cells (columns, rows) of each size */
 export const SIZES: Record<Size, [number, number]> = { s: [1, 1], q: [1, 2], w: [2, 1], l: [2, 2] };
@@ -20,6 +20,7 @@ export const KINDS: Record<Kind, Size[]> = {
     switch: ['s', 'q', 'w'],
     dimmer: ['w', 'l'],
     button: ['s', 'q', 'w'],
+    thermostat: ['q', 'l'],
 };
 
 /** Icons the firmware has (components/tiles/tiles.cpp of the satellite firmware) */
@@ -77,12 +78,14 @@ export interface TileRow {
     type: Kind;
     state: string;
     state2: string;
+    state3?: string;
     label: string;
     unit: string;
     icon: string;
     decimals: number | '' | null;
     min: number | '' | null;
     max: number | '' | null;
+    step?: number | '' | null;
 }
 
 export function sameSatellite(a: string, b: string): boolean {
@@ -190,11 +193,13 @@ export function newTile(satellite: string, page: number, col: number, row: numbe
         type: 'value',
         state: '',
         state2: '',
+        state3: '',
         label: '',
         unit: '',
         icon: '',
         decimals: '',
         min: '',
         max: '',
+        step: '',
     };
 }

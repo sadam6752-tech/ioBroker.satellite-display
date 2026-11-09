@@ -29,5 +29,10 @@
     "sd_satellite": "Satellit",
     "sd_not_configured": "nicht in der Liste der Satelliten",
     "sd_how": "Eine freie Zelle anklicken fügt eine Kachel hinzu, eine Kachel ziehen verschiebt sie. Die Vorschau zeigt die aktuellen Werte; die Farben des Satelliten können leicht abweichen.",
-    "sd_disabled_count": "%s inaktive Kachel(n) auf dieser Seite werden nicht gezeigt."
+    "sd_disabled_count": "%s inaktive Kachel(n) auf dieser Seite werden nicht gezeigt.",
+    "sd_kind_thermostat": "Thermostat mit Sollwert",
+    "sd_current_state": "Ist-Temperatur",
+    "sd_target_state": "Soll-Temperatur",
+    "sd_relay_state": "Heizungsrelais (optional, der Punkt)",
+    "sd_step": "Schrittweite von − / +"
 }

@@ -29,5 +29,10 @@
     "sd_satellite": "卫星设备",
     "sd_not_configured": "不在卫星设备列表中",
     "sd_how": "点击空白格添加磁贴,拖动磁贴可移动它。预览显示当前数值;卫星设备上的颜色可能略有不同。",
-    "sd_disabled_count": "此页有 %s 个未启用的磁贴未显示。"
+    "sd_disabled_count": "此页有 %s 个未启用的磁贴未显示。",
+    "sd_kind_thermostat": "恒温器",
+    "sd_current_state": "当前温度",
+    "sd_target_state": "目标温度",
+    "sd_relay_state": "供暖继电器（可选，圆点）",
+    "sd_step": "− / + 的步长"
 }

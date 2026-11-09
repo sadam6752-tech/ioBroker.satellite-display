@@ -7,10 +7,19 @@
  */
 
 const utils = require('@iobroker/adapter-core');
-const { SatelliteLink } = require('./lib/satellite');
+const { SatelliteLink, OPTIONAL_ACTIONS } = require('./lib/satellite');
 const { normalizeSatellites, normalizeTiles } = require('./lib/layout');
 const { NAMES } = require('./lib/names');
-const { toNumber, isOn, textOf, levelPercent, levelValue, switchValue, tileArgs } = require('./lib/values');
+const {
+    toNumber,
+    isOn,
+    textOf,
+    levelPercent,
+    levelValue,
+    switchValue,
+    setpointValue,
+    tileArgs,
+} = require('./lib/values');
 
 /** After a touch the tile shows the real state again after this time (when the device did not follow) */
 const RESYNC_MS = 3000;
@@ -27,7 +36,8 @@ const CHART_POINTS = 60;
  * @property {Tile} tile - The tile
  * @property {Record<string, string | number>} args - Its tile_set arguments
  * @property {Partial<ioBroker.StateCommon>} common - Common part of the object of its state
- * @property {Partial<ioBroker.StateCommon>} common2 - Common part of the object of the on/off state of a dimmer
+ * @property {Partial<ioBroker.StateCommon>} common2 - Common part of the object of the second state (on/off of a
+ *   dimmer, target temperature of a thermostat)
  * @property {number} lastLevel - Last level above 0 of a dimmer (switched on again with it)
  */
 
@@ -54,6 +64,8 @@ class SatelliteDisplay extends utils.Adapter {
         this.stopping = false;
         /** @type {Set<string>} read-only states already reported */
         this.readOnlyWarned = new Set();
+        /** @type {Set<string>} satellites already told that their firmware is too old for a tile */
+        this.oldFirmwareWarned = new Set();
     }
 
     async onReady() {
@@ -178,16 +190,19 @@ class SatelliteDisplay extends utils.Adapter {
         for (const tile of tiles) {
             const obj = await objectOf(tile.state);
             const obj2 = tile.state2 ? await objectOf(tile.state2) : null;
+            if (tile.state3) {
+                await objectOf(tile.state3);
+            }
             /** @type {Bound} */
             const b = {
                 tile,
-                args: tileArgs(tile, obj, this.lang),
+                args: tileArgs(tile, obj, this.lang, obj2),
                 common: /** @type {Partial<ioBroker.StateCommon>} */ (obj?.common || {}),
                 common2: /** @type {Partial<ioBroker.StateCommon>} */ (obj2?.common || {}),
                 lastLevel: 100,
             };
             this.bound.push(b);
-            for (const id of [tile.state, tile.state2].filter(Boolean)) {
+            for (const id of [tile.state, tile.state2, tile.state3].filter(Boolean)) {
                 const list = this.byState.get(id) || [];
                 list.push(b);
                 this.byState.set(id, list);
@@ -230,7 +245,7 @@ class SatelliteDisplay extends utils.Adapter {
             return;
         }
         link.call('tile_clear', { page: 0 });
-        const mine = this.bound.filter(b => b.tile.satellite === sat.id);
+        const mine = this.bound.filter(b => b.tile.satellite === sat.id && this.supported(sat, link, b));
         for (const b of mine) {
             link.call('tile_set', b.args);
         }
@@ -240,6 +255,28 @@ class SatelliteDisplay extends utils.Adapter {
                 await this.pushHistory(b);
             }
         }
+    }
+
+    /**
+     * A thermostat needs the action tile_setpoint of a newer firmware; without it the tile is left out.
+     *
+     * @param {SatelliteConfig} sat - Satellite
+     * @param {SatelliteLink} link - Its connection
+     * @param {Bound} b - Tile
+     * @returns {boolean} True when the firmware can show the tile
+     */
+    supported(sat, link, b) {
+        if (b.tile.type !== 'thermostat' || link.has('tile_setpoint')) {
+            return true;
+        }
+        const key = `${sat.id}/tile_setpoint`;
+        if (!this.oldFirmwareWarned.has(key)) {
+            this.oldFirmwareWarned.add(key);
+            this.log.warn(
+                `${sat.name}: a thermostat tile needs the satellite firmware ${OPTIONAL_ACTIONS.tile_setpoint} or newer, it is left out`,
+            );
+        }
+        return false;
     }
 
     /**
@@ -254,9 +291,9 @@ class SatelliteDisplay extends utils.Adapter {
         try {
             const state = await this.getForeignStateAsync(b.tile.state);
             this.push(b, b.tile.state, state?.val);
-            if (b.tile.state2) {
-                const state2 = await this.getForeignStateAsync(b.tile.state2);
-                this.push(b, b.tile.state2, state2?.val);
+            for (const id of [b.tile.state2, b.tile.state3].filter(Boolean)) {
+                const other = await this.getForeignStateAsync(id);
+                this.push(b, id, other?.val);
             }
         } catch (e) {
             this.log.debug(`Reading ${b.tile.state} failed: ${e.message}`);
@@ -311,6 +348,24 @@ class SatelliteDisplay extends utils.Adapter {
                         }
                     }
                 } else {
+                    link.call('tile_state', { page, slot, on: isOn(val) });
+                }
+                break;
+            case 'thermostat':
+                // one state can be bound twice (e.g. the target as the current value too): send each meaning
+                if (id === b.tile.state) {
+                    const n = toNumber(val);
+                    if (n !== null) {
+                        link.call('tile_value', { page, slot, value: n });
+                    }
+                }
+                if (id === b.tile.state2 && link.has('tile_setpoint')) {
+                    const n = toNumber(val);
+                    if (n !== null) {
+                        link.call('tile_setpoint', { page, slot, value: n, step: b.tile.step });
+                    }
+                }
+                if (id === b.tile.state3) {
                     link.call('tile_state', { page, slot, on: isOn(val) });
                 }
                 break;
@@ -426,6 +481,8 @@ class SatelliteDisplay extends utils.Adapter {
                 b.lastLevel = input.value;
             }
             target = { id: tile.state, val: levelValue(input.value, b.common), common: b.common };
+        } else if (tile.type === 'thermostat' && input.input === 'setpoint') {
+            target = { id: tile.state2, val: setpointValue(input.value, tile.step, b.common2), common: b.common2 };
         } else if (tile.type === 'button' && input.input === 'press') {
             target = { id: tile.state, val: b.common.type === 'number' ? 1 : true, common: b.common };
         }

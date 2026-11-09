@@ -29,5 +29,10 @@
     "sd_satellite": "Satellite vocale",
     "sd_not_configured": "non nell'elenco dei satelliti",
     "sd_how": "Fai clic su una cella libera per aggiungere un riquadro, trascina un riquadro per spostarlo. L'anteprima mostra i valori attuali; i colori del satellite possono differire un po'.",
-    "sd_disabled_count": "%s riquadro/i inattivo/i in questa pagina non sono mostrati."
+    "sd_disabled_count": "%s riquadro/i inattivo/i in questa pagina non sono mostrati.",
+    "sd_kind_thermostat": "Termostato",
+    "sd_current_state": "Temperatura attuale",
+    "sd_target_state": "Temperatura desiderata",
+    "sd_relay_state": "Relè del riscaldamento (facoltativo, il punto)",
+    "sd_step": "Passo di − / +"
 }

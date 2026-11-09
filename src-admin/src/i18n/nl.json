@@ -29,5 +29,10 @@
     "sd_satellite": "Satelliet",
     "sd_not_configured": "niet in de lijst met satellieten",
     "sd_how": "Klik op een vrije cel om een tegel toe te voegen, sleep een tegel om hem te verplaatsen. De voorvertoning toont de huidige waarden; de kleuren van de satelliet kunnen iets afwijken.",
-    "sd_disabled_count": "%s inactieve tegel(s) op deze pagina worden niet getoond."
+    "sd_disabled_count": "%s inactieve tegel(s) op deze pagina worden niet getoond.",
+    "sd_kind_thermostat": "Thermostaat",
+    "sd_current_state": "Huidige temperatuur",
+    "sd_target_state": "Gewenste temperatuur",
+    "sd_relay_state": "Verwarmingsrelais (optioneel, de stip)",
+    "sd_step": "Stap van − / +"
 }

@@ -29,5 +29,10 @@
     "sd_satellite": "Satélite",
     "sd_not_configured": "no está en la lista de satélites",
     "sd_how": "Haga clic en una celda libre para añadir un mosaico, arrastre un mosaico para moverlo. La vista previa muestra los valores actuales; los colores del satélite pueden variar un poco.",
-    "sd_disabled_count": "%s mosaico(s) inactivo(s) en esta página no se muestran."
+    "sd_disabled_count": "%s mosaico(s) inactivo(s) en esta página no se muestran.",
+    "sd_kind_thermostat": "Termostato",
+    "sd_current_state": "Temperatura actual",
+    "sd_target_state": "Temperatura deseada",
+    "sd_relay_state": "Relé de la calefacción (opcional, el punto)",
+    "sd_step": "Paso de − / +"
 }

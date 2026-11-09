@@ -51,8 +51,11 @@ const KIND_KEYS: Record<Kind, string> = {
     switch: 'sd_kind_switch',
     dimmer: 'sd_kind_dimmer',
     button: 'sd_kind_button',
+    thermostat: 'sd_kind_thermostat',
 };
 const SIZE_LABELS: Record<Size, string> = { s: '1 × 1', q: '1 × 2', w: '2 × 1', l: '2 × 2' };
+
+type StateAttr = 'state' | 'state2' | 'state3';
 
 const COLOR = {
     screen: '#0B1118',
@@ -61,13 +64,15 @@ const COLOR = {
     label: '#8A9AAC',
     accent: '#38BDF8',
     track: '#2E3A47',
+    heatOn: '#4CAF50',
+    heatOff: '#4B5563',
 };
 
 interface TileEditorState extends ConfigGenericState {
     satellite: string;
     page: number;
     selected: number;
-    pickFor: 'state' | 'state2' | null;
+    pickFor: StateAttr | null;
     dragging: number;
     values: Record<string, ioBroker.StateValue | undefined>;
     names: Record<string, string>;
@@ -135,7 +140,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         const socket = this.props.oContext.socket;
         const ids = new Set<string>();
         for (const t of this.pageTiles()) {
-            for (const id of [t.tile.state, t.tile.state2]) {
+            for (const id of [t.tile.state, t.tile.state2, t.tile.state3]) {
                 if (id && !(id in this.state.values)) {
                     ids.add(id);
                 }
@@ -211,7 +216,14 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                 }
             }
         }
-        this.update(index, { type, size, col, row, state2: type === 'dimmer' ? t.state2 : '' });
+        this.update(index, {
+            type,
+            size,
+            col,
+            row,
+            state2: type === 'dimmer' || type === 'thermostat' ? t.state2 : '',
+            state3: type === 'thermostat' ? t.state3 || '' : '',
+        });
     }
 
     changePage(index: number, page: number): void {
@@ -280,7 +292,107 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                 />
             </div>
         );
+        const arc = (d: number, style: React.CSSProperties): React.JSX.Element => {
+            const r = d / 2 - px(4);
+            const len = Math.PI * 2 * r * 0.75;
+            return (
+                <svg
+                    width={d}
+                    height={d}
+                    style={style}
+                >
+                    <circle
+                        cx={d / 2}
+                        cy={d / 2}
+                        r={r}
+                        fill="none"
+                        stroke={COLOR.track}
+                        strokeWidth={px(5)}
+                        strokeDasharray={`${len} ${len * 2}`}
+                        transform={`rotate(135 ${d / 2} ${d / 2})`}
+                        strokeLinecap="round"
+                    />
+                    <circle
+                        cx={d / 2}
+                        cy={d / 2}
+                        r={r}
+                        fill="none"
+                        stroke={COLOR.accent}
+                        strokeWidth={px(5)}
+                        strokeDasharray={`${len * frac} ${len * 3}`}
+                        transform={`rotate(135 ${d / 2} ${d / 2})`}
+                        strokeLinecap="round"
+                    />
+                    <text
+                        x={d / 2}
+                        y={d / 2 + px(4)}
+                        textAnchor="middle"
+                        fill="#fff"
+                        fontSize={px(11)}
+                    >
+                        {shown}
+                    </text>
+                </svg>
+            );
+        };
         switch (t.type) {
+            case 'thermostat': {
+                const target = this.state.values[t.state2];
+                const step = Number(t.step) > 0 ? Number(t.step) : 0.5;
+                const targetText =
+                    typeof target === 'number'
+                        ? `${target.toFixed(step < 1 ? 1 : 0)}${t.unit ? ` ${t.unit}` : ''}`
+                        : '–';
+                const relay = t.state3 ? this.state.values[t.state3] : undefined;
+                const dot =
+                    t.state3 && relay !== undefined && relay !== null ? (
+                        <div
+                            style={{
+                                position: 'absolute',
+                                right: px(6),
+                                top: px(5),
+                                width: px(10),
+                                height: px(10),
+                                borderRadius: '50%',
+                                background: relay === true || Number(relay) > 0 ? COLOR.heatOn : COLOR.heatOff,
+                            }}
+                        />
+                    ) : null;
+                const stepRow = (
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            color: COLOR.label,
+                            flex: 1,
+                        }}
+                    >
+                        <span style={{ fontSize: px(18), fontWeight: 700 }}>−</span>
+                        <span style={{ fontSize: t.size === 'l' ? px(22) : px(11), color: t.size === 'l' ? '#fff' : COLOR.label }}>
+                            {targetText}
+                        </span>
+                        <span style={{ fontSize: px(18), fontWeight: 700 }}>+</span>
+                    </div>
+                );
+                return t.size === 'l' ? (
+                    <>
+                        {dot}
+                        {label}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: px(12) }}>
+                            {arc(px(52), { display: 'block', flex: 'none' })}
+                            {stepRow}
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        {dot}
+                        {label}
+                        {arc(px(46), { display: 'block', margin: '0 auto' })}
+                        <div style={{ display: 'flex', marginTop: -px(4) }}>{stepRow}</div>
+                    </>
+                );
+            }
             case 'gauge': {
                 const d = px(56);
                 const r = d / 2 - px(4);
@@ -522,6 +634,8 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                 height: h,
                                 boxSizing: 'border-box',
                                 padding: `${px(4)}px ${px(7)}px`,
+                                display: tile.type === 'thermostat' ? 'flex' : undefined,
+                                flexDirection: tile.type === 'thermostat' ? 'column' : undefined,
                                 background: on ? COLOR.tileOn : COLOR.tile,
                                 borderRadius: px(8),
                                 color: '#fff',
@@ -540,7 +654,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         );
     }
 
-    renderStateField(index: number, t: TileRow, attr: 'state' | 'state2', label: string): React.JSX.Element {
+    renderStateField(index: number, t: TileRow, attr: StateAttr, label: string): React.JSX.Element {
         return (
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                 <TextField
@@ -576,7 +690,9 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         }
         const tiles = this.tiles();
         const num = (v: string): number | '' => (v === '' ? '' : Number(v));
-        const scaled = t.type === 'gauge' || t.type === 'bar' || t.type === 'chart';
+        const scaled = t.type === 'gauge' || t.type === 'bar' || t.type === 'chart' || t.type === 'thermostat';
+        const stateLabel =
+            t.type === 'dimmer' ? 'sd_level_state' : t.type === 'thermostat' ? 'sd_current_state' : 'sd_state';
         return (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, minWidth: 260, maxWidth: 360, flex: 1 }}>
                 <FormControlLabel
@@ -630,8 +746,10 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                         ))}
                     </ToggleButtonGroup>
                 </Box>
-                {this.renderStateField(index, t, 'state', t.type === 'dimmer' ? 'sd_level_state' : 'sd_state')}
+                {this.renderStateField(index, t, 'state', stateLabel)}
                 {t.type === 'dimmer' ? this.renderStateField(index, t, 'state2', 'sd_onoff_state') : null}
+                {t.type === 'thermostat' ? this.renderStateField(index, t, 'state2', 'sd_target_state') : null}
+                {t.type === 'thermostat' ? this.renderStateField(index, t, 'state3', 'sd_relay_state') : null}
                 <Box sx={{ display: 'flex', gap: 1 }}>
                     <TextField
                         variant="standard"
@@ -704,6 +822,17 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                             </>
                         ) : null}
                     </Box>
+                ) : null}
+                {t.type === 'thermostat' ? (
+                    <TextField
+                        variant="standard"
+                        type="number"
+                        label={I18n.t('sd_step')}
+                        placeholder="0.5"
+                        value={t.step ?? ''}
+                        slotProps={{ htmlInput: { min: 0.1, step: 0.1 } }}
+                        onChange={e => this.update(index, { step: num(e.target.value) })}
+                    />
                 ) : null}
                 <TextField
                     select

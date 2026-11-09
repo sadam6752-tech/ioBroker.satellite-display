@@ -46,6 +46,7 @@ to 8 tiles. Swipe left from the clock to reach them; a page without tiles is ski
 | Switch | name, toggle; the tile lights up when on | small, square, wide | toggles the state |
 | Dimmer | name, toggle, slider, percent | wide, large | toggle and slider write the states |
 | Button | icon, name | small, square, wide | writes `true` to the state |
+| Thermostat | name, arc with the current temperature, − target +, a dot for the heating relay | square, large | − and + write the target |
 
 ## Settings
 
@@ -66,6 +67,11 @@ Details of the kinds:
   writes the level when it is released. The second state is its on/off. Without a second state a level of 0 is off,
   and switching on restores the last level.
 - **Button:** writes `true` (or `1` for a number state), e.g. to a scene or a script trigger.
+- **Thermostat:** three states: the current temperature (the arc), the target temperature (written by − and +)
+  and, optional, the heating relay (the dot: green on, grey off). − and + change the target on the screen at
+  once by the step (0.5 unless set); one second after the last press the adapter writes it. The scale and the
+  limits of the target come from the object of the target temperature (`min`/`max`), else 5-30. Needs the
+  satellite firmware **2.0.1**; an older firmware is reported in the log and the tile is left out.
 - A value that is no number (text, `true`/`false`) shows as text on a value tile.
 
 The toggle and the slider change at once on the screen. When the device does not follow, the tile shows the real
@@ -97,6 +103,12 @@ again by itself.
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+
+### 0.0.2 (2026-11-09)
+
+- Thermostat tile: current temperature in an arc, the target temperature with − and +, a dot for the heating
+  relay (satellite firmware 2.0.1)
+- Released through GitHub Actions with provenance
 
 ### 0.0.1 (2026-11-09)
 

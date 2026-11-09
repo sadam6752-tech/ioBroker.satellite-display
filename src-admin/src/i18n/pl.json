@@ -29,5 +29,10 @@
     "sd_satellite": "Satelita",
     "sd_not_configured": "brak na liście satelitów",
     "sd_how": "Kliknij wolną komórkę, aby dodać kafelek, przeciągnij kafelek, aby go przenieść. Podgląd pokazuje bieżące wartości; kolory na satelicie mogą się nieco różnić.",
-    "sd_disabled_count": "Nieaktywne kafelki na tej stronie, które nie są pokazane: %s."
+    "sd_disabled_count": "Nieaktywne kafelki na tej stronie, które nie są pokazane: %s.",
+    "sd_kind_thermostat": "Termostat z nastawą",
+    "sd_current_state": "Temperatura bieżąca",
+    "sd_target_state": "Temperatura zadana",
+    "sd_relay_state": "Przekaźnik ogrzewania (opcjonalnie, kropka)",
+    "sd_step": "Krok − / +"
 }

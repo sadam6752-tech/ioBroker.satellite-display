@@ -1,7 +1,17 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const { toNumber, isOn, textOf, nameOf, levelPercent, levelValue, switchValue, tileArgs } = require('../../lib/values');
+const {
+    toNumber,
+    isOn,
+    textOf,
+    nameOf,
+    levelPercent,
+    levelValue,
+    switchValue,
+    setpointValue,
+    tileArgs,
+} = require('../../lib/values');
 
 /**
  * @param {object} extra - Fields of the tile
@@ -127,5 +137,25 @@ describe('values', () => {
         const args = tileArgs(tile({ label: 'A very long name that does not fit', unit: 'abcdefghij' }), null, 'en');
         assert.equal(args.label.length, 24);
         assert.equal(String(args.unit).length, 8);
+    });
+
+    it('takes the scale and the unit of a thermostat from its target temperature', () => {
+        const target = { common: { name: 'Soll', type: 'number', role: 'level.temperature', unit: '°C', min: 10, max: 28 } };
+        const args = tileArgs(tile({ type: 'thermostat', size: 'q', state2: 'a.0.soll' }), null, 'en', target);
+        assert.equal(args.min, 10);
+        assert.equal(args.max, 28);
+        assert.equal(args.unit, '°C');
+        assert.equal(args.decimals, 1);
+        const plain = tileArgs(tile({ type: 'thermostat', size: 'q', state2: 'a.0.soll' }), null, 'en', null);
+        assert.deepEqual([plain.min, plain.max], [5, 30]);
+    });
+
+    it('puts a setpoint on the grid of its step and into the range of the object', () => {
+        assert.equal(setpointValue(21.4, 0.5, {}), 21.5);
+        assert.equal(setpointValue(21.1 + 0.4, 0.5, {}), 21.5);
+        assert.equal(setpointValue(22.2, 1, {}), 22);
+        assert.equal(setpointValue(35, 0.5, { min: 5, max: 30 }), 30);
+        assert.equal(setpointValue(2, 0.5, { min: 5, max: 30 }), 5);
+        assert.equal(setpointValue(20.26, 0.1, {}), 20.3);
     });
 });

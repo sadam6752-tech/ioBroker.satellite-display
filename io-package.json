@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "satellite-display",
-        "version": "0.0.1",
+        "version": "0.0.2",
         "news": {
+            "0.0.2": {
+                "en": "Thermostat tile: current temperature, target with - and +, heating relay (satellite firmware 2.0.1)",
+                "de": "Thermostat-Kachel: Ist-Temperatur, Soll mit - und +, Heizungsrelais (Satelliten-Firmware 2.0.1)",
+                "ru": "Плитка термостата: текущая температура, заданная с - и +, реле отопления (прошивка сателлита 2.0.1)",
+                "pt": "Bloco de termostato: temperatura atual, alvo com - e +, relé do aquecimento (firmware do satélite 2.0.1)",
+                "nl": "Thermostaattegel: huidige temperatuur, doel met - en +, verwarmingsrelais (satellietfirmware 2.0.1)",
+                "fr": "Tuile thermostat : température actuelle, consigne avec - et +, relais du chauffage (firmware du satellite 2.0.1)",
+                "it": "Riquadro termostato: temperatura attuale, obiettivo con - e +, relè del riscaldamento (firmware del satellite 2.0.1)",
+                "es": "Mosaico de termostato: temperatura actual, objetivo con - y +, relé de la calefacción (firmware del satélite 2.0.1)",
+                "pl": "Kafelek termostatu: temperatura bieżąca, zadana z - i +, przekaźnik ogrzewania (firmware satelity 2.0.1)",
+                "uk": "Плитка термостата: поточна температура, задана з - і +, реле опалення (прошивка сателіта 2.0.1)",
+                "zh-cn": "恒温器磁贴：当前温度、用 - 和 + 调节的目标温度、供暖继电器（卫星固件 2.0.1）"
+            },
             "0.0.1": {
                 "en": "First version: tile pages on the touch display of ESPHome voice satellites",
                 "de": "Erste Version: Kachelseiten auf dem Touch-Display von ESPHome-Sprachsatelliten",

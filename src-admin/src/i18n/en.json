@@ -29,5 +29,10 @@
     "sd_satellite": "Satellite",
     "sd_not_configured": "not in the list of satellites",
     "sd_how": "Click a free cell to add a tile, drag a tile to move it. The preview shows the current values; the colours of the satellite may differ a little.",
-    "sd_disabled_count": "%s inactive tile(s) on this page are not shown."
+    "sd_disabled_count": "%s inactive tile(s) on this page are not shown.",
+    "sd_kind_thermostat": "Thermostat",
+    "sd_current_state": "Current temperature",
+    "sd_target_state": "Target temperature",
+    "sd_relay_state": "Heating relay (optional, the dot)",
+    "sd_step": "Step of − / +"
 }

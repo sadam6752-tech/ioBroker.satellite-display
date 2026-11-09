@@ -109,6 +109,33 @@ describe('layout', () => {
         assert.match(problems[7], /no state chosen/);
     });
 
+    it('needs the target temperature for a thermostat, keeps its relay and step', () => {
+        const problems = [];
+        const sats = normalizeSatellites(SATS, problems);
+        const tiles = normalizeTiles(
+            [
+                row({ type: 'thermostat', state2: 'a.0.soll', state3: 'a.0.relay', step: '1' }),
+                row({ type: 'thermostat', col: 1, state2: 'a.0.soll' }),
+                row({ type: 'thermostat', row: 2 }),
+                row({ type: 'thermostat', row: 2, col: 1, size: 's', state2: 'a.0.soll' }),
+                row({ type: 'value', row: 2, state2: 'a.0.x', state3: 'a.0.y' }),
+            ],
+            sats,
+            problems,
+        );
+        assert.equal(problems.length, 2);
+        assert.match(problems[0], /^Tile 3: a thermostat needs the state of its target temperature/);
+        assert.match(problems[1], /^Tile 4: a thermostat tile comes in the sizes q, l/);
+        assert.deepEqual(
+            tiles.map(t => [t.state2, t.state3, t.step]),
+            [
+                ['a.0.soll', 'a.0.relay', 1],
+                ['a.0.soll', '', 0.5],
+                ['', '', 0.5],
+            ],
+        );
+    });
+
     it('allows eight small tiles on a page and refuses the ninth (the grid is full)', () => {
         const problems = [];
         const sats = normalizeSatellites(SATS, problems);

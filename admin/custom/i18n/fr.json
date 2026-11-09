@@ -29,5 +29,10 @@
     "sd_satellite": "Satellite vocal",
     "sd_not_configured": "absent de la liste des satellites",
     "sd_how": "Cliquez sur une case libre pour ajouter une tuile, faites glisser une tuile pour la déplacer. L'aperçu montre les valeurs actuelles ; les couleurs du satellite peuvent différer un peu.",
-    "sd_disabled_count": "%s tuile(s) inactive(s) sur cette page ne sont pas affichées."
+    "sd_disabled_count": "%s tuile(s) inactive(s) sur cette page ne sont pas affichées.",
+    "sd_kind_thermostat": "Thermostat d'ambiance",
+    "sd_current_state": "Température actuelle",
+    "sd_target_state": "Température de consigne",
+    "sd_relay_state": "Relais du chauffage (facultatif, le point)",
+    "sd_step": "Pas de − / +"
 }
