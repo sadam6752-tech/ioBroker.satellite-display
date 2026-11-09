@@ -1,0 +1,229 @@
+{
+    "i18n": true,
+    "type": "tabs",
+    "items": {
+        "_satellites": {
+            "type": "panel",
+            "label": "Satellites",
+            "items": {
+                "_satellitesIntro": {
+                    "type": "staticText",
+                    "text": "Satellites with the Waveshare voice firmware 2.0.0 or newer. The adapter connects next to ioBroker.assistant, the voice stays there.",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "satellites": {
+                    "type": "table",
+                    "label": "Satellites",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "items": [
+                        { "type": "checkbox", "attr": "enabled", "title": "Active", "width": "8%", "default": true },
+                        { "type": "text", "attr": "name", "title": "Room or name", "width": "25%", "default": "" },
+                        { "type": "text", "attr": "host", "title": "IP address", "width": "25%", "default": "" },
+                        { "type": "number", "attr": "port", "title": "API port", "width": "12%", "min": 1, "max": 65535, "default": 6053 },
+                        { "type": "text", "attr": "encryptionKey", "title": "API encryption key (only when the firmware has one)", "width": "30%", "default": "" }
+                    ]
+                }
+            }
+        },
+        "_tiles": {
+            "type": "panel",
+            "label": "Tiles",
+            "items": {
+                "_tilesIntro": {
+                    "type": "staticText",
+                    "text": "Each satellite has 4 pages with a grid of 2 columns and 4 rows. A tile takes 1 cell (small), 1 × 2 cells (square), 2 × 1 cells (wide) or 2 × 2 cells (large). Empty name, unit and scale come from the object of the state.",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "tiles": {
+                    "type": "table",
+                    "label": "Tiles",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "items": [
+                        { "type": "checkbox", "attr": "enabled", "title": "Active", "width": "4%", "default": true },
+                        { "type": "text", "attr": "satellite", "title": "Satellite", "width": "8%", "default": "" },
+                        {
+                            "type": "select",
+                            "attr": "page",
+                            "title": "Page",
+                            "width": "5%",
+                            "default": 1,
+                            "noTranslation": true,
+                            "options": [
+                                { "label": "1", "value": 1 },
+                                { "label": "2", "value": 2 },
+                                { "label": "3", "value": 3 },
+                                { "label": "4", "value": 4 }
+                            ]
+                        },
+                        {
+                            "type": "select",
+                            "attr": "col",
+                            "title": "Column",
+                            "width": "6%",
+                            "default": 0,
+                            "options": [
+                                { "label": "left", "value": 0 },
+                                { "label": "right", "value": 1 }
+                            ]
+                        },
+                        {
+                            "type": "select",
+                            "attr": "row",
+                            "title": "Row",
+                            "width": "5%",
+                            "default": 0,
+                            "noTranslation": true,
+                            "options": [
+                                { "label": "1", "value": 0 },
+                                { "label": "2", "value": 1 },
+                                { "label": "3", "value": 2 },
+                                { "label": "4", "value": 3 }
+                            ]
+                        },
+                        {
+                            "type": "select",
+                            "attr": "size",
+                            "title": "Size",
+                            "width": "8%",
+                            "default": "q",
+                            "options": [
+                                { "label": "small (1 × 1)", "value": "s" },
+                                { "label": "square (1 × 2)", "value": "q" },
+                                { "label": "wide (2 × 1)", "value": "w" },
+                                { "label": "large (2 × 2)", "value": "l" }
+                            ]
+                        },
+                        {
+                            "type": "select",
+                            "attr": "type",
+                            "title": "Kind of tile",
+                            "width": "8%",
+                            "default": "value",
+                            "options": [
+                                { "label": "Value", "value": "value" },
+                                { "label": "Gauge", "value": "gauge" },
+                                { "label": "Value with bar", "value": "bar" },
+                                { "label": "Value with chart", "value": "chart" },
+                                { "label": "Switch", "value": "switch" },
+                                { "label": "Dimmer with switch and slider", "value": "dimmer" },
+                                { "label": "Button", "value": "button" }
+                            ]
+                        },
+                        { "type": "objectId", "attr": "state", "title": "State", "width": "14%", "default": "" },
+                        { "type": "objectId", "attr": "state2", "title": "On/off state of a dimmer", "width": "10%", "default": "" },
+                        { "type": "text", "attr": "label", "title": "Name on the tile", "width": "8%", "default": "" },
+                        { "type": "text", "attr": "unit", "title": "Unit", "width": "4%", "default": "" },
+                        {
+                            "type": "select",
+                            "attr": "icon",
+                            "title": "Icon",
+                            "width": "7%",
+                            "default": "",
+                            "noTranslation": true,
+                            "options": [
+                                { "label": "-", "value": "" },
+                                { "label": "lightbulb", "value": "lightbulb" },
+                                { "label": "lamp", "value": "lamp" },
+                                { "label": "ceiling-light", "value": "ceiling-light" },
+                                { "label": "power-plug", "value": "power-plug" },
+                                { "label": "power", "value": "power" },
+                                { "label": "fan", "value": "fan" },
+                                { "label": "radiator", "value": "radiator" },
+                                { "label": "thermometer", "value": "thermometer" },
+                                { "label": "water-percent", "value": "water-percent" },
+                                { "label": "flash", "value": "flash" },
+                                { "label": "solar-power", "value": "solar-power" },
+                                { "label": "battery", "value": "battery" },
+                                { "label": "window-closed", "value": "window-closed" },
+                                { "label": "window-open", "value": "window-open" },
+                                { "label": "door", "value": "door" },
+                                { "label": "garage", "value": "garage" },
+                                { "label": "blinds", "value": "blinds" },
+                                { "label": "lock", "value": "lock" },
+                                { "label": "lock-open", "value": "lock-open" },
+                                { "label": "bell", "value": "bell" },
+                                { "label": "television", "value": "television" },
+                                { "label": "movie", "value": "movie" },
+                                { "label": "music", "value": "music" },
+                                { "label": "speaker", "value": "speaker" },
+                                { "label": "coffee", "value": "coffee" },
+                                { "label": "washing-machine", "value": "washing-machine" },
+                                { "label": "dishwasher", "value": "dishwasher" },
+                                { "label": "car", "value": "car" },
+                                { "label": "home", "value": "home" },
+                                { "label": "bed", "value": "bed" },
+                                { "label": "sofa", "value": "sofa" },
+                                { "label": "shower", "value": "shower" },
+                                { "label": "weather-sunny", "value": "weather-sunny" },
+                                { "label": "weather-night", "value": "weather-night" },
+                                { "label": "alarm", "value": "alarm" },
+                                { "label": "play", "value": "play" },
+                                { "label": "pause", "value": "pause" },
+                                { "label": "stop", "value": "stop" },
+                                { "label": "check", "value": "check" },
+                                { "label": "close", "value": "close" }
+                            ]
+                        },
+                        { "type": "number", "attr": "decimals", "title": "Decimals", "width": "4%", "min": 0, "max": 3 },
+                        { "type": "number", "attr": "min", "title": "Scale from", "width": "4%" },
+                        { "type": "number", "attr": "max", "title": "Scale to", "width": "4%" }
+                    ]
+                },
+                "_tilesHelp": {
+                    "type": "staticText",
+                    "text": "A switch and a button write the state when touched (a button writes true). A dimmer takes its level from the state (0-100 or the range of the object) and its on/off from the second state; without a second state, a level of 0 is off.",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                }
+            }
+        },
+        "_charts": {
+            "type": "panel",
+            "label": "Charts",
+            "items": {
+                "historyInstance": {
+                    "type": "instance",
+                    "adapter": "_dataSources",
+                    "label": "History adapter for the charts",
+                    "help": "Empty: a chart starts empty and draws the values as they come",
+                    "allowDeactivate": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "chartHours": {
+                    "type": "number",
+                    "label": "Hours shown in a chart",
+                    "min": 1,
+                    "max": 168,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                }
+            }
+        }
+    }
+}
