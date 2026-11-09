@@ -19,6 +19,7 @@ const {
     levelValue,
     switchValue,
     setpointValue,
+    alertColor,
     tileArgs,
 } = require('./lib/values');
 
@@ -42,6 +43,7 @@ const PREVIEW_MS = 10 * 60_000;
  * @property {Partial<ioBroker.StateCommon>} common2 - Common part of the object of the second state (on/off of a
  *   dimmer, target temperature of a thermostat)
  * @property {number} lastLevel - Last level above 0 of a dimmer (switched on again with it)
+ * @property {number} lastColor - Colour last sent with tile_color, -1 = none since tile_set
  */
 
 class SatelliteDisplay extends utils.Adapter {
@@ -229,6 +231,7 @@ class SatelliteDisplay extends utils.Adapter {
                 common: /** @type {Partial<ioBroker.StateCommon>} */ (obj?.common || {}),
                 common2: /** @type {Partial<ioBroker.StateCommon>} */ (obj2?.common || {}),
                 lastLevel: 100,
+                lastColor: -1,
             };
             result.push(b);
         }
@@ -351,6 +354,8 @@ class SatelliteDisplay extends utils.Adapter {
         const mine = this.shownOn(sat.id).filter(b => this.supported(sat, link, b));
         for (const b of mine) {
             link.call('tile_set', b.args);
+            // tile_set starts with the colours of the theme
+            b.lastColor = -1;
         }
         for (const b of mine) {
             await this.pushAll(b);
@@ -424,6 +429,7 @@ class SatelliteDisplay extends utils.Adapter {
                     link.call('tile_text', { page, slot, value: mapped });
                 } else if (n !== null) {
                     link.call('tile_value', { page, slot, value: n });
+                    this.sendColor(link, b, n);
                 } else if (val !== null && val !== undefined) {
                     link.call('tile_text', { page, slot, value: textOf(val, this.lang) });
                 }
@@ -435,6 +441,7 @@ class SatelliteDisplay extends utils.Adapter {
                 const n = toNumber(val);
                 if (n !== null) {
                     link.call('tile_value', { page, slot, value: n });
+                    this.sendColor(link, b, n);
                 }
                 break;
             }
@@ -463,6 +470,7 @@ class SatelliteDisplay extends utils.Adapter {
                     const n = toNumber(val);
                     if (n !== null) {
                         link.call('tile_value', { page, slot, value: n });
+                        this.sendColor(link, b, n);
                     }
                 }
                 if (id === b.tile.state2 && link.has('tile_setpoint')) {
@@ -477,6 +485,25 @@ class SatelliteDisplay extends utils.Adapter {
                 break;
             default:
                 break;
+        }
+    }
+
+    /**
+     * Red beyond a threshold of the tile, the colours of the theme else; sent only when it changes. A firmware
+     * without tile_color (before 2.0.3) gets none.
+     *
+     * @param {SatelliteLink} link - Connection of the satellite
+     * @param {Bound} b - Tile
+     * @param {number} value - Its value
+     */
+    sendColor(link, b, value) {
+        if ((b.tile.alertBelow === null && b.tile.alertAbove === null) || !link.has('tile_color')) {
+            return;
+        }
+        const color = alertColor(value, b.tile);
+        if (color !== b.lastColor) {
+            b.lastColor = color;
+            link.call('tile_color', { page: b.tile.page, slot: b.tile.slot, color });
         }
     }
 

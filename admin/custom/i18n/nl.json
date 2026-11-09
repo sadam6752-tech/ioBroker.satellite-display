@@ -59,5 +59,7 @@
     "sd_preview_not_saved": "Sla eerst de instellingen op: de adapter kent alleen de satellieten van de opgeslagen instellingen.",
     "sd_hint_missing": "Een state van deze tegel bestaat niet.",
     "sd_hint_read_only": "Deze state is alleen-lezen: een aanraking van de tegel schakelt hem niet.",
-    "sd_hint_not_number": "Deze tegel toont getallen, maar de state is geen getal."
+    "sd_hint_not_number": "Deze tegel toont getallen, maar de state is geen getal.",
+    "sd_alert_below": "Rood onder",
+    "sd_alert_above": "Rood boven"
 }

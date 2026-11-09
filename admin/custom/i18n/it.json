@@ -59,5 +59,7 @@
     "sd_preview_not_saved": "Salva prima le impostazioni: l'adattatore conosce solo i satelliti delle impostazioni salvate.",
     "sd_hint_missing": "Uno stato di questo riquadro non esiste.",
     "sd_hint_read_only": "Questo stato è di sola lettura: toccare il riquadro non lo commuta.",
-    "sd_hint_not_number": "Questo riquadro mostra numeri, ma lo stato non è un numero."
+    "sd_hint_not_number": "Questo riquadro mostra numeri, ma lo stato non è un numero.",
+    "sd_alert_below": "Rosso sotto",
+    "sd_alert_above": "Rosso sopra"
 }

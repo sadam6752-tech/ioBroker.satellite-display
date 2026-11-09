@@ -136,6 +136,27 @@ describe('layout', () => {
         );
     });
 
+    it('keeps thresholds only for the tiles that show a number', () => {
+        const problems = [];
+        const sats = normalizeSatellites(SATS, problems);
+        const tiles = normalizeTiles(
+            [
+                row({ type: 'bar', alertBelow: '20', alertAbove: '' }),
+                row({ type: 'switch', col: 1, size: 's', alertBelow: 5, alertAbove: 9 }),
+            ],
+            sats,
+            problems,
+        );
+        assert.deepEqual(problems, []);
+        assert.deepEqual(
+            tiles.map(t => [t.alertBelow, t.alertAbove]),
+            [
+                [20, null],
+                [null, null],
+            ],
+        );
+    });
+
     it('allows eight small tiles on a page and refuses the ninth (the grid is full)', () => {
         const problems = [];
         const sats = normalizeSatellites(SATS, problems);

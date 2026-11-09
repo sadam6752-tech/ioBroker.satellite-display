@@ -59,5 +59,7 @@
     "sd_preview_not_saved": "Zuerst die Einstellungen speichern: der Adapter kennt nur die Satelliten der gespeicherten Einstellungen.",
     "sd_hint_missing": "Ein Datenpunkt dieser Kachel existiert nicht.",
     "sd_hint_read_only": "Dieser Datenpunkt ist schreibgeschützt: eine Berührung der Kachel schaltet ihn nicht.",
-    "sd_hint_not_number": "Diese Kachel zeigt Zahlen, der Datenpunkt ist aber keine Zahl."
+    "sd_hint_not_number": "Diese Kachel zeigt Zahlen, der Datenpunkt ist aber keine Zahl.",
+    "sd_alert_below": "Rot unter",
+    "sd_alert_above": "Rot über"
 }

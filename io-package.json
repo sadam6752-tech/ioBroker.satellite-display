@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "satellite-display",
-        "version": "0.0.6",
+        "version": "0.0.7",
         "news": {
+            "0.0.7": {
+                "en": "Thresholds: a tile turns red below or above a value (satellite firmware 2.0.3)",
+                "de": "Schwellwerte: eine Kachel wird unter oder über einem Wert rot (Satelliten-Firmware 2.0.3)",
+                "ru": "Пороги: плитка становится красной ниже или выше значения (прошивка сателлита 2.0.3)",
+                "pt": "Limites: um bloco fica vermelho abaixo ou acima de um valor (firmware do satélite 2.0.3)",
+                "nl": "Drempels: een tegel wordt rood onder of boven een waarde (satellietfirmware 2.0.3)",
+                "fr": "Seuils : une tuile devient rouge en dessous ou au-dessus d'une valeur (firmware du satellite 2.0.3)",
+                "it": "Soglie: un riquadro diventa rosso sotto o sopra un valore (firmware del satellite 2.0.3)",
+                "es": "Umbrales: un mosaico se vuelve rojo por debajo o por encima de un valor (firmware del satélite 2.0.3)",
+                "pl": "Progi: kafelek robi się czerwony poniżej lub powyżej wartości (firmware satelity 2.0.3)",
+                "uk": "Пороги: плитка стає червоною нижче або вище значення (прошивка сателіта 2.0.3)",
+                "zh-cn": "阈值：数值低于或高于设定值时磁贴变为红色（卫星固件 2.0.3）"
+            },
             "0.0.6": {
                 "en": "Preview on the satellite without saving, real history in the chart preview, texts of common.states on value tiles, hints on unsuitable states",
                 "de": "Vorschau auf dem Satelliten ohne Speichern, echter Verlauf in der Diagramm-Vorschau, Texte aus common.states auf Wert-Kacheln, Hinweise auf unpassende Datenpunkte",

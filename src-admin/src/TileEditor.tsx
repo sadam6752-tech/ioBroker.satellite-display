@@ -34,10 +34,12 @@ import { ConfigGeneric, type ConfigGenericProps, type ConfigGenericState } from 
 
 import {
     COLS,
+    ALERT_KINDS,
     ICONS,
     KINDS,
     PAGES,
     ROWS,
+    alerted,
     SIZES,
     fits,
     freeCell,
@@ -121,6 +123,7 @@ const COLOR = {
     track: '#2E3A47',
     heatOn: '#4CAF50',
     heatOff: '#4B5563',
+    alert: '#EF4444',
 };
 
 interface TileEditorState extends ConfigGenericState {
@@ -779,14 +782,16 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             </div>
         );
         const big = h > px(60);
-        const valueText = <div style={{ fontSize: big ? px(22) : px(14) }}>{shown}</div>;
+        const accent = alerted(t, num) ? COLOR.alert : COLOR.accent;
+        const valueColor = alerted(t, num) ? COLOR.alert : undefined;
+        const valueText = <div style={{ fontSize: big ? px(22) : px(14), color: valueColor }}>{shown}</div>;
         const toggle = (
             <div
                 style={{
                     width: px(26),
                     height: px(14),
                     borderRadius: px(7),
-                    background: on ? COLOR.accent : COLOR.track,
+                    background: on ? accent : COLOR.track,
                     position: 'relative',
                     flex: 'none',
                 }}
@@ -829,7 +834,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                         cy={d / 2}
                         r={r}
                         fill="none"
-                        stroke={COLOR.accent}
+                        stroke={accent}
                         strokeWidth={px(5)}
                         strokeDasharray={`${len * frac} ${len * 3}`}
                         transform={`rotate(135 ${d / 2} ${d / 2})`}
@@ -933,7 +938,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                 cy={d / 2}
                                 r={r}
                                 fill="none"
-                                stroke={COLOR.accent}
+                                stroke={accent}
                                 strokeWidth={px(5)}
                                 strokeDasharray={`${len * frac} ${len * 3}`}
                                 transform={`rotate(135 ${d / 2} ${d / 2})`}
@@ -975,7 +980,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                         style={{
                                             width: `${frac * 100}%`,
                                             height: '100%',
-                                            background: COLOR.accent,
+                                            background: accent,
                                             borderRadius: px(2),
                                         }}
                                     />
@@ -988,7 +993,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                 >
                                     <polyline
                                         fill="none"
-                                        stroke={COLOR.accent}
+                                        stroke={accent}
                                         strokeWidth={2}
                                         points={line.points
                                             .map((v, i, a) => `${(i * (w - px(16))) / (a.length - 1)},${v * px(14)}`)
@@ -1012,7 +1017,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                             >
                                 <polyline
                                     fill="none"
-                                    stroke={COLOR.accent}
+                                    stroke={accent}
                                     strokeWidth={2}
                                     points={line.points
                                         .map((v, i, a) => `${(i * (w - px(16))) / (a.length - 1)},${v * px(18)}`)
@@ -1039,7 +1044,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                 style={{
                                     width: `${frac * 100}%`,
                                     height: '100%',
-                                    background: COLOR.accent,
+                                    background: accent,
                                     borderRadius: px(3),
                                 }}
                             />
@@ -1079,7 +1084,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                 style={{
                                     width: `${Number.isFinite(num) ? Math.max(0, Math.min(100, num)) : 50}%`,
                                     height: '100%',
-                                    background: COLOR.accent,
+                                    background: accent,
                                     borderRadius: px(3),
                                 }}
                             />
@@ -1105,7 +1110,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                             <TileIcon
                                 name={t.icon}
                                 size={px(20)}
-                                color={COLOR.accent}
+                                color={accent}
                             />
                         ) : null}
                         <span style={{ fontSize: px(11) }}>{name}</span>
@@ -1444,6 +1449,26 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                 />
                             </>
                         ) : null}
+                    </Box>
+                ) : null}
+                {ALERT_KINDS.includes(t.type) ? (
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        <TextField
+                            variant="standard"
+                            type="number"
+                            sx={{ flex: 1 }}
+                            label={I18n.t('sd_alert_below')}
+                            value={t.alertBelow ?? ''}
+                            onChange={e => this.update(index, { alertBelow: num(e.target.value) })}
+                        />
+                        <TextField
+                            variant="standard"
+                            type="number"
+                            sx={{ flex: 1 }}
+                            label={I18n.t('sd_alert_above')}
+                            value={t.alertAbove ?? ''}
+                            onChange={e => this.update(index, { alertAbove: num(e.target.value) })}
+                        />
                     </Box>
                 ) : null}
                 {t.type === 'thermostat' ? (

@@ -59,5 +59,7 @@
     "sd_preview_not_saved": "Guarde primeiro as definições: o adaptador só conhece os satélites das definições guardadas.",
     "sd_hint_missing": "Um estado deste bloco não existe.",
     "sd_hint_read_only": "Este estado é só de leitura: tocar no bloco não o comuta.",
-    "sd_hint_not_number": "Este bloco mostra números, mas o estado não é um número."
+    "sd_hint_not_number": "Este bloco mostra números, mas o estado não é um número.",
+    "sd_alert_below": "Vermelho abaixo de",
+    "sd_alert_above": "Vermelho acima de"
 }

@@ -11,6 +11,8 @@ const {
     switchValue,
     setpointValue,
     stateText,
+    alertColor,
+    ALERT_COLOR,
     tileArgs,
 } = require('../../lib/values');
 
@@ -149,6 +151,16 @@ describe('values', () => {
         assert.equal(args.decimals, 1);
         const plain = tileArgs(tile({ type: 'thermostat', size: 'q', state2: 'a.0.soll' }), null, 'en', null);
         assert.deepEqual([plain.min, plain.max], [5, 30]);
+    });
+
+    it('turns a tile red beyond its thresholds', () => {
+        const both = { alertBelow: 20, alertAbove: 80 };
+        assert.equal(alertColor(10, both), ALERT_COLOR);
+        assert.equal(alertColor(20, both), 0, 'the threshold itself is fine');
+        assert.equal(alertColor(50, both), 0);
+        assert.equal(alertColor(81, both), ALERT_COLOR);
+        assert.equal(alertColor(-5, { alertBelow: null, alertAbove: 30 }), 0);
+        assert.equal(alertColor(31, { alertBelow: null, alertAbove: 30 }), ALERT_COLOR);
     });
 
     it('shows the text that common.states gives a value', () => {

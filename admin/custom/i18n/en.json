@@ -59,5 +59,7 @@
     "sd_preview_not_saved": "Save the settings first: the adapter only knows the satellites of the saved settings.",
     "sd_hint_missing": "A state of this tile does not exist.",
     "sd_hint_read_only": "This state is read-only: a touch on the tile does not switch it.",
-    "sd_hint_not_number": "This tile shows numbers, but the state is no number."
+    "sd_hint_not_number": "This tile shows numbers, but the state is no number.",
+    "sd_alert_below": "Red below",
+    "sd_alert_above": "Red above"
 }

@@ -71,6 +71,9 @@ Details of the kinds:
   writes the level when it is released. The second state is its on/off. Without a second state a level of 0 is off,
   and switching on restores the last level.
 - **Button:** writes `true` (or `1` for a number state), e.g. to a scene or a script trigger.
+- **Thresholds:** value, gauge, bar, chart and thermostat tiles have "Red below" and "Red above": beyond them the
+  value and its arc, bar or line turn red, e.g. a battery below 20 %. Needs the satellite firmware **2.0.3**; an older
+  one keeps the colours.
 - **Thermostat:** three states: the current temperature (the arc), the target temperature (written by − and +)
   and, optional, the heating relay (the dot: green on, grey off). − and + change the target on the screen at
   once by the step (0.5 unless set); one second after the last press the adapter writes it. The scale and the
@@ -113,6 +116,11 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+
+### 0.0.7 (2026-11-09)
+
+- Thresholds: "Red below" / "Red above" turn the value and its arc, bar or line red beyond a value (satellite
+  firmware 2.0.3)
 
 ### 0.0.6 (2026-11-09)
 

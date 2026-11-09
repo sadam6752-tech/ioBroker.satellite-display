@@ -59,5 +59,7 @@
     "sd_preview_not_saved": "Guarde primero la configuración: el adaptador solo conoce los satélites de la configuración guardada.",
     "sd_hint_missing": "Un estado de este mosaico no existe.",
     "sd_hint_read_only": "Este estado es de solo lectura: tocar el mosaico no lo conmuta.",
-    "sd_hint_not_number": "Este mosaico muestra números, pero el estado no es un número."
+    "sd_hint_not_number": "Este mosaico muestra números, pero el estado no es un número.",
+    "sd_alert_below": "Rojo por debajo de",
+    "sd_alert_above": "Rojo por encima de"
 }

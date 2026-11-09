@@ -59,5 +59,7 @@
     "sd_preview_not_saved": "Najpierw zapisz ustawienia: adapter zna tylko satelity z zapisanych ustawień.",
     "sd_hint_missing": "Jeden ze stanów tego kafelka nie istnieje.",
     "sd_hint_read_only": "Ten stan jest tylko do odczytu: dotknięcie kafelka go nie przełączy.",
-    "sd_hint_not_number": "Ten kafelek pokazuje liczby, ale stan nie jest liczbą."
+    "sd_hint_not_number": "Ten kafelek pokazuje liczby, ale stan nie jest liczbą.",
+    "sd_alert_below": "Czerwony poniżej",
+    "sd_alert_above": "Czerwony powyżej"
 }

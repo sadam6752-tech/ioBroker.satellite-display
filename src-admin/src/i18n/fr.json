@@ -59,5 +59,7 @@
     "sd_preview_not_saved": "Enregistrez d'abord les paramètres : l'adaptateur ne connaît que les satellites des paramètres enregistrés.",
     "sd_hint_missing": "Un état de cette tuile n'existe pas.",
     "sd_hint_read_only": "Cet état est en lecture seule : toucher la tuile ne le commute pas.",
-    "sd_hint_not_number": "Cette tuile affiche des nombres, mais l'état n'est pas un nombre."
+    "sd_hint_not_number": "Cette tuile affiche des nombres, mais l'état n'est pas un nombre.",
+    "sd_alert_below": "Rouge en dessous de",
+    "sd_alert_above": "Rouge au-dessus de"
 }

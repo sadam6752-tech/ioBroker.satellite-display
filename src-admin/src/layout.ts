@@ -86,6 +86,22 @@ export interface TileRow {
     min: number | '' | null;
     max: number | '' | null;
     step?: number | '' | null;
+    /** The tile turns red below / above this value */
+    alertBelow?: number | '' | null;
+    alertAbove?: number | '' | null;
+}
+
+/** The kinds that can turn red at a threshold (lib/layout.js ALERT_TYPES) */
+export const ALERT_KINDS: Kind[] = ['value', 'gauge', 'bar', 'chart', 'thermostat'];
+
+/** True when the value is beyond a threshold of the tile (lib/values.js alertColor) */
+export function alerted(t: TileRow, value: number): boolean {
+    if (!Number.isFinite(value) || !ALERT_KINDS.includes(t.type)) {
+        return false;
+    }
+    const below = t.alertBelow === '' || t.alertBelow === null || t.alertBelow === undefined ? null : Number(t.alertBelow);
+    const above = t.alertAbove === '' || t.alertAbove === null || t.alertAbove === undefined ? null : Number(t.alertAbove);
+    return (below !== null && value < below) || (above !== null && value > above);
 }
 
 /**

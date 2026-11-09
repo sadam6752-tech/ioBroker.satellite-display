@@ -59,5 +59,7 @@
     "sd_preview_not_saved": "请先保存设置：适配器只知道已保存设置中的卫星。",
     "sd_hint_missing": "此磁贴的某个状态不存在。",
     "sd_hint_read_only": "此状态为只读：触摸磁贴不会切换它。",
-    "sd_hint_not_number": "此磁贴显示数字，但该状态不是数字。"
+    "sd_hint_not_number": "此磁贴显示数字，但该状态不是数字。",
+    "sd_alert_below": "低于此值显示红色",
+    "sd_alert_above": "高于此值显示红色"
 }
