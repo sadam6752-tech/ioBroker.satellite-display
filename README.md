@@ -98,7 +98,7 @@ again by itself.
     ### **WORK IN PROGRESS**
 -->
 
-### **WORK IN PROGRESS**
+### 0.0.1 (2026-11-09)
 
 - First version: tile pages on the touch display of ESPHome voice satellites, with a graphical tile editor
 
