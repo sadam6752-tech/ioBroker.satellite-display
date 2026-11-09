@@ -48,5 +48,16 @@
     "sd_copy_replace": "%s kafelków na tej stronie zostanie zastąpionych.",
     "sd_copy": "Kopiuj",
     "sd_cancel": "Anuluj",
-    "sd_undo": "Cofnij"
+    "sd_undo": "Cofnij",
+    "sd_preview": "Pokaż na satelicie",
+    "sd_preview_hint": "Pokazuje kafelki tego satelity tak, jak są tutaj, bez zapisywania. Zapisane kafelki wracają po \"Zakończ podgląd\", po zapisaniu lub po 10 minutach.",
+    "sd_preview_end": "Zakończ podgląd",
+    "sd_preview_shown": "Satelita pokazuje %s kafelków z edytora.",
+    "sd_preview_waiting": "Podgląd %s kafelków: satelita nie jest połączony, dostanie je po połączeniu.",
+    "sd_preview_ended": "Satelita znowu pokazuje zapisane kafelki.",
+    "sd_preview_no_adapter": "Adapter nie odpowiada: uruchom instancję (do podglądu musi działać).",
+    "sd_preview_not_saved": "Najpierw zapisz ustawienia: adapter zna tylko satelity z zapisanych ustawień.",
+    "sd_hint_missing": "Jeden ze stanów tego kafelka nie istnieje.",
+    "sd_hint_read_only": "Ten stan jest tylko do odczytu: dotknięcie kafelka go nie przełączy.",
+    "sd_hint_not_number": "Ten kafelek pokazuje liczby, ale stan nie jest liczbą."
 }

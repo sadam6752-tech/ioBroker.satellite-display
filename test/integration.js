@@ -40,6 +40,35 @@ tests.integration(path.join(__dirname, '..'), {
                 const info = await harness.states.getStateAsync('satellite-display.0.info.connection');
                 assert.equal(info?.val, false);
                 assert.ok(harness.isAdapterRunning(), 'the adapter stopped');
+
+                // the preview of the tile editor: a satellite of the saved settings answers, another one not
+                const ask = (command, message) =>
+                    new Promise((resolve, reject) => {
+                        const timer = setTimeout(() => reject(new Error(`no answer to ${command}`)), 20_000);
+                        harness.sendTo('satellite-display.0', command, message, answer => {
+                            clearTimeout(timer);
+                            resolve(answer);
+                        });
+                    });
+                const tile = {
+                    enabled: true,
+                    satellite: 'Test Room',
+                    page: 2,
+                    col: 0,
+                    row: 0,
+                    size: 's',
+                    type: 'value',
+                    state: 'system.adapter.satellite-display.0.alive',
+                };
+                const shown = await ask('preview', { satellite: 'Test Room', tiles: [tile, { ...tile, size: 'x' }] });
+                assert.equal(shown.ok, true, JSON.stringify(shown));
+                assert.equal(shown.tiles, 1);
+                assert.equal(shown.connected, false);
+                assert.equal(shown.problems.length, 1);
+                const unknown = await ask('preview', { satellite: 'Keller', tiles: [tile] });
+                assert.ok(unknown.error, JSON.stringify(unknown));
+                const ended = await ask('previewEnd', { satellite: 'Test Room' });
+                assert.equal(ended.ok, true);
             });
         });
     },

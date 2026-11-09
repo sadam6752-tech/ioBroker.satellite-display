@@ -48,5 +48,16 @@
     "sd_copy_replace": "%s tuiles de cette page sont remplacées.",
     "sd_copy": "Copier",
     "sd_cancel": "Annuler",
-    "sd_undo": "Défaire"
+    "sd_undo": "Défaire",
+    "sd_preview": "Afficher sur le satellite",
+    "sd_preview_hint": "Affiche les tuiles de ce satellite telles qu'elles sont ici, sans enregistrer. Les tuiles enregistrées reviennent avec « Terminer l'aperçu », après l'enregistrement ou après 10 minutes.",
+    "sd_preview_end": "Terminer l'aperçu",
+    "sd_preview_shown": "Le satellite affiche les %s tuiles de l'éditeur.",
+    "sd_preview_waiting": "Aperçu de %s tuiles : le satellite n'est pas connecté, il les reçoit à la connexion.",
+    "sd_preview_ended": "Le satellite affiche de nouveau les tuiles enregistrées.",
+    "sd_preview_no_adapter": "L'adaptateur ne répond pas : démarrez l'instance (elle doit tourner pour l'aperçu).",
+    "sd_preview_not_saved": "Enregistrez d'abord les paramètres : l'adaptateur ne connaît que les satellites des paramètres enregistrés.",
+    "sd_hint_missing": "Un état de cette tuile n'existe pas.",
+    "sd_hint_read_only": "Cet état est en lecture seule : toucher la tuile ne le commute pas.",
+    "sd_hint_not_number": "Cette tuile affiche des nombres, mais l'état n'est pas un nombre."
 }

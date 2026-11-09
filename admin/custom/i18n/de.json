@@ -48,5 +48,16 @@
     "sd_copy_replace": "%s Kacheln auf dieser Seite werden ersetzt.",
     "sd_copy": "Kopieren",
     "sd_cancel": "Abbrechen",
-    "sd_undo": "Rückgängig"
+    "sd_undo": "Rückgängig",
+    "sd_preview": "Auf dem Satelliten zeigen",
+    "sd_preview_hint": "Zeigt die Kacheln dieses Satelliten so, wie sie hier sind, ohne zu speichern. Die gespeicherten Kacheln kommen mit \"Vorschau beenden\", nach dem Speichern oder nach 10 Minuten zurück.",
+    "sd_preview_end": "Vorschau beenden",
+    "sd_preview_shown": "Der Satellit zeigt die %s Kacheln des Editors.",
+    "sd_preview_waiting": "Vorschau mit %s Kacheln: der Satellit ist nicht verbunden, er bekommt sie beim Verbinden.",
+    "sd_preview_ended": "Der Satellit zeigt wieder die gespeicherten Kacheln.",
+    "sd_preview_no_adapter": "Der Adapter antwortet nicht: die Instanz starten (für die Vorschau muss sie laufen).",
+    "sd_preview_not_saved": "Zuerst die Einstellungen speichern: der Adapter kennt nur die Satelliten der gespeicherten Einstellungen.",
+    "sd_hint_missing": "Ein Datenpunkt dieser Kachel existiert nicht.",
+    "sd_hint_read_only": "Dieser Datenpunkt ist schreibgeschützt: eine Berührung der Kachel schaltet ihn nicht.",
+    "sd_hint_not_number": "Diese Kachel zeigt Zahlen, der Datenpunkt ist aber keine Zahl."
 }

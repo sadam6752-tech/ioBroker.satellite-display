@@ -48,5 +48,16 @@
     "sd_copy_replace": "%s tiles on that page are replaced.",
     "sd_copy": "Copy",
     "sd_cancel": "Cancel",
-    "sd_undo": "Undo"
+    "sd_undo": "Undo",
+    "sd_preview": "Show on the satellite",
+    "sd_preview_hint": "Shows the tiles of this satellite as they are here, without saving. The saved tiles come back with \"End preview\", after saving, or after 10 minutes.",
+    "sd_preview_end": "End preview",
+    "sd_preview_shown": "The satellite shows the %s tiles of the editor.",
+    "sd_preview_waiting": "Preview of %s tiles: the satellite is not connected, it gets them when it connects.",
+    "sd_preview_ended": "The satellite shows the saved tiles again.",
+    "sd_preview_no_adapter": "The adapter does not answer: start the instance (it must be running for the preview).",
+    "sd_preview_not_saved": "Save the settings first: the adapter only knows the satellites of the saved settings.",
+    "sd_hint_missing": "A state of this tile does not exist.",
+    "sd_hint_read_only": "This state is read-only: a touch on the tile does not switch it.",
+    "sd_hint_not_number": "This tile shows numbers, but the state is no number."
 }

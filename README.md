@@ -57,7 +57,8 @@ to 8 tiles. Swipe left from the clock to reach them; a page without tiles is ski
    two, click a tile to edit it on the right: kind, size, the state (with the object browser of the admin), name,
    unit, icon and scale. Choosing a state fills in its name and unit; you can change them. Name, unit and scale may
    also stay empty: they come from the object of the state. "Copy page" copies the page to another page or
-   satellite, Ctrl+Z undoes the last changes. A tile the adapter would leave out is marked red, with the reason (a
+   satellite, Ctrl+Z undoes the last changes. "Show on the satellite" puts the tiles of the editor on the satellite
+   without saving, to try sizes and places (the instance must run). A tile the adapter would leave out is marked red, with the reason (a
    size its kind does not come in, a thermostat without its target, more than eight tiles on a page).
 3. **Charts (optional):** a history adapter (history, sql, influxdb). A chart then starts with the last hours of its
    state instead of empty.
@@ -75,7 +76,8 @@ Details of the kinds:
   once by the step (0.5 unless set); one second after the last press the adapter writes it. The scale and the
   limits of the target come from the object of the target temperature (`min`/`max`), else 5-30. Needs the
   satellite firmware **2.0.1**; an older firmware is reported in the log and the tile is left out.
-- A value that is no number (text, `true`/`false`) shows as text on a value tile.
+- A value that is no number (text, `true`/`false`) shows as text on a value tile. When the object of the state has
+  `common.states` (e.g. `0: Aus, 1: Heizen, 2: Kühlen`), the value tile shows that text instead of the number.
 
 The toggle and the slider change at once on the screen. When the device does not follow, the tile shows the real
 state again after three seconds.
@@ -101,6 +103,7 @@ again by itself.
 - The format between adapter and firmware is described in
   [docs/TILES.md of the firmware](https://github.com/sadam6752-tech/esphome-waveshare-esp32-s3-audio-va/blob/main/docs/TILES.md).
 - The icons are a fixed set built into the firmware; the settings offer exactly that list.
+- After an update of the adapter, reload the admin page (F5) once: an open admin keeps the old tile editor in memory.
 
 ## Changelog
 
@@ -110,6 +113,15 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+
+### 0.0.6 (2026-11-09)
+
+- Tile editor: "Show on the satellite" sends the tiles as they are in the editor to the satellite, without saving
+  (back to the saved tiles with "End preview", after saving, or after 10 minutes)
+- The chart preview draws the real history of the state when a history adapter is set
+- A value tile shows the text that `common.states` of the object gives the value (e.g. 1 → "Heizen")
+- The editor warns about a state that does not exist, a read-only state on a switch, and a number tile on a state
+  that is no number
 
 ### 0.0.5 (2026-11-09)
 

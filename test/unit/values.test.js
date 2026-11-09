@@ -10,6 +10,7 @@ const {
     levelValue,
     switchValue,
     setpointValue,
+    stateText,
     tileArgs,
 } = require('../../lib/values');
 
@@ -148,6 +149,18 @@ describe('values', () => {
         assert.equal(args.decimals, 1);
         const plain = tileArgs(tile({ type: 'thermostat', size: 'q', state2: 'a.0.soll' }), null, 'en', null);
         assert.deepEqual([plain.min, plain.max], [5, 30]);
+    });
+
+    it('shows the text that common.states gives a value', () => {
+        const modes = { type: 'number', states: { 0: 'Aus', 1: 'Heizen', 2: { en: 'Cooling', de: 'Kühlen' } } };
+        assert.equal(stateText(1, modes, 'de'), 'Heizen');
+        assert.equal(stateText(2, modes, 'de'), 'Kühlen');
+        assert.equal(stateText(2, modes, 'fr'), 'Cooling');
+        assert.equal(stateText(5, modes, 'de'), null);
+        assert.equal(stateText(1, { states: '0:Zu;1:Offen' }, 'de'), 'Offen');
+        assert.equal(stateText(true, { states: { true: 'An', false: 'Aus' } }, 'de'), 'An');
+        assert.equal(stateText('a', { states: ['a', 'b'] }, 'de'), null);
+        assert.equal(stateText(1, {}, 'de'), null);
     });
 
     it('puts a setpoint on the grid of its step and into the range of the object', () => {

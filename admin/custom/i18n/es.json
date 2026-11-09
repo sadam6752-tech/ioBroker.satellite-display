@@ -48,5 +48,16 @@
     "sd_copy_replace": "Se reemplazan %s mosaicos de esa página.",
     "sd_copy": "Copiar",
     "sd_cancel": "Cancelar",
-    "sd_undo": "Deshacer"
+    "sd_undo": "Deshacer",
+    "sd_preview": "Mostrar en el satélite",
+    "sd_preview_hint": "Muestra los mosaicos de este satélite tal como están aquí, sin guardar. Los mosaicos guardados vuelven con \"Terminar vista previa\", después de guardar o tras 10 minutos.",
+    "sd_preview_end": "Terminar vista previa",
+    "sd_preview_shown": "El satélite muestra los %s mosaicos del editor.",
+    "sd_preview_waiting": "Vista previa de %s mosaicos: el satélite no está conectado, los recibe al conectarse.",
+    "sd_preview_ended": "El satélite vuelve a mostrar los mosaicos guardados.",
+    "sd_preview_no_adapter": "El adaptador no responde: inicie la instancia (debe estar en marcha para la vista previa).",
+    "sd_preview_not_saved": "Guarde primero la configuración: el adaptador solo conoce los satélites de la configuración guardada.",
+    "sd_hint_missing": "Un estado de este mosaico no existe.",
+    "sd_hint_read_only": "Este estado es de solo lectura: tocar el mosaico no lo conmuta.",
+    "sd_hint_not_number": "Este mosaico muestra números, pero el estado no es un número."
 }

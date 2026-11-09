@@ -48,5 +48,16 @@
     "sd_copy_replace": "%s tegels op die pagina worden vervangen.",
     "sd_copy": "Kopiëren",
     "sd_cancel": "Annuleren",
-    "sd_undo": "Ongedaan maken"
+    "sd_undo": "Ongedaan maken",
+    "sd_preview": "Op de satelliet tonen",
+    "sd_preview_hint": "Toont de tegels van deze satelliet zoals ze hier zijn, zonder op te slaan. De opgeslagen tegels komen terug met \"Voorbeeld beëindigen\", na het opslaan of na 10 minuten.",
+    "sd_preview_end": "Voorbeeld beëindigen",
+    "sd_preview_shown": "De satelliet toont de %s tegels van de editor.",
+    "sd_preview_waiting": "Voorbeeld met %s tegels: de satelliet is niet verbonden, hij krijgt ze bij het verbinden.",
+    "sd_preview_ended": "De satelliet toont weer de opgeslagen tegels.",
+    "sd_preview_no_adapter": "De adapter antwoordt niet: start de instantie (voor het voorbeeld moet hij draaien).",
+    "sd_preview_not_saved": "Sla eerst de instellingen op: de adapter kent alleen de satellieten van de opgeslagen instellingen.",
+    "sd_hint_missing": "Een state van deze tegel bestaat niet.",
+    "sd_hint_read_only": "Deze state is alleen-lezen: een aanraking van de tegel schakelt hem niet.",
+    "sd_hint_not_number": "Deze tegel toont getallen, maar de state is geen getal."
 }

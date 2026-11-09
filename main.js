@@ -8,12 +8,13 @@
 
 const utils = require('@iobroker/adapter-core');
 const { SatelliteLink, OPTIONAL_ACTIONS } = require('./lib/satellite');
-const { normalizeSatellites, normalizeTiles } = require('./lib/layout');
+const { normalizeSatellites, normalizeTiles, idOf } = require('./lib/layout');
 const { NAMES } = require('./lib/names');
 const {
     toNumber,
     isOn,
     textOf,
+    stateText,
     levelPercent,
     levelValue,
     switchValue,
@@ -25,6 +26,8 @@ const {
 const RESYNC_MS = 3000;
 /** Points of a chart from the history adapter */
 const CHART_POINTS = 60;
+/** A preview from the editor ends by itself after this time */
+const PREVIEW_MS = 10 * 60_000;
 
 /**
  * @typedef {import('./lib/layout').Tile} Tile
@@ -49,6 +52,7 @@ class SatelliteDisplay extends utils.Adapter {
         super({ ...options, name: 'satellite-display' });
         this.on('ready', this.onReady.bind(this));
         this.on('stateChange', this.onStateChange.bind(this));
+        this.on('message', this.onMessage.bind(this));
         this.on('unload', this.onUnload.bind(this));
         /** @type {Map<string, SatelliteLink>} */
         this.links = new Map();
@@ -66,6 +70,8 @@ class SatelliteDisplay extends utils.Adapter {
         this.readOnlyWarned = new Set();
         /** @type {Set<string>} satellites already told that their firmware is too old for a tile */
         this.oldFirmwareWarned = new Set();
+        /** @type {Map<string, {bound: Bound[], timer: ioBroker.Timeout | undefined}>} satellite id → tiles of the editor */
+        this.previews = new Map();
     }
 
     async onReady() {
@@ -170,6 +176,29 @@ class SatelliteDisplay extends utils.Adapter {
      * @param {Tile[]} tiles - Tiles from the settings
      */
     async bindTiles(tiles) {
+        this.bound = await this.boundOf(tiles, true);
+        for (const b of this.bound) {
+            for (const id of [b.tile.state, b.tile.state2, b.tile.state3].filter(Boolean)) {
+                const list = this.byState.get(id) || [];
+                list.push(b);
+                this.byState.set(id, list);
+            }
+        }
+        for (const id of this.byState.keys()) {
+            await this.subscribeForeignStatesAsync(id);
+        }
+    }
+
+    /**
+     * The tiles with the objects of their states.
+     *
+     * @param {Tile[]} tiles - Tiles
+     * @param {boolean} warn - Warn about states that do not exist
+     * @returns {Promise<Bound[]>} The tiles, ready to send
+     */
+    async boundOf(tiles, warn) {
+        /** @type {Bound[]} */
+        const result = [];
         /** @type {Map<string, ioBroker.Object | null>} */
         const objects = new Map();
         const objectOf = async id => {
@@ -180,7 +209,7 @@ class SatelliteDisplay extends utils.Adapter {
                 } catch {
                     // reported below
                 }
-                if (!obj) {
+                if (!obj && warn) {
                     this.log.warn(`State ${id} does not exist`);
                 }
                 objects.set(id, /** @type {ioBroker.Object | null} */ (obj ?? null));
@@ -201,15 +230,89 @@ class SatelliteDisplay extends utils.Adapter {
                 common2: /** @type {Partial<ioBroker.StateCommon>} */ (obj2?.common || {}),
                 lastLevel: 100,
             };
-            this.bound.push(b);
-            for (const id of [tile.state, tile.state2, tile.state3].filter(Boolean)) {
-                const list = this.byState.get(id) || [];
-                list.push(b);
-                this.byState.set(id, list);
-            }
+            result.push(b);
         }
-        for (const id of this.byState.keys()) {
-            await this.subscribeForeignStatesAsync(id);
+        return result;
+    }
+
+    /**
+     * The tiles a satellite shows now: those of a preview from the editor, else those of the settings.
+     *
+     * @param {string} satId - Id of the satellite
+     * @returns {Bound[]} Its tiles
+     */
+    shownOn(satId) {
+        return this.previews.get(satId)?.bound ?? this.bound.filter(b => b.tile.satellite === satId);
+    }
+
+    /**
+     * Messages of the tile editor: `preview` shows unsaved tiles on a satellite, `previewEnd` brings back the saved ones.
+     *
+     * @param {ioBroker.Message} obj - Message
+     */
+    async onMessage(obj) {
+        if (!obj || typeof obj !== 'object' || !obj.command) {
+            return;
+        }
+        const msg = /** @type {{satellite?: unknown, tiles?: unknown}} */ (obj.message || {});
+        const reply = (/** @type {Record<string, unknown>} */ answer) => {
+            if (obj.callback) {
+                this.sendTo(obj.from, obj.command, answer, obj.callback);
+            }
+        };
+        const sat = this.satellites.get(idOf(String(msg.satellite || '')));
+        if (obj.command !== 'preview' && obj.command !== 'previewEnd') {
+            return;
+        }
+        if (!sat) {
+            reply({ error: 'satellite not in the saved settings' });
+            return;
+        }
+        const link = this.links.get(sat.id);
+        if (obj.command === 'previewEnd') {
+            await this.endPreview(sat);
+            reply({ ok: true });
+            return;
+        }
+        /** @type {string[]} */
+        const problems = [];
+        const rows = /** @type {Record<string, unknown>[]} */ (Array.isArray(msg.tiles) ? msg.tiles : []);
+        const tiles = normalizeTiles(rows, [sat], problems);
+        const bound = await this.boundOf(tiles, false);
+        const old = this.previews.get(sat.id);
+        if (old) {
+            this.clearTimeout(old.timer);
+            this.timers.delete(old.timer);
+        }
+        const timer = this.setTimeout(() => {
+            this.timers.delete(timer);
+            void this.endPreview(sat);
+        }, PREVIEW_MS);
+        this.timers.add(timer);
+        this.previews.set(sat.id, { bound, timer });
+        this.log.info(`${sat.name}: preview of ${bound.length} tiles from the editor`);
+        if (link?.ready) {
+            await this.sendLayout(sat);
+        }
+        reply({ ok: true, tiles: bound.length, problems, connected: !!link?.ready });
+    }
+
+    /**
+     * Ends the preview of a satellite: it shows the saved tiles again.
+     *
+     * @param {SatelliteConfig} sat - Satellite
+     */
+    async endPreview(sat) {
+        const preview = this.previews.get(sat.id);
+        if (!preview) {
+            return;
+        }
+        this.clearTimeout(preview.timer);
+        this.timers.delete(preview.timer);
+        this.previews.delete(sat.id);
+        this.log.info(`${sat.name}: preview ended, the saved tiles again`);
+        if (this.links.get(sat.id)?.ready && !this.stopping) {
+            await this.sendLayout(sat);
         }
     }
 
@@ -245,7 +348,7 @@ class SatelliteDisplay extends utils.Adapter {
             return;
         }
         link.call('tile_clear', { page: 0 });
-        const mine = this.bound.filter(b => b.tile.satellite === sat.id && this.supported(sat, link, b));
+        const mine = this.shownOn(sat.id).filter(b => this.supported(sat, link, b));
         for (const b of mine) {
             link.call('tile_set', b.args);
         }
@@ -315,8 +418,11 @@ class SatelliteDisplay extends utils.Adapter {
         const { page, slot } = b.tile;
         switch (b.tile.type) {
             case 'value': {
-                const n = typeof val === 'boolean' ? null : toNumber(val);
-                if (n !== null) {
+                const mapped = stateText(val, b.common, this.lang);
+                const n = typeof val === 'boolean' || mapped !== null ? null : toNumber(val);
+                if (mapped !== null) {
+                    link.call('tile_text', { page, slot, value: mapped });
+                } else if (n !== null) {
                     link.call('tile_value', { page, slot, value: n });
                 } else if (val !== null && val !== undefined) {
                     link.call('tile_text', { page, slot, value: textOf(val, this.lang) });
@@ -453,9 +559,7 @@ class SatelliteDisplay extends utils.Adapter {
      * @param {import('./lib/satellite').TileInput} input - The touch
      */
     async onInput(sat, input) {
-        const b = this.bound.find(
-            x => x.tile.satellite === sat.id && x.tile.page === input.page && x.tile.slot === input.slot,
-        );
+        const b = this.shownOn(sat.id).find(x => x.tile.page === input.page && x.tile.slot === input.slot);
         await this.setState(`satellites.${sat.id}.lastTouch`, {
             val: JSON.stringify({ ...input, ts: Date.now() }),
             ack: true,
@@ -530,7 +634,10 @@ class SatelliteDisplay extends utils.Adapter {
             return;
         }
         for (const b of this.byState.get(id) || []) {
-            this.push(b, id, state.val);
+            // during a preview the slots of the satellite belong to the tiles of the editor
+            if (!this.previews.has(b.tile.satellite)) {
+                this.push(b, id, state.val);
+            }
         }
     }
 

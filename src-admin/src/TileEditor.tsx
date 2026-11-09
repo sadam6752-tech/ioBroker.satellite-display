@@ -21,6 +21,8 @@ import {
     Add as IconAdd,
     ContentCopy as IconCopy,
     Delete as IconDelete,
+    Cast as IconCast,
+    CastConnected as IconCastStop,
     FileCopy as IconCopyPage,
     ListAlt as IconPick,
     Undo as IconUndo,
@@ -50,6 +52,40 @@ import {
     type TileRow,
 } from './layout';
 import { TileIcon } from './icons';
+
+/** The line of a chart in the preview without a history */
+const SAMPLE_LINE = [0, 0.6, 0.4, 0.7, 0.3, 0.5, 0.2, 0.45, 0.35];
+
+/** The text that common.states of the object gives a value, as the adapter shows it (lib/values.js stateText) */
+function stateTextOf(val: unknown, common: Partial<ioBroker.StateCommon> | null | undefined): string | null {
+    let states: unknown = common?.states;
+    if (val === null || val === undefined || !states) {
+        return null;
+    }
+    if (typeof states === 'string') {
+        const parsed: Record<string, string> = {};
+        for (const part of states.split(';')) {
+            const at = part.indexOf(':');
+            if (at > 0) {
+                parsed[part.slice(0, at).trim()] = part.slice(at + 1).trim();
+            }
+        }
+        states = parsed;
+    }
+    if (Array.isArray(states) || typeof states !== 'object') {
+        return null;
+    }
+    const text = (states as Record<string, unknown>)[String(val)];
+    if (text === undefined || text === null || text === '') {
+        return null;
+    }
+    if (typeof text === 'object') {
+        const lang = I18n.getLanguage();
+        const t = text as Record<string, string>;
+        return (t[lang] || t.en || '').slice(0, 32) || null;
+    }
+    return String(text).slice(0, 32);
+}
 
 /** Changes kept for undo */
 const UNDO_STEPS = 50;
@@ -104,6 +140,12 @@ interface TileEditorState extends ConfigGenericState {
     values: Record<string, ioBroker.StateValue | undefined>;
     names: Record<string, string>;
     units: Record<string, string>;
+    /** Common part of the objects of the states (type, write, states) for the hints and the texts */
+    commons: Record<string, Partial<ioBroker.StateCommon> | null>;
+    /** Values of the history adapter for the chart tiles of the page, oldest first */
+    histories: Record<string, number[]>;
+    /** Preview on the satellite: running, and what the adapter answered */
+    preview: { on: boolean; text: string; error: boolean };
 }
 
 class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
@@ -123,6 +165,9 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             values: {},
             names: {},
             units: {},
+            commons: {},
+            histories: {},
+            preview: { on: false, text: '', error: false },
         };
     }
 
@@ -327,16 +372,21 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             }
         }
         if (!ids.size) {
+            await this.readHistories();
             return;
         }
         const values: Record<string, ioBroker.StateValue | undefined> = {};
         const names: Record<string, string> = {};
         const units: Record<string, string> = {};
+        const commons: Record<string, Partial<ioBroker.StateCommon> | null> = {};
         for (const id of ids) {
             try {
                 const state = await socket.getState(id);
                 values[id] = state?.val;
-                ({ name: names[id], unit: units[id] } = await this.readObject(id));
+                const info = await this.readObject(id);
+                names[id] = info.name;
+                units[id] = info.unit;
+                commons[id] = info.common;
             } catch {
                 values[id] = undefined;
             }
@@ -345,11 +395,137 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             values: { ...s.values, ...values },
             names: { ...s.names, ...names },
             units: { ...s.units, ...units },
+            commons: { ...s.commons, ...commons },
         }));
+        await this.readHistories();
+    }
+
+    /** The history of the chart tiles of the page from the history adapter of the settings (as the satellite gets it) */
+    async readHistories(): Promise<void> {
+        const instance = String(ConfigGeneric.getValue(this.props.data, 'historyInstance') || '').trim();
+        if (!instance) {
+            return;
+        }
+        const hours = Number(ConfigGeneric.getValue(this.props.data, 'chartHours')) || 24;
+        const end = Date.now();
+        const histories: Record<string, number[]> = {};
+        for (const { tile } of this.pageTiles()) {
+            if (tile.type !== 'chart' || !tile.state || tile.state in this.state.histories) {
+                continue;
+            }
+            try {
+                const rows = await this.props.oContext.socket.getHistory(tile.state, {
+                    instance,
+                    start: end - hours * 3600_000,
+                    end,
+                    aggregate: 'average',
+                    count: 30,
+                    ignoreNull: true,
+                    removeBorderValues: true,
+                } as ioBroker.GetHistoryOptions);
+                histories[tile.state] = (Array.isArray(rows) ? rows : [])
+                    .map(r => Number(r?.val))
+                    .filter(v => Number.isFinite(v));
+            } catch {
+                histories[tile.state] = [];
+            }
+        }
+        if (Object.keys(histories).length) {
+            this.setState(s => ({ histories: { ...s.histories, ...histories } }));
+        }
+    }
+
+    /**
+     * The line of a chart in the preview: its history (0 = top, 1 = bottom), else a sample line.
+     *
+     * @returns The points and whether they are real
+     */
+    chartLine(t: TileRow): { points: number[]; real: boolean } {
+        const data = this.state.histories[t.state] || [];
+        if (data.length < 2) {
+            return { points: SAMPLE_LINE, real: false };
+        }
+        let lo = t.min === '' || t.min === null ? Number.NaN : Number(t.min);
+        let hi = t.max === '' || t.max === null ? Number.NaN : Number(t.max);
+        if (!(hi > lo)) {
+            lo = Math.min(...data);
+            hi = Math.max(...data);
+        }
+        if (hi - lo < 1e-6) {
+            lo -= 1;
+            hi += 1;
+        }
+        return {
+            points: data.map(v => 1 - (Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo)),
+            real: true,
+        };
+    }
+
+    /** Sends the tiles of the satellite as they are in the editor (not saved) to the satellite */
+    async showOnSatellite(end = false): Promise<void> {
+        const { adapterName, instance, socket } = this.props.oContext;
+        const target = `${adapterName}.${instance}`;
+        const satellite = this.state.satellite;
+        const tiles = this.tiles().filter(t => sameSatellite(t.satellite, satellite));
+        try {
+            const answer = await Promise.race([
+                socket.sendTo(target, end ? 'previewEnd' : 'preview', { satellite, tiles }),
+                new Promise((_resolve, reject) => setTimeout(() => reject(new Error('timeout')), 8000)),
+            ]);
+            const a = (answer || {}) as { error?: string; tiles?: number; problems?: string[]; connected?: boolean };
+            if (a.error) {
+                this.setState({ preview: { on: false, text: I18n.t('sd_preview_not_saved'), error: true } });
+            } else if (end) {
+                this.setState({ preview: { on: false, text: I18n.t('sd_preview_ended'), error: false } });
+            } else {
+                const problems = a.problems?.length ? ` ${a.problems.join('; ')}` : '';
+                this.setState({
+                    preview: {
+                        on: true,
+                        text: `${I18n.t(a.connected ? 'sd_preview_shown' : 'sd_preview_waiting', a.tiles ?? 0)}${problems}`,
+                        error: !!problems,
+                    },
+                });
+            }
+        } catch {
+            this.setState({ preview: { on: false, text: I18n.t('sd_preview_no_adapter'), error: true } });
+        }
+    }
+
+    /**
+     * What may not work as meant with the states of a tile (i18n keys): a state that does not exist, a touch on a
+     * read-only state, a number tile on a state that is no number.
+     */
+    hintsOf(t: TileRow): string[] {
+        const hints: string[] = [];
+        const common = (id: string): Partial<ioBroker.StateCommon> | null | undefined =>
+            id ? this.state.commons[id] : undefined;
+        for (const id of [t.state, t.state2, t.state3]) {
+            if (id && common(id) === null) {
+                hints.push('sd_hint_missing');
+                break;
+            }
+        }
+        const written =
+            t.type === 'switch' || t.type === 'button' || t.type === 'dimmer'
+                ? [t.state, t.type === 'dimmer' ? t.state2 : '']
+                : t.type === 'thermostat'
+                  ? [t.state2]
+                  : [];
+        if (written.some(id => common(id)?.write === false)) {
+            hints.push('sd_hint_read_only');
+        }
+        const numeric =
+            t.type === 'gauge' || t.type === 'bar' || t.type === 'chart' || t.type === 'dimmer' || t.type === 'thermostat';
+        const type = common(t.state)?.type;
+        if (numeric && type && type !== 'number' && type !== 'mixed') {
+            hints.push('sd_hint_not_number');
+        }
+        return hints;
     }
 
     /** Name (in the language of the admin) and unit of the object of a state */
-    async readObject(id: string): Promise<{ name: string; unit: string }> {
+    async readObject(id: string): Promise<{ name: string; unit: string; common: Partial<ioBroker.StateCommon> | null }> {
         const lang = I18n.getLanguage();
         const obj = await this.props.oContext.socket.getObject(id);
         const name = obj?.common?.name;
@@ -357,6 +533,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         return {
             name: typeof name === 'object' && name ? name[lang] || name.en || '' : String(name || ''),
             unit: typeof unit === 'string' ? unit : '',
+            common: obj ? (obj.common as Partial<ioBroker.StateCommon>) : null,
         };
     }
 
@@ -367,7 +544,11 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
      * @param old - The state before (its name and unit count as not written by the user)
      */
     async takeState(index: number, attr: StateAttr, id: string, old: string): Promise<void> {
-        let info: { name: string; unit: string } = { name: '', unit: '' };
+        let info: { name: string; unit: string; common: Partial<ioBroker.StateCommon> | null } = {
+            name: '',
+            unit: '',
+            common: null,
+        };
         try {
             info = await this.readObject(id);
         } catch {
@@ -387,7 +568,11 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         if (info.unit && ((attr === 'state' && autoUnit) || (attr === 'state2' && t.type === 'thermostat' && !t.unit))) {
             change.unit = info.unit.slice(0, 8);
         }
-        this.setState(s => ({ names: { ...s.names, [id]: info.name }, units: { ...s.units, [id]: info.unit } }));
+        this.setState(s => ({
+            names: { ...s.names, [id]: info.name },
+            units: { ...s.units, [id]: info.unit },
+            commons: { ...s.commons, [id]: info.common },
+        }));
         this.update(index, change);
     }
 
@@ -563,8 +748,11 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         const name = t.label || this.state.names[t.state] || t.state.split('.').pop() || I18n.t('sd_no_state');
         const num = typeof value === 'number' ? value : Number.NaN;
         const unit = t.unit && t.type !== 'dimmer' ? ` ${t.unit}` : '';
+        const mapped = stateTextOf(value, this.state.commons[t.state]);
         const shown =
-            value === undefined || value === null
+            mapped !== null
+                ? mapped
+                : value === undefined || value === null
                 ? '–'
                 : typeof value === 'number'
                   ? `${Number(value.toFixed(t.decimals === '' || t.decimals === null ? 1 : Number(t.decimals)))}${unit}`
@@ -573,6 +761,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             t.type === 'dimmer' && t.state2
                 ? !!this.state.values[t.state2]
                 : value === true || (typeof value === 'number' && value > 0);
+        const line = t.type === 'chart' ? this.chartLine(t) : { points: SAMPLE_LINE, real: false };
         const lo = t.min === '' || t.min === null ? 0 : Number(t.min);
         const hi = t.max === '' || t.max === null ? 100 : Number(t.max);
         const frac = Number.isFinite(num) && hi > lo ? Math.max(0, Math.min(1, (num - lo) / (hi - lo))) : 0.5;
@@ -801,9 +990,10 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                         fill="none"
                                         stroke={COLOR.accent}
                                         strokeWidth={2}
-                                        points={[0, 0.6, 0.4, 0.7, 0.3, 0.5, 0.2, 0.45, 0.35]
-                                            .map((v, i) => `${(i * (w - px(16))) / 8},${v * px(14)}`)
+                                        points={line.points
+                                            .map((v, i, a) => `${(i * (w - px(16))) / (a.length - 1)},${v * px(14)}`)
                                             .join(' ')}
+                                        opacity={line.real ? 1 : 0.5}
                                     />
                                 </svg>
                             )}
@@ -824,9 +1014,10 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                     fill="none"
                                     stroke={COLOR.accent}
                                     strokeWidth={2}
-                                    points={[0, 0.6, 0.4, 0.7, 0.3, 0.5, 0.2, 0.45, 0.35]
-                                        .map((v, i) => `${(i * (w - px(16))) / 8},${v * px(18)}`)
+                                    points={line.points
+                                        .map((v, i, a) => `${(i * (w - px(16))) / (a.length - 1)},${v * px(18)}`)
                                         .join(' ')}
+                                    opacity={line.real ? 1 : 0.5}
                                 />
                             </svg>
                         </>
@@ -1112,6 +1303,15 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                         {I18n.t(problemOf(t))}
                     </Typography>
                 ) : null}
+                {this.hintsOf(t).map(hint => (
+                    <Typography
+                        key={hint}
+                        variant="body2"
+                        color="warning.main"
+                    >
+                        {I18n.t(hint)}
+                    </Typography>
+                ))}
                 <FormControlLabel
                     control={
                         <Checkbox
@@ -1407,6 +1607,36 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                             </IconButton>
                         </span>
                     </Tooltip>
+                    <Tooltip title={I18n.t('sd_preview_hint')}>
+                        <span>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<IconCast />}
+                                disabled={!this.isConfigured(satellite)}
+                                onClick={() => void this.showOnSatellite()}
+                            >
+                                {I18n.t('sd_preview')}
+                            </Button>
+                        </span>
+                    </Tooltip>
+                    {this.state.preview.on ? (
+                        <Button
+                            size="small"
+                            startIcon={<IconCastStop />}
+                            onClick={() => void this.showOnSatellite(true)}
+                        >
+                            {I18n.t('sd_preview_end')}
+                        </Button>
+                    ) : null}
+                    {this.state.preview.text ? (
+                        <Typography
+                            variant="body2"
+                            color={this.state.preview.error ? 'warning.main' : 'text.secondary'}
+                        >
+                            {this.state.preview.text}
+                        </Typography>
+                    ) : null}
                 </Box>
                 <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                     <Box>

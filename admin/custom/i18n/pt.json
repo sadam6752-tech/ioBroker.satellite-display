@@ -48,5 +48,16 @@
     "sd_copy_replace": "%s blocos nessa página são substituídos.",
     "sd_copy": "Copiar",
     "sd_cancel": "Cancelar",
-    "sd_undo": "Desfazer"
+    "sd_undo": "Desfazer",
+    "sd_preview": "Mostrar no satélite",
+    "sd_preview_hint": "Mostra os blocos deste satélite como estão aqui, sem guardar. Os blocos guardados voltam com \"Terminar pré-visualização\", depois de guardar ou após 10 minutos.",
+    "sd_preview_end": "Terminar pré-visualização",
+    "sd_preview_shown": "O satélite mostra os %s blocos do editor.",
+    "sd_preview_waiting": "Pré-visualização de %s blocos: o satélite não está ligado, recebe-os ao ligar.",
+    "sd_preview_ended": "O satélite mostra de novo os blocos guardados.",
+    "sd_preview_no_adapter": "O adaptador não responde: inicie a instância (tem de estar a correr para a pré-visualização).",
+    "sd_preview_not_saved": "Guarde primeiro as definições: o adaptador só conhece os satélites das definições guardadas.",
+    "sd_hint_missing": "Um estado deste bloco não existe.",
+    "sd_hint_read_only": "Este estado é só de leitura: tocar no bloco não o comuta.",
+    "sd_hint_not_number": "Este bloco mostra números, mas o estado não é um número."
 }

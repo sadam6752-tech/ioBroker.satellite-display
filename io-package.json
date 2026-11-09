@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "satellite-display",
-        "version": "0.0.5",
+        "version": "0.0.6",
         "news": {
+            "0.0.6": {
+                "en": "Preview on the satellite without saving, real history in the chart preview, texts of common.states on value tiles, hints on unsuitable states",
+                "de": "Vorschau auf dem Satelliten ohne Speichern, echter Verlauf in der Diagramm-Vorschau, Texte aus common.states auf Wert-Kacheln, Hinweise auf unpassende Datenpunkte",
+                "ru": "Показ на сателлите без сохранения, реальная история в превью графика, тексты из common.states на плитках значений, подсказки о неподходящих состояниях",
+                "pt": "Pré-visualização no satélite sem guardar, histórico real na pré-visualização do gráfico, textos de common.states nos blocos de valor, avisos sobre estados inadequados",
+                "nl": "Voorbeeld op de satelliet zonder opslaan, echte geschiedenis in het grafiekvoorbeeld, teksten uit common.states op waardetegels, hints bij ongeschikte states",
+                "fr": "Aperçu sur le satellite sans enregistrer, historique réel dans l'aperçu des courbes, textes de common.states sur les tuiles de valeur, conseils sur les états inadaptés",
+                "it": "Anteprima sul satellite senza salvare, cronologia reale nell'anteprima del grafico, testi di common.states sui riquadri di valore, avvisi su stati non adatti",
+                "es": "Vista previa en el satélite sin guardar, historial real en la vista previa del gráfico, textos de common.states en los mosaicos de valor, avisos sobre estados inadecuados",
+                "pl": "Podgląd na satelicie bez zapisywania, prawdziwa historia w podglądzie wykresu, teksty z common.states na kafelkach wartości, wskazówki o nieodpowiednich stanach",
+                "uk": "Показ на сателіті без збереження, справжня історія в прев'ю графіка, тексти з common.states на плитках значень, підказки про невідповідні стани",
+                "zh-cn": "无需保存即可在卫星上预览，图表预览显示真实历史，数值磁贴显示 common.states 文本，提示不合适的状态"
+            },
             "0.0.5": {
                 "en": "Tile editor: copy a page to another page or satellite, the icons are shown, undo with Ctrl+Z",
                 "de": "Kachel-Editor: Seite auf eine andere Seite oder einen anderen Satelliten kopieren, die Symbole werden angezeigt, Rückgängig mit Strg+Z",
@@ -122,6 +135,7 @@
         "mode": "daemon",
         "type": "visualization",
         "compact": true,
+        "messagebox": true,
         "connectionType": "local",
         "dataSource": "push",
         "adminUI": {
