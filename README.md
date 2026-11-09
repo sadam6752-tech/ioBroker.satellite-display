@@ -99,6 +99,8 @@ again by itself.
 
 ## Changelog
 
+Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
+
 <!--
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**

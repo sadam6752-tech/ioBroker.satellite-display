@@ -5,7 +5,10 @@
 version: 2
 updates:
   - package-ecosystem: 'npm'
-    directory: '/'
+    # the root and the source of the tile editor of the admin (built into admin/custom)
+    directories:
+      - '/'
+      - '/src-admin'
     schedule:
       interval: 'weekly'
     open-pull-requests-limit: 15

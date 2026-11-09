@@ -44,17 +44,17 @@
             "zh-cn": "卫星显示屏"
         },
         "desc": {
-            "en": "Tile pages on the touch display of ESPHome voice satellites: values, gauges, charts, switches, dimmers and buttons bound to ioBroker states",
-            "de": "Kachelseiten auf dem Touch-Display von ESPHome-Sprachsatelliten: Werte, Anzeigen, Verläufe, Schalter, Dimmer und Tasten, verbunden mit ioBroker-Datenpunkten",
-            "ru": "Страницы плиток на сенсорном дисплее голосовых сателлитов ESPHome: значения, шкалы, графики, выключатели, диммеры и кнопки, связанные с состояниями ioBroker",
-            "pt": "Páginas de mosaicos no ecrã tátil de satélites de voz ESPHome: valores, mostradores, gráficos, interruptores, reguladores e botões ligados a estados do ioBroker",
-            "nl": "Tegelpagina's op het aanraakscherm van ESPHome-spraaksatellieten: waarden, meters, grafieken, schakelaars, dimmers en knoppen gekoppeld aan ioBroker-states",
-            "fr": "Pages de tuiles sur l'écran tactile des satellites vocaux ESPHome : valeurs, jauges, courbes, interrupteurs, variateurs et boutons liés aux états ioBroker",
-            "it": "Pagine di riquadri sul display touch dei satelliti vocali ESPHome: valori, indicatori, grafici, interruttori, dimmer e pulsanti collegati agli stati di ioBroker",
-            "es": "Páginas de mosaicos en la pantalla táctil de satélites de voz ESPHome: valores, indicadores, gráficos, interruptores, reguladores y botones vinculados a estados de ioBroker",
-            "pl": "Strony kafelków na ekranie dotykowym satelitów głosowych ESPHome: wartości, wskaźniki, wykresy, przełączniki, ściemniacze i przyciski powiązane ze stanami ioBroker",
-            "uk": "Сторінки плиток на сенсорному дисплеї голосових сателітів ESPHome: значення, шкали, графіки, вимикачі, димери та кнопки, пов'язані зі станами ioBroker",
-            "zh-cn": "ESPHome 语音卫星触摸屏上的磁贴页面:与 ioBroker 状态绑定的数值、仪表、图表、开关、调光器和按钮"
+            "en": "Tile pages on the touch display of ESPHome voice satellites: values, gauges, charts, switches, dimmers, buttons and thermostats bound to ioBroker states",
+            "de": "Kachelseiten auf dem Touch-Display von ESPHome-Sprachsatelliten: Werte, Anzeigen, Verläufe, Schalter, Dimmer, Tasten und Thermostate, verbunden mit ioBroker-Datenpunkten",
+            "ru": "Страницы плиток на сенсорном дисплее голосовых сателлитов ESPHome: значения, шкалы, графики, выключатели, диммеры, кнопки и термостаты, связанные с состояниями ioBroker",
+            "pt": "Páginas de mosaicos no ecrã tátil de satélites de voz ESPHome: valores, mostradores, gráficos, interruptores, reguladores, botões e termóstatos ligados a estados do ioBroker",
+            "nl": "Tegelpagina's op het aanraakscherm van ESPHome-spraaksatellieten: waarden, meters, grafieken, schakelaars, dimmers, knoppen en thermostaten gekoppeld aan ioBroker-states",
+            "fr": "Pages de tuiles sur l'écran tactile des satellites vocaux ESPHome : valeurs, jauges, courbes, interrupteurs, variateurs, boutons et thermostats liés aux états ioBroker",
+            "it": "Pagine di riquadri sul display touch dei satelliti vocali ESPHome: valori, indicatori, grafici, interruttori, dimmer, pulsanti e termostati collegati agli stati di ioBroker",
+            "es": "Páginas de mosaicos en la pantalla táctil de satélites de voz ESPHome: valores, indicadores, gráficos, interruptores, reguladores, botones y termostatos vinculados a estados de ioBroker",
+            "pl": "Strony kafelków na ekranie dotykowym satelitów głosowych ESPHome: wartości, wskaźniki, wykresy, przełączniki, ściemniacze, przyciski i termostaty powiązane ze stanami ioBroker",
+            "uk": "Сторінки плиток на сенсорному дисплеї голосових сателітів ESPHome: значення, шкали, графіки, вимикачі, димери, кнопки та термостати, пов'язані зі станами ioBroker",
+            "zh-cn": "ESPHome 语音卫星触摸屏上的磁贴页面:与 ioBroker 状态绑定的数值、仪表、图表、开关、调光器、按钮和恒温器"
         },
         "authors": [
             "sadam6752-tech <sadam6752@gmail.com>"
