@@ -205,6 +205,29 @@ describe('satellite link', () => {
         assert.deepEqual(inputs, [{ page: 2, slot: 1, input: 'level', value: 53 }]);
     });
 
+    it('passes on the state of the screen lock', () => {
+        const link = startLink();
+        const conn = FakeConnection.last;
+        /** @type {any[]} */
+        const locks = [];
+        link.on('lock', l => locks.push(l));
+        const event = (locked, failed) => ({
+            service: 'esphome.screen_lock',
+            isEvent: true,
+            dataList: [
+                { key: 'locked', value: locked },
+                { key: 'failed', value: failed },
+            ],
+        });
+        conn.emit('message.HomeassistantActionRequest', event('1', '2'));
+        conn.emit('message.HomeassistantActionRequest', event('0', '0'));
+        conn.emit('message.HomeassistantActionRequest', { service: 'esphome.screen_lock', isEvent: false, dataList: [] });
+        assert.deepEqual(locks, [
+            { locked: true, failed: 2 },
+            { locked: false, failed: 0 },
+        ]);
+    });
+
     it('reports a lost connection once and a repeated problem only once', async () => {
         const link = startLink();
         const conn = FakeConnection.last;

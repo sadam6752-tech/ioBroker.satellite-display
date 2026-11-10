@@ -149,6 +149,25 @@ describe('layout', () => {
         assert.equal(normalizeTiles([row({ type: 'value' })], sats, problems)[0].showToggle, true);
     });
 
+    it('sends the hash of the PIN, never the PIN, and only for 4 to 6 digits', () => {
+        const { lockOf } = require('../../lib/layout');
+        const problems = [];
+        const lock = lockOf({ lockEnabled: true, pin: ' 1234 ' }, 0, problems);
+        // the same as the firmware computes: SHA-256 of "satellite-display:" + PIN
+        assert.equal(lock.pinHash, '99c0a75a0cb2831b528227a07847fbbb481a401f567abcfef8b48ae3befe06c1');
+        assert.equal(lock.pinLength, 4);
+        assert.deepEqual(lockOf({ lockEnabled: false, pin: '1234' }, 0, problems), { pinHash: '', pinLength: 0 });
+        assert.deepEqual(problems, []);
+        for (const pin of ['123', '1234567', '12a4', '']) {
+            assert.deepEqual(lockOf({ lockEnabled: true, pin }, 1, problems), { pinHash: '', pinLength: 0 });
+        }
+        assert.equal(problems.length, 4);
+        assert.match(problems[0], /^Satellite 2: the PIN must have 4 to 6 digits/);
+        const sats = normalizeSatellites([{ ...SATS[0], lockEnabled: true, pin: '987654' }], []);
+        assert.equal(sats[0].pinLength, 6);
+        assert.ok(!JSON.stringify(sats).includes('987654'), 'the PIN does not leave the settings');
+    });
+
     it('reads colours of the settings', () => {
         assert.equal(colorOf('#38BDF8'), 0x38bdf8);
         assert.equal(colorOf('#fff'), 0xffffff);

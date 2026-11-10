@@ -14,5 +14,15 @@
     "Hours shown in a chart": "Horas mostradas num gráfico",
     "Appearance": "Aparência",
     "Main colour of the tiles": "Cor principal dos blocos",
-    "Value, arc, bar, line and toggles. Empty: the blue of the satellite. A tile can have its own colour.": "Valor, arco, barra, linha e interruptores. Vazio: o azul do satélite. Um bloco pode ter a sua própria cor."
+    "Value, arc, bar, line and toggles. Empty: the blue of the satellite. A tile can have its own colour.": "Valor, arco, barra, linha e interruptores. Vazio: o azul do satélite. Um bloco pode ter a sua própria cor.",
+    "Screen lock": "Bloqueio do ecrã",
+    "PIN (4-6 digits)": "PIN (4-6 dígitos)",
+    "Authentication": "Autenticação",
+    "A satellite with \"Screen lock\" on (tab Satellites) shows only the clock and a lock and does not react to the wake word. A touch opens a keypad for its PIN. The satellite checks the PIN itself, also without ioBroker; after 5 wrong PINs it waits a minute.": "Um satélite com o \"Bloqueio do ecrã\" ligado (separador Satélites) mostra só o relógio e um cadeado e não reage à palavra de ativação. Um toque abre um teclado para o PIN. O satélite verifica o PIN sozinho, também sem ioBroker; após 5 PINs errados espera um minuto.",
+    "Lock the screen again": "Bloquear o ecrã de novo",
+    "After some minutes without a touch": "Após alguns minutos sem toque",
+    "When the display goes back to the clock by itself": "Quando o ecrã volta sozinho ao relógio",
+    "Only by hand (the open lock next to the gear)": "Só à mão (o cadeado aberto ao lado da roda dentada)",
+    "Minutes without a touch": "Minutos sem toque",
+    "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night.": "O cadeado aberto ao lado da roda dentada bloqueia logo em qualquer modo. O estado satellites.<nome>.locked mostra o bloqueio e bloqueia ou desbloqueia a partir do ioBroker, p. ex. à noite."
 }

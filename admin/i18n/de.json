@@ -14,5 +14,15 @@
     "Hours shown in a chart": "Stunden in einem Diagramm",
     "Appearance": "Darstellung",
     "Main colour of the tiles": "Hauptfarbe der Kacheln",
-    "Value, arc, bar, line and toggles. Empty: the blue of the satellite. A tile can have its own colour.": "Wert, Bogen, Balken, Linie und Schalter. Leer: das Blau des Satelliten. Eine Kachel kann ihre eigene Farbe haben."
+    "Value, arc, bar, line and toggles. Empty: the blue of the satellite. A tile can have its own colour.": "Wert, Bogen, Balken, Linie und Schalter. Leer: das Blau des Satelliten. Eine Kachel kann ihre eigene Farbe haben.",
+    "Screen lock": "Bildschirmsperre",
+    "PIN (4-6 digits)": "PIN (4-6 Ziffern)",
+    "Authentication": "Authentifizierung",
+    "A satellite with \"Screen lock\" on (tab Satellites) shows only the clock and a lock and does not react to the wake word. A touch opens a keypad for its PIN. The satellite checks the PIN itself, also without ioBroker; after 5 wrong PINs it waits a minute.": "Ein Satellit mit eingeschalteter \"Bildschirmsperre\" (Reiter Satelliten) zeigt nur die Uhr und ein Schloss und reagiert nicht auf das Aktivierungswort. Eine Berührung öffnet ein Tastenfeld für die PIN. Der Satellit prüft die PIN selbst, auch ohne ioBroker; nach 5 falschen PINs wartet er eine Minute.",
+    "Lock the screen again": "Bildschirm wieder sperren",
+    "After some minutes without a touch": "Nach einigen Minuten ohne Berührung",
+    "When the display goes back to the clock by itself": "Wenn die Anzeige von selbst zur Uhr zurückkehrt",
+    "Only by hand (the open lock next to the gear)": "Nur von Hand (das offene Schloss neben dem Zahnrad)",
+    "Minutes without a touch": "Minuten ohne Berührung",
+    "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night.": "Das offene Schloss neben dem Zahnrad sperrt in jeder Einstellung sofort. Der Datenpunkt satellites.<Name>.locked zeigt die Sperre und sperrt oder entsperrt aus ioBroker, z. B. nachts."
 }

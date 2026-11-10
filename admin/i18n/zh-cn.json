@@ -14,5 +14,15 @@
     "Hours shown in a chart": "图表显示的小时数",
     "Appearance": "外观",
     "Main colour of the tiles": "磁贴的主颜色",
-    "Value, arc, bar, line and toggles. Empty: the blue of the satellite. A tile can have its own colour.": "数值、圆弧、进度条、线条和开关。留空：卫星的蓝色。每个磁贴可以有自己的颜色。"
+    "Value, arc, bar, line and toggles. Empty: the blue of the satellite. A tile can have its own colour.": "数值、圆弧、进度条、线条和开关。留空：卫星的蓝色。每个磁贴可以有自己的颜色。",
+    "Screen lock": "屏幕锁",
+    "PIN (4-6 digits)": "PIN（4-6 位数字）",
+    "Authentication": "身份验证",
+    "A satellite with \"Screen lock\" on (tab Satellites) shows only the clock and a lock and does not react to the wake word. A touch opens a keypad for its PIN. The satellite checks the PIN itself, also without ioBroker; after 5 wrong PINs it waits a minute.": "开启“屏幕锁”（卫星选项卡）的卫星只显示时钟和锁图标，不响应唤醒词。触摸屏幕会打开输入 PIN 的键盘。卫星自行校验 PIN，即使没有 ioBroker 也可以；输错 5 次后等待一分钟。",
+    "Lock the screen again": "再次锁定屏幕",
+    "After some minutes without a touch": "若干分钟无触摸后",
+    "When the display goes back to the clock by itself": "显示屏自动返回时钟时",
+    "Only by hand (the open lock next to the gear)": "仅手动（齿轮旁边的打开的锁）",
+    "Minutes without a touch": "无触摸的分钟数",
+    "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night.": "在任何模式下，齿轮旁打开的锁都会立即锁定。状态 satellites.<名称>.locked 显示锁定状态，并可从 ioBroker 锁定或解锁，例如在夜间。"
 }

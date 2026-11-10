@@ -95,6 +95,22 @@ Details of the kinds:
 The toggle and the slider change at once on the screen. When the device does not follow, the tile shows the real
 state again after three seconds.
 
+## Screen lock
+
+A satellite can be locked with a PIN of 4 to 6 digits (tab **Satellites**: "Screen lock" and "PIN"). While it is
+locked the display shows only the clock and the date and a lock instead of the gear; the pages of tiles, the system
+page and the settings cannot be reached, and the satellite does not react to the wake word. Announcements, alarms,
+timers and music still sound. A touch opens a keypad; the PIN is checked as soon as all digits are typed. After 5
+wrong PINs in a row the keypad waits a minute; without a key it closes after 30 seconds.
+
+The tab **Authentication** decides when an unlocked satellite locks again: after some minutes without a touch, when
+the display goes back to the clock by itself, or only by hand. The open lock next to the gear locks at once in every
+mode. The state `satellites.<name>.locked` shows the lock and locks or unlocks from ioBroker (e.g. at night or with
+the alarm system); `satellites.<name>.failedPins` counts the wrong PINs.
+
+The PIN does not leave ioBroker: the satellite gets its SHA-256 hash and keeps it in its flash, so the lock also
+works after a restart and without ioBroker. Needs the satellite firmware **2.1.0**.
+
 ## States
 
 | State | Meaning |
@@ -103,6 +119,8 @@ state again after three seconds.
 | `satellites.<name>.connected` | this satellite is connected and has its tiles |
 | `satellites.<name>.lastTouch` | the last touch on a tile, as JSON (`page`, `slot`, `input`, `value`, `ts`) |
 | `satellites.<name>.resend` | button: sends all tiles again |
+| `satellites.<name>.locked` | the screen is locked; write `true` / `false` to lock or unlock (only with a screen lock) |
+| `satellites.<name>.failedPins` | wrong PINs in a row on the display (only with a screen lock) |
 
 The satellite keeps no layout: after a restart or a lost connection the adapter sends all tiles and their values
 again by itself.
@@ -126,6 +144,13 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+
+### 0.1.0 (2026-11-10)
+
+- Screen lock with a PIN per satellite (tab Satellites): the display shows only the clock and a lock, the wake word is
+  ignored, a touch opens a keypad; the satellite checks the PIN itself (satellite firmware 2.1.0)
+- Tab Authentication: lock again after some minutes without a touch, when the display goes back to the clock, or only
+  by hand; the state `satellites.<name>.locked` locks and unlocks from ioBroker
 
 ### 0.0.8 (2026-11-10)
 
@@ -154,12 +179,6 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
   replaced)
 - The icons are shown in the list and in the preview
 - Undo with Ctrl+Z or the undo button (the last 50 changes)
-
-### 0.0.4 (2026-11-09)
-
-- Tile editor: drag a tile onto another one to swap the two (the target shows blue when they fit, red when not)
-- A chosen state fills the name and the unit of the tile from its object, unless you wrote your own
-- "Duplicate tile" puts a copy on the first free place of the page (or of the next pages)
 
 ## License
 

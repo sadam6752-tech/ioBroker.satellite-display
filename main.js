@@ -102,6 +102,7 @@ class SatelliteDisplay extends utils.Adapter {
         await this.createObjects(satellites);
         await this.bindTiles(tiles);
         await this.subscribeStatesAsync('satellites.*.resend');
+        await this.subscribeStatesAsync('satellites.*.locked');
 
         for (const sat of satellites) {
             this.satellites.set(sat.id, sat);
@@ -122,6 +123,7 @@ class SatelliteDisplay extends utils.Adapter {
             );
             link.on('problem', message => this.log.info(`${sat.name} (${sat.host}): ${message}`));
             link.on('input', input => void this.onInput(sat, input));
+            link.on('lock', lock => void this.onLockState(sat, lock));
             this.links.set(sat.id, link);
             try {
                 link.start();
@@ -164,6 +166,25 @@ class SatelliteDisplay extends utils.Adapter {
                 native: {},
             });
             await this.setState(`${base}.connected`, { val: false, ack: true });
+            if (sat.pinHash) {
+                await this.extendObject(`${base}.locked`, {
+                    type: 'state',
+                    common: { name: NAMES.locked, type: 'boolean', role: 'switch', read: true, write: true, def: true },
+                    native: {},
+                });
+                await this.extendObject(`${base}.failedPins`, {
+                    type: 'state',
+                    common: { name: NAMES.failedPins, type: 'number', role: 'value', read: true, write: false, def: 0 },
+                    native: {},
+                });
+            } else {
+                // the lock is off: its states go
+                for (const s of ['locked', 'failedPins']) {
+                    if (await this.getObjectAsync(`${base}.${s}`)) {
+                        await this.delObjectAsync(`${base}.${s}`);
+                    }
+                }
+            }
         }
         const keep = new Set(satellites.map(s => `${this.namespace}.satellites.${s.id}`));
         const devices = await this.getDevicesAsync();
@@ -327,9 +348,58 @@ class SatelliteDisplay extends utils.Adapter {
     /** @param {SatelliteConfig} sat - The satellite that connected */
     async onSatelliteReady(sat) {
         this.log.info(`${sat.name} (${sat.host}) connected`);
+        this.sendLock(sat);
         await this.sendLayout(sat);
         await this.setState(`satellites.${sat.id}.connected`, { val: true, ack: true });
         await this.updateConnection();
+    }
+
+    /**
+     * The screen lock to the satellite: on or off, the hash of the PIN, when it locks again. The satellite keeps it
+     * in its flash, so it is sent after every connect (also "off", to end a lock set before).
+     *
+     * @param {SatelliteConfig} sat - Satellite
+     */
+    sendLock(sat) {
+        const link = this.links.get(sat.id);
+        if (!link) {
+            return;
+        }
+        if (!link.has('lock_config')) {
+            if (sat.pinHash) {
+                this.log.warn(
+                    `${sat.name}: the screen lock needs the satellite firmware ${OPTIONAL_ACTIONS.lock_config} or newer`,
+                );
+            }
+            return;
+        }
+        const mode = [0, 1, 2].includes(Number(this.config.relockMode)) ? Number(this.config.relockMode) : 0;
+        const minutes = Math.min(1440, Math.max(1, Math.round(Number(this.config.relockMinutes) || 5)));
+        link.call('lock_config', {
+            enabled: !!sat.pinHash,
+            pin_hash: sat.pinHash,
+            length: sat.pinLength,
+            mode,
+            minutes,
+        });
+    }
+
+    /**
+     * The screen lock of a satellite changed, or a PIN was wrong.
+     *
+     * @param {SatelliteConfig} sat - Satellite
+     * @param {{locked: boolean, failed: number}} lock - Its state
+     */
+    async onLockState(sat, lock) {
+        if (!sat.pinHash) {
+            return;
+        }
+        const base = `satellites.${sat.id}`;
+        await this.setState(`${base}.locked`, { val: lock.locked, ack: true });
+        await this.setState(`${base}.failedPins`, { val: lock.failed, ack: true });
+        if (lock.failed > 0 && lock.locked) {
+            this.log.warn(`${sat.name}: wrong PIN on the display (${lock.failed} in a row)`);
+        }
     }
 
     /** @param {SatelliteConfig} sat - The satellite that was lost */
@@ -689,6 +759,19 @@ class SatelliteDisplay extends utils.Adapter {
      */
     async onStateChange(id, state) {
         if (!state || this.stopping) {
+            return;
+        }
+        if (id.startsWith(`${this.namespace}.satellites.`) && id.endsWith('.locked')) {
+            if (!state.ack) {
+                // lock or unlock from ioBroker; the satellite answers with its state
+                const sat = this.satellites.get(id.split('.')[3]);
+                const link = sat ? this.links.get(sat.id) : undefined;
+                if (sat?.pinHash && link?.ready && link.has('lock_set')) {
+                    link.call('lock_set', { locked: !!state.val });
+                } else {
+                    this.log.info(`${sat?.name ?? id}: the screen lock cannot be switched now (off or not connected)`);
+                }
+            }
             return;
         }
         if (id.startsWith(`${this.namespace}.satellites.`) && id.endsWith('.resend')) {
