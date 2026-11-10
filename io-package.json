@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "satellite-display",
-        "version": "0.1.1",
+        "version": "0.1.2",
         "news": {
+            "0.1.2": {
+                "en": "media.url plays only an http(s) address; an empty value or \"stop\" (e.g. from ioBroker.spotify-connect) stops the player",
+                "de": "media.url spielt nur eine http(s)-Adresse; ein leerer Wert oder \"stop\" (z. B. von ioBroker.spotify-connect) stoppt die Wiedergabe",
+                "ru": "media.url воспроизводит только адрес http(s); пустое значение или \"stop\" (например, от ioBroker.spotify-connect) останавливает плеер",
+                "pt": "media.url reproduz apenas um endereço http(s); um valor vazio ou \"stop\" (p. ex. do ioBroker.spotify-connect) para o leitor",
+                "nl": "media.url speelt alleen een http(s)-adres af; een lege waarde of \"stop\" (bijv. van ioBroker.spotify-connect) stopt de speler",
+                "fr": "media.url ne lit qu'une adresse http(s) ; une valeur vide ou « stop » (p. ex. de ioBroker.spotify-connect) arrête le lecteur",
+                "it": "media.url riproduce solo un indirizzo http(s); un valore vuoto o \"stop\" (ad es. da ioBroker.spotify-connect) ferma il lettore",
+                "es": "media.url solo reproduce una dirección http(s); un valor vacío o \"stop\" (p. ej. de ioBroker.spotify-connect) detiene el reproductor",
+                "pl": "media.url odtwarza tylko adres http(s); pusta wartość lub \"stop\" (np. z ioBroker.spotify-connect) zatrzymuje odtwarzacz",
+                "uk": "media.url відтворює лише адресу http(s); порожнє значення або \"stop\" (наприклад, від ioBroker.spotify-connect) зупиняє програвач",
+                "zh-cn": "media.url 只播放 http(s) 地址；空值或 \"stop\"（例如来自 ioBroker.spotify-connect）会停止播放器"
+            },
             "0.1.1": {
                 "en": "Tile panel without voice (Waveshare ESP32-S3-Touch-LCD-2): state brightness, e.g. for a night mode from a script",
                 "de": "Kachel-Panel ohne Sprache (Waveshare ESP32-S3-Touch-LCD-2): Datenpunkt brightness, z. B. für einen Nachtmodus per Skript",
@@ -80,19 +93,6 @@
                 "pl": "Edytor kafelków: kopiowanie strony na inną stronę lub satelitę, wyświetlanie ikon, cofanie przez Ctrl+Z",
                 "uk": "Редактор плиток: копіювання сторінки на іншу сторінку або сателіт, показ іконок, скасування через Ctrl+Z",
                 "zh-cn": "磁贴编辑器：将页面复制到其他页面或卫星，显示图标，使用 Ctrl+Z 撤销"
-            },
-            "0.0.4": {
-                "en": "Tile editor: drag a tile onto another to swap them; a chosen state brings its name and unit",
-                "de": "Kachel-Editor: eine Kachel auf eine andere ziehen tauscht sie; ein gewählter Datenpunkt bringt Name und Einheit mit",
-                "ru": "Редактор плиток: перетащите плитку на другую, чтобы поменять их местами; выбранное состояние приносит имя и единицу",
-                "pt": "Editor de blocos: arrastar um bloco para outro troca-os; um estado escolhido traz o nome e a unidade",
-                "nl": "Tegeleditor: een tegel op een andere slepen verwisselt ze; een gekozen state brengt naam en eenheid mee",
-                "fr": "Éditeur de tuiles : glisser une tuile sur une autre les échange ; un état choisi apporte son nom et son unité",
-                "it": "Editor dei riquadri: trascinare un riquadro su un altro li scambia; uno stato scelto porta nome e unità",
-                "es": "Editor de mosaicos: arrastrar un mosaico sobre otro los intercambia; un estado elegido trae su nombre y unidad",
-                "pl": "Edytor kafelków: przeciągnięcie kafelka na inny zamienia je miejscami; wybrany stan przynosi nazwę i jednostkę",
-                "uk": "Редактор плиток: перетягніть плитку на іншу, щоб поміняти їх місцями; вибраний стан приносить ім'я та одиницю",
-                "zh-cn": "磁贴编辑器：将一个磁贴拖到另一个上即可交换；选择的状态会带入其名称和单位"
             }
         },
         "titleLang": {

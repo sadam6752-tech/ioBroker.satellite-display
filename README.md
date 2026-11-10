@@ -155,7 +155,7 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
     ### **WORK IN PROGRESS**
 -->
 
-### **WORK IN PROGRESS**
+### 0.1.2 (2026-11-10)
 
 - `media.url` plays only an `http://` or `https://` address; an empty value or `stop` (as other players of ioBroker
   take it, e.g. ioBroker.spotify-connect) stops the player
@@ -185,15 +185,6 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 
 - Thresholds: "Red below" / "Red above" turn the value and its arc, bar or line red beyond a value (satellite
   firmware 2.0.3)
-
-### 0.0.6 (2026-11-09)
-
-- Tile editor: "Show on the satellite" sends the tiles as they are in the editor to the satellite, without saving
-  (back to the saved tiles with "End preview", after saving, or after 10 minutes)
-- The chart preview draws the real history of the state when a history adapter is set
-- A value tile shows the text that `common.states` of the object gives the value (e.g. 1 → "Heizen")
-- The editor warns about a state that does not exist, a read-only state on a switch, and a number tile on a state
-  that is no number
 
 ## License
 
