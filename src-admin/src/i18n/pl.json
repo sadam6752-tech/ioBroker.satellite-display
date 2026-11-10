@@ -61,5 +61,12 @@
     "sd_hint_read_only": "Ten stan jest tylko do odczytu: dotknięcie kafelka go nie przełączy.",
     "sd_hint_not_number": "Ten kafelek pokazuje liczby, ale stan nie jest liczbą.",
     "sd_alert_below": "Czerwony poniżej",
-    "sd_alert_above": "Czerwony powyżej"
+    "sd_alert_above": "Czerwony powyżej",
+    "sd_icon_only": "Tylko ikona (zamiast nazwy)",
+    "sd_color": "Kolor główny",
+    "sd_background": "Tło",
+    "sd_bg_state": "Stan dla tła (włączony = kolor poniżej lub kolor #RRGGBB)",
+    "sd_bg_color": "Tło, gdy włączony",
+    "sd_default": "Domyślny",
+    "sd_hide_toggle": "Cały kafelek przełącza (bez przełącznika)"
 }

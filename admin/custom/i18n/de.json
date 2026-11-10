@@ -61,5 +61,12 @@
     "sd_hint_read_only": "Dieser Datenpunkt ist schreibgeschützt: eine Berührung der Kachel schaltet ihn nicht.",
     "sd_hint_not_number": "Diese Kachel zeigt Zahlen, der Datenpunkt ist aber keine Zahl.",
     "sd_alert_below": "Rot unter",
-    "sd_alert_above": "Rot über"
+    "sd_alert_above": "Rot über",
+    "sd_icon_only": "Nur Symbol (statt des Namens)",
+    "sd_color": "Hauptfarbe",
+    "sd_background": "Hintergrund",
+    "sd_bg_state": "Datenpunkt für den Hintergrund (an = Farbe unten, oder eine Farbe #RRGGBB)",
+    "sd_bg_color": "Hintergrund wenn an",
+    "sd_default": "Standard",
+    "sd_hide_toggle": "Ganze Kachel schaltet (ohne Schalter)"
 }

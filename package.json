@@ -1,6 +1,6 @@
 {
   "name": "iobroker.satellite-display",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Tile pages on the touch display of ESPHome voice satellites: values, gauges, charts, switches, dimmers, buttons and thermostats bound to ioBroker states",
   "author": {
     "name": "sadam6752-tech",

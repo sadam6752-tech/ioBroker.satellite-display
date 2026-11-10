@@ -71,6 +71,16 @@ Details of the kinds:
   writes the level when it is released. The second state is its on/off. Without a second state a level of 0 is off,
   and switching on restores the last level.
 - **Button:** writes `true` (or `1` for a number state), e.g. to a scene or a script trigger.
+- **Colours:** the tab **Appearance** sets the main colour of all tiles (value, arc, bar, line, toggles); a tile can
+  have its own main colour and background. A **background state** colours the tile from another state: while it is
+  on (`true`, a number other than 0) the tile takes the chosen colour; a state that holds a colour (`#7F1D1D`) gives
+  that colour, e.g. from a script. A threshold still turns the tile red. Needs the satellite firmware **2.0.4** for
+  the background (the main colour works from 2.0.3).
+- **Icons:** every kind can show an icon. A small (1 × 1) or wide tile shows it left in the middle, a large one top
+  left; the square tiles (1 × 2) keep their layout. "Only the icon" puts it in the place of the name. A small or wide
+  switch with an icon and a name has no toggle: the whole tile is the switch and lights up when on; with only the
+  icon it keeps the toggle. "The whole tile switches" sets this for every switch, the square one too. Needs the
+  satellite firmware **2.0.4**.
 - **Thresholds:** value, gauge, bar, chart and thermostat tiles have "Red below" and "Red above": beyond them the
   value and its arc, bar or line turn red, e.g. a battery below 20 %. Needs the satellite firmware **2.0.3**; an older
   one keeps the colours.
@@ -117,6 +127,13 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
     ### **WORK IN PROGRESS**
 -->
 
+### 0.0.8 (2026-11-10)
+
+- Colours: a default main colour of the tiles (tab Appearance), an own main colour and background per tile, and a
+  background from another state (on = a chosen colour, or a colour `#RRGGBB` written into the state)
+- Icons on the small, wide and large tiles of every kind, "only the icon" instead of the name; a small or wide
+  switch with an icon and a name becomes a tile switch without the toggle (satellite firmware 2.0.4)
+
 ### 0.0.7 (2026-11-09)
 
 - Thresholds: "Red below" / "Red above" turn the value and its arc, bar or line red beyond a value (satellite
@@ -143,22 +160,6 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 - Tile editor: drag a tile onto another one to swap the two (the target shows blue when they fit, red when not)
 - A chosen state fills the name and the unit of the tile from its object, unless you wrote your own
 - "Duplicate tile" puts a copy on the first free place of the page (or of the next pages)
-
-### 0.0.3 (2026-11-09)
-
-- Small bar and chart tiles (1 × 1): the name and the value on one line, the bar or the line below (satellite
-  firmware 2.0.2)
-- The tile editor marks a tile the adapter would leave out, with the reason
-
-### 0.0.2 (2026-11-09)
-
-- Thermostat tile: current temperature in an arc, the target temperature with − and +, a dot for the heating
-  relay (satellite firmware 2.0.1)
-- Released through GitHub Actions with provenance
-
-### 0.0.1 (2026-11-09)
-
-- First version: tile pages on the touch display of ESPHome voice satellites, with a graphical tile editor
 
 ## License
 

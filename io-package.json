@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "satellite-display",
-        "version": "0.0.7",
+        "version": "0.0.8",
         "news": {
+            "0.0.8": {
+                "en": "Colours: a default main colour, own main colour and background per tile, background from another state; icons on small, wide and large tiles (satellite firmware 2.0.4)",
+                "de": "Farben: Standard-Hauptfarbe, eigene Hauptfarbe und eigener Hintergrund je Kachel, Hintergrund aus einem anderen Datenpunkt; Symbole auf kleinen, breiten und großen Kacheln (Satelliten-Firmware 2.0.4)",
+                "ru": "Цвета: основной цвет по умолчанию, свой основной цвет и фон у плитки, фон по другому состоянию; иконки на маленьких, широких и больших плитках (прошивка сателлита 2.0.4)",
+                "pt": "Cores: cor principal predefinida, cor principal e fundo próprios por bloco, fundo a partir de outro estado; ícones em blocos pequenos, largos e grandes (firmware do satélite 2.0.4)",
+                "nl": "Kleuren: standaard hoofdkleur, eigen hoofdkleur en achtergrond per tegel, achtergrond uit een andere state; pictogrammen op kleine, brede en grote tegels (satellietfirmware 2.0.4)",
+                "fr": "Couleurs : couleur principale par défaut, couleur principale et arrière-plan propres par tuile, arrière-plan selon un autre état ; icônes sur les petites, larges et grandes tuiles (firmware du satellite 2.0.4)",
+                "it": "Colori: colore principale predefinito, colore principale e sfondo propri per riquadro, sfondo da un altro stato; icone sui riquadri piccoli, larghi e grandi (firmware del satellite 2.0.4)",
+                "es": "Colores: color principal predeterminado, color principal y fondo propios por mosaico, fondo según otro estado; iconos en mosaicos pequeños, anchos y grandes (firmware del satélite 2.0.4)",
+                "pl": "Kolory: domyślny kolor główny, własny kolor główny i tło kafelka, tło z innego stanu; ikony na małych, szerokich i dużych kafelkach (firmware satelity 2.0.4)",
+                "uk": "Кольори: основний колір за замовчуванням, власний основний колір і тло плитки, тло з іншого стану; іконки на малих, широких і великих плитках (прошивка сателіта 2.0.4)",
+                "zh-cn": "颜色：默认主颜色、每个磁贴自己的主颜色和背景、由其他状态控制的背景；小型、宽型和大型磁贴上的图标（卫星固件 2.0.4）"
+            },
             "0.0.7": {
                 "en": "Thresholds: a tile turns red below or above a value (satellite firmware 2.0.3)",
                 "de": "Schwellwerte: eine Kachel wird unter oder über einem Wert rot (Satelliten-Firmware 2.0.3)",
@@ -80,19 +93,6 @@
                 "pl": "Kafelek termostatu: temperatura bieżąca, zadana z - i +, przekaźnik ogrzewania (firmware satelity 2.0.1)",
                 "uk": "Плитка термостата: поточна температура, задана з - і +, реле опалення (прошивка сателіта 2.0.1)",
                 "zh-cn": "恒温器磁贴：当前温度、用 - 和 + 调节的目标温度、供暖继电器（卫星固件 2.0.1）"
-            },
-            "0.0.1": {
-                "en": "First version: tile pages on the touch display of ESPHome voice satellites",
-                "de": "Erste Version: Kachelseiten auf dem Touch-Display von ESPHome-Sprachsatelliten",
-                "ru": "Первая версия: страницы плиток на сенсорном дисплее голосовых сателлитов ESPHome",
-                "pt": "Primeira versão: páginas de mosaicos no ecrã tátil de satélites de voz ESPHome",
-                "nl": "Eerste versie: tegelpagina's op het aanraakscherm van ESPHome-spraaksatellieten",
-                "fr": "Première version : pages de tuiles sur l'écran tactile des satellites vocaux ESPHome",
-                "it": "Prima versione: pagine di riquadri sul display touch dei satelliti vocali ESPHome",
-                "es": "Primera versión: páginas de mosaicos en la pantalla táctil de satélites de voz ESPHome",
-                "pl": "Pierwsza wersja: strony kafelków na ekranie dotykowym satelitów głosowych ESPHome",
-                "uk": "Перша версія: сторінки плиток на сенсорному дисплеї голосових сателітів ESPHome",
-                "zh-cn": "首个版本:ESPHome 语音卫星触摸屏上的磁贴页面"
             }
         },
         "titleLang": {
@@ -172,7 +172,8 @@
         "satellites": [],
         "tiles": [],
         "historyInstance": "",
-        "chartHours": 24
+        "chartHours": 24,
+        "accentColor": ""
     },
     "objects": [],
     "instanceObjects": [

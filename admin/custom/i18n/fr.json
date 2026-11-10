@@ -61,5 +61,12 @@
     "sd_hint_read_only": "Cet état est en lecture seule : toucher la tuile ne le commute pas.",
     "sd_hint_not_number": "Cette tuile affiche des nombres, mais l'état n'est pas un nombre.",
     "sd_alert_below": "Rouge en dessous de",
-    "sd_alert_above": "Rouge au-dessus de"
+    "sd_alert_above": "Rouge au-dessus de",
+    "sd_icon_only": "Seulement l'icône (au lieu du nom)",
+    "sd_color": "Couleur principale",
+    "sd_background": "Arrière-plan",
+    "sd_bg_state": "État pour l'arrière-plan (activé = couleur ci-dessous, ou une couleur #RRGGBB)",
+    "sd_bg_color": "Arrière-plan si activé",
+    "sd_default": "Par défaut",
+    "sd_hide_toggle": "Toute la tuile commute (sans l'interrupteur)"
 }

@@ -61,5 +61,12 @@
     "sd_hint_read_only": "This state is read-only: a touch on the tile does not switch it.",
     "sd_hint_not_number": "This tile shows numbers, but the state is no number.",
     "sd_alert_below": "Red below",
-    "sd_alert_above": "Red above"
+    "sd_alert_above": "Red above",
+    "sd_icon_only": "Only the icon (instead of the name)",
+    "sd_color": "Main colour",
+    "sd_background": "Background",
+    "sd_bg_state": "State for the background (on = colour below, or a colour #RRGGBB)",
+    "sd_bg_color": "Background while on",
+    "sd_default": "Default",
+    "sd_hide_toggle": "The whole tile switches (without the toggle)"
 }

@@ -12,6 +12,7 @@ const {
     setpointValue,
     stateText,
     alertColor,
+    backgroundOf,
     ALERT_COLOR,
     tileArgs,
 } = require('../../lib/values');
@@ -151,6 +152,23 @@ describe('values', () => {
         assert.equal(args.decimals, 1);
         const plain = tileArgs(tile({ type: 'thermostat', size: 'q', state2: 'a.0.soll' }), null, 'en', null);
         assert.deepEqual([plain.min, plain.max], [5, 30]);
+    });
+
+    it('takes the background from the background state', () => {
+        const { colorOf } = require('../../lib/layout');
+        const tile = { background: 0x112233, bgColor: 0x7f1d1d };
+        assert.equal(backgroundOf(true, tile, colorOf), 0x7f1d1d);
+        assert.equal(backgroundOf(1, tile, colorOf), 0x7f1d1d);
+        assert.equal(backgroundOf(false, tile, colorOf), 0x112233);
+        assert.equal(backgroundOf('#00ff00', tile, colorOf), 0x00ff00, 'a colour in the state wins');
+        assert.equal(backgroundOf(null, { background: null, bgColor: null }, colorOf), 0);
+        assert.equal(backgroundOf(true, { background: null, bgColor: null }, colorOf), 0);
+    });
+
+    it('sends no name for a tile that shows only its icon', () => {
+        const args = tileArgs(tile({ type: 'switch', size: 's', icon: 'lamp', iconOnly: true, label: 'Licht' }), null, 'en');
+        assert.equal(args.label, '');
+        assert.equal(args.icon, 'lamp');
     });
 
     it('turns a tile red beyond its thresholds', () => {

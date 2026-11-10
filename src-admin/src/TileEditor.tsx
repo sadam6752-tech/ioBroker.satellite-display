@@ -22,6 +22,7 @@ import {
     ContentCopy as IconCopy,
     Delete as IconDelete,
     Cast as IconCast,
+    Close as IconClear,
     CastConnected as IconCastStop,
     FileCopy as IconCopyPage,
     ListAlt as IconPick,
@@ -40,6 +41,8 @@ import {
     PAGES,
     ROWS,
     alerted,
+    cssColor,
+    showToggle,
     SIZES,
     fits,
     freeCell,
@@ -112,7 +115,7 @@ const KIND_KEYS: Record<Kind, string> = {
 };
 const SIZE_LABELS: Record<Size, string> = { s: '1 × 1', q: '1 × 2', w: '2 × 1', l: '2 × 2' };
 
-type StateAttr = 'state' | 'state2' | 'state3';
+type StateAttr = 'state' | 'state2' | 'state3' | 'bgState';
 
 const COLOR = {
     screen: '#0B1118',
@@ -368,7 +371,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         const socket = this.props.oContext.socket;
         const ids = new Set<string>();
         for (const t of this.pageTiles()) {
-            for (const id of [t.tile.state, t.tile.state2, t.tile.state3]) {
+            for (const id of [t.tile.state, t.tile.state2, t.tile.state3, t.tile.bgState || '']) {
                 if (id && !(id in this.state.values)) {
                     ids.add(id);
                 }
@@ -746,7 +749,65 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         }
     }
 
+    /** Main colour of a tile: its own, else the default of the settings, else the blue of the theme */
+    accentOf(t: TileRow): string {
+        return cssColor(t.color) || cssColor(ConfigGeneric.getValue(this.props.data, 'accentColor')) || COLOR.accent;
+    }
+
+    /** Background of a tile as the adapter sends it (lib/values.js backgroundOf) */
+    backgroundOf(t: TileRow): string {
+        const own = cssColor(t.background) || COLOR.tile;
+        if (!t.bgState) {
+            return own;
+        }
+        const val = this.state.values[t.bgState];
+        if (typeof val === 'string' && cssColor(val)) {
+            return cssColor(val);
+        }
+        const on = val === true || (typeof val === 'number' && val !== 0) || (typeof val === 'string' && ['on', 'true', '1'].includes(val.toLowerCase()));
+        return on && cssColor(t.bgColor) ? cssColor(t.bgColor) : own;
+    }
+
+    /** True when the firmware shows the icon of this tile in front of (or instead of) the name */
+    showsIcon(t: TileRow): boolean {
+        return !!t.icon && t.type !== 'button' && t.size !== 'q';
+    }
+
+    /** A switch without its toggle: the whole tile switches and lights up */
+    tileSwitch(t: TileRow): boolean {
+        return t.type === 'switch' && !showToggle(t);
+    }
+
     renderTileFace(t: TileRow, w: number, h: number): React.JSX.Element {
+        const body = this.renderTileBody(t, w, h);
+        if (!this.showsIcon(t)) {
+            return body;
+        }
+        const value = this.state.values[t.state];
+        const lit = this.tileSwitch(t) && (value === true || (typeof value === 'number' && value > 0));
+        const icon = (
+            <TileIcon
+                name={t.icon}
+                size={px(20)}
+                color={lit ? this.accentOf(t) : COLOR.label}
+            />
+        );
+        return (
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: t.size === 'l' ? 'flex-start' : 'center',
+                    gap: px(6),
+                    height: '100%',
+                }}
+            >
+                {icon}
+                <div style={{ flex: 1, minWidth: 0, height: '100%' }}>{body}</div>
+            </div>
+        );
+    }
+
+    renderTileBody(t: TileRow, w: number, h: number): React.JSX.Element {
         const value = this.state.values[t.state];
         const name = t.label || this.state.names[t.state] || t.state.split('.').pop() || I18n.t('sd_no_state');
         const num = typeof value === 'number' ? value : Number.NaN;
@@ -768,7 +829,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         const lo = t.min === '' || t.min === null ? 0 : Number(t.min);
         const hi = t.max === '' || t.max === null ? 100 : Number(t.max);
         const frac = Number.isFinite(num) && hi > lo ? Math.max(0, Math.min(1, (num - lo) / (hi - lo))) : 0.5;
-        const label = (
+        const label = t.iconOnly && this.showsIcon(t) ? <span /> : (
             <div
                 style={{
                     color: COLOR.label,
@@ -782,8 +843,9 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             </div>
         );
         const big = h > px(60);
-        const accent = alerted(t, num) ? COLOR.alert : COLOR.accent;
-        const valueColor = alerted(t, num) ? COLOR.alert : undefined;
+        const accent = alerted(t, num) ? COLOR.alert : this.accentOf(t);
+        const own = cssColor(t.color) || cssColor(ConfigGeneric.getValue(this.props.data, 'accentColor'));
+        const valueColor = alerted(t, num) ? COLOR.alert : own || undefined;
         const valueText = <div style={{ fontSize: big ? px(22) : px(14), color: valueColor }}>{shown}</div>;
         const toggle = (
             <div
@@ -1062,14 +1124,14 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                     <TileIcon
                                         name={t.icon}
                                         size={px(20)}
-                                        color={COLOR.label}
+                                        color={on ? this.accentOf(t) : COLOR.label}
                                     />
                                 ) : (
                                     <span />
                                 )}
-                                {toggle}
+                                {this.tileSwitch(t) ? null : toggle}
                             </div>
-                        ) : (
+                        ) : this.tileSwitch(t) ? null : (
                             toggle
                         )}
                     </div>
@@ -1223,7 +1285,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                 padding: `${px(4)}px ${px(7)}px`,
                                 display: tile.type === 'thermostat' ? 'flex' : undefined,
                                 flexDirection: tile.type === 'thermostat' ? 'column' : undefined,
-                                background: on ? COLOR.tileOn : COLOR.tile,
+                                background: on ? COLOR.tileOn : this.backgroundOf(tile),
                                 borderRadius: px(8),
                                 color: '#fff',
                                 cursor: 'grab',
@@ -1248,6 +1310,45 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                     );
                 })}
             </div>
+        );
+    }
+
+    /** A colour of the tile; empty = the default (shown pale), the cross empties it */
+    renderColorField(
+        index: number,
+        t: TileRow,
+        attr: 'color' | 'background' | 'bgColor',
+        label: string,
+        fallback: string,
+    ): React.JSX.Element {
+        const value = cssColor(t[attr]);
+        return (
+            <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.5 }}>
+                <TextField
+                    variant="standard"
+                    type="color"
+                    label={I18n.t(label)}
+                    value={value || fallback}
+                    sx={{ width: 110, opacity: value ? 1 : 0.5 }}
+                    onChange={e => this.update(index, { [attr]: e.target.value })}
+                />
+                {value ? (
+                    <IconButton
+                        size="small"
+                        title={I18n.t('sd_default')}
+                        onClick={() => this.update(index, { [attr]: '' })}
+                    >
+                        <IconClear fontSize="small" />
+                    </IconButton>
+                ) : (
+                    <Typography
+                        variant="caption"
+                        sx={{ opacity: 0.6, pb: 0.5 }}
+                    >
+                        {I18n.t('sd_default')}
+                    </Typography>
+                )}
+            </Box>
         );
     }
 
@@ -1393,7 +1494,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                         />
                     ) : null}
                 </Box>
-                {t.type === 'button' || (t.type === 'switch' && t.size === 'q') ? (
+                {t.type === 'button' || t.type === 'switch' || t.size !== 'q' ? (
                     <TextField
                         select
                         variant="standard"
@@ -1418,6 +1519,34 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                         ))}
                     </TextField>
                 ) : null}
+                {t.type === 'switch' ? (
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={!showToggle(t)}
+                                onChange={e => this.update(index, { hideToggle: e.target.checked })}
+                            />
+                        }
+                        label={I18n.t('sd_hide_toggle')}
+                    />
+                ) : null}
+                {t.icon && t.type !== 'button' && t.size !== 'q' ? (
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={!!t.iconOnly}
+                                onChange={e => this.update(index, { iconOnly: e.target.checked })}
+                            />
+                        }
+                        label={I18n.t('sd_icon_only')}
+                    />
+                ) : null}
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    {this.renderColorField(index, t, 'color', 'sd_color', this.accentOf({ ...t, color: '' }))}
+                    {this.renderColorField(index, t, 'background', 'sd_background', COLOR.tile)}
+                </Box>
+                {this.renderStateField(index, t, 'bgState', 'sd_bg_state')}
+                {t.bgState ? this.renderColorField(index, t, 'bgColor', 'sd_bg_color', '#7F1D1D') : null}
                 {t.type === 'value' || scaled ? (
                     <Box sx={{ display: 'flex', gap: 1 }}>
                         <TextField

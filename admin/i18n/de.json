@@ -11,5 +11,8 @@
     "Charts": "Verläufe",
     "History adapter for the charts": "Verlaufsadapter für die Diagramme",
     "Empty: a chart starts empty and draws the values as they come": "Leer: ein Diagramm beginnt leer und zeichnet die Werte, wie sie kommen",
-    "Hours shown in a chart": "Stunden in einem Diagramm"
+    "Hours shown in a chart": "Stunden in einem Diagramm",
+    "Appearance": "Darstellung",
+    "Main colour of the tiles": "Hauptfarbe der Kacheln",
+    "Value, arc, bar, line and toggles. Empty: the blue of the satellite. A tile can have its own colour.": "Wert, Bogen, Balken, Linie und Schalter. Leer: das Blau des Satelliten. Eine Kachel kann ihre eigene Farbe haben."
 }

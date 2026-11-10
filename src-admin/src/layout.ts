@@ -89,6 +89,37 @@ export interface TileRow {
     /** The tile turns red below / above this value */
     alertBelow?: number | '' | null;
     alertAbove?: number | '' | null;
+    /** Main colour and background "#RRGGBB", empty = the default */
+    color?: string;
+    background?: string;
+    /** State that switches the background (or holds a colour), and the background while it is on */
+    bgState?: string;
+    bgColor?: string;
+    /** The icon replaces the name */
+    iconOnly?: boolean;
+    /** A switch without its toggle (the whole tile switches); unset = the default of its size (showToggle) */
+    hideToggle?: boolean;
+}
+
+/** Whether a switch shows its toggle (lib/layout.js showToggleOf) */
+export function showToggle(t: TileRow): boolean {
+    if (t.type !== 'switch') {
+        return true;
+    }
+    if (typeof t.hideToggle === 'boolean') {
+        return !t.hideToggle;
+    }
+    return !((t.size === 's' || t.size === 'w') && !!t.icon && !t.iconOnly);
+}
+
+/** "#RRGGBB" (or "#RGB") of a colour field, '' when empty or no colour */
+export function cssColor(value: unknown): string {
+    const text = String(value ?? '').trim();
+    if (/^#[0-9a-f]{6}$/i.test(text)) {
+        return text;
+    }
+    const m = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(text);
+    return m ? `#${m[1]}${m[1]}${m[2]}${m[2]}${m[3]}${m[3]}` : '';
 }
 
 /** The kinds that can turn red at a threshold (lib/layout.js ALERT_TYPES) */

@@ -61,5 +61,12 @@
     "sd_hint_read_only": "Questo stato è di sola lettura: toccare il riquadro non lo commuta.",
     "sd_hint_not_number": "Questo riquadro mostra numeri, ma lo stato non è un numero.",
     "sd_alert_below": "Rosso sotto",
-    "sd_alert_above": "Rosso sopra"
+    "sd_alert_above": "Rosso sopra",
+    "sd_icon_only": "Solo l'icona (al posto del nome)",
+    "sd_color": "Colore principale",
+    "sd_background": "Sfondo",
+    "sd_bg_state": "Stato per lo sfondo (acceso = colore sotto, o un colore #RRGGBB)",
+    "sd_bg_color": "Sfondo quando acceso",
+    "sd_default": "Predefinito",
+    "sd_hide_toggle": "Tutto il riquadro commuta (senza l'interruttore)"
 }

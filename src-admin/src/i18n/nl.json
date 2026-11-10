@@ -61,5 +61,12 @@
     "sd_hint_read_only": "Deze state is alleen-lezen: een aanraking van de tegel schakelt hem niet.",
     "sd_hint_not_number": "Deze tegel toont getallen, maar de state is geen getal.",
     "sd_alert_below": "Rood onder",
-    "sd_alert_above": "Rood boven"
+    "sd_alert_above": "Rood boven",
+    "sd_icon_only": "Alleen het pictogram (in plaats van de naam)",
+    "sd_color": "Hoofdkleur",
+    "sd_background": "Achtergrond",
+    "sd_bg_state": "State voor de achtergrond (aan = kleur hieronder, of een kleur #RRGGBB)",
+    "sd_bg_color": "Achtergrond wanneer aan",
+    "sd_default": "Standaard",
+    "sd_hide_toggle": "De hele tegel schakelt (zonder schakelaar)"
 }

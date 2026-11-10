@@ -8,7 +8,7 @@
 
 const utils = require('@iobroker/adapter-core');
 const { SatelliteLink, OPTIONAL_ACTIONS } = require('./lib/satellite');
-const { normalizeSatellites, normalizeTiles, idOf } = require('./lib/layout');
+const { normalizeSatellites, normalizeTiles, idOf, colorOf } = require('./lib/layout');
 const { NAMES } = require('./lib/names');
 const {
     toNumber,
@@ -20,6 +20,7 @@ const {
     switchValue,
     setpointValue,
     alertColor,
+    backgroundOf,
     tileArgs,
 } = require('./lib/values');
 
@@ -43,7 +44,8 @@ const PREVIEW_MS = 10 * 60_000;
  * @property {Partial<ioBroker.StateCommon>} common2 - Common part of the object of the second state (on/off of a
  *   dimmer, target temperature of a thermostat)
  * @property {number} lastLevel - Last level above 0 of a dimmer (switched on again with it)
- * @property {number} lastColor - Colour last sent with tile_color, -1 = none since tile_set
+ * @property {number} lastColor - Colour last sent with tile_color (0 = the theme, as after tile_set)
+ * @property {number} lastBackground - Background last sent with tile_background (0 = the theme)
  */
 
 class SatelliteDisplay extends utils.Adapter {
@@ -180,7 +182,9 @@ class SatelliteDisplay extends utils.Adapter {
     async bindTiles(tiles) {
         this.bound = await this.boundOf(tiles, true);
         for (const b of this.bound) {
-            for (const id of [b.tile.state, b.tile.state2, b.tile.state3].filter(Boolean)) {
+            for (const id of [...new Set([b.tile.state, b.tile.state2, b.tile.state3, b.tile.bgState])].filter(
+                Boolean,
+            )) {
                 const list = this.byState.get(id) || [];
                 list.push(b);
                 this.byState.set(id, list);
@@ -231,7 +235,8 @@ class SatelliteDisplay extends utils.Adapter {
                 common: /** @type {Partial<ioBroker.StateCommon>} */ (obj?.common || {}),
                 common2: /** @type {Partial<ioBroker.StateCommon>} */ (obj2?.common || {}),
                 lastLevel: 100,
-                lastColor: -1,
+                lastColor: 0,
+                lastBackground: 0,
             };
             result.push(b);
         }
@@ -355,7 +360,13 @@ class SatelliteDisplay extends utils.Adapter {
         for (const b of mine) {
             link.call('tile_set', b.args);
             // tile_set starts with the colours of the theme
-            b.lastColor = -1;
+            b.lastColor = 0;
+            b.lastBackground = 0;
+            this.sendColor(link, b, null);
+            this.sendBackground(link, b, null);
+            if (b.tile.type === 'switch' && link.has('tile_toggle')) {
+                link.call('tile_toggle', { page: b.tile.page, slot: b.tile.slot, show: b.tile.showToggle });
+            }
         }
         for (const b of mine) {
             await this.pushAll(b);
@@ -399,7 +410,10 @@ class SatelliteDisplay extends utils.Adapter {
         try {
             const state = await this.getForeignStateAsync(b.tile.state);
             this.push(b, b.tile.state, state?.val);
-            for (const id of [b.tile.state2, b.tile.state3].filter(Boolean)) {
+            for (const id of [b.tile.state2, b.tile.state3, b.tile.bgState].filter(Boolean)) {
+                if (id === b.tile.state) {
+                    continue;
+                }
                 const other = await this.getForeignStateAsync(id);
                 this.push(b, id, other?.val);
             }
@@ -421,6 +435,12 @@ class SatelliteDisplay extends utils.Adapter {
             return;
         }
         const { page, slot } = b.tile;
+        if (id === b.tile.bgState) {
+            this.sendBackground(link, b, val);
+            if (id !== b.tile.state && id !== b.tile.state2 && id !== b.tile.state3) {
+                return;
+            }
+        }
         switch (b.tile.type) {
             case 'value': {
                 const mapped = stateText(val, b.common, this.lang);
@@ -494,16 +514,37 @@ class SatelliteDisplay extends utils.Adapter {
      *
      * @param {SatelliteLink} link - Connection of the satellite
      * @param {Bound} b - Tile
-     * @param {number} value - Its value
+     * @param {number | null} value - Its value, null = no value (only the colour of the tile)
      */
     sendColor(link, b, value) {
-        if ((b.tile.alertBelow === null && b.tile.alertAbove === null) || !link.has('tile_color')) {
+        if (!link.has('tile_color')) {
             return;
         }
-        const color = alertColor(value, b.tile);
+        // red beyond a threshold, else the colour of the tile, else the default of the settings, else the theme
+        const alert = value === null ? 0 : alertColor(value, b.tile);
+        const color = alert || (b.tile.color ?? colorOf(this.config.accentColor) ?? 0);
         if (color !== b.lastColor) {
             b.lastColor = color;
             link.call('tile_color', { page: b.tile.page, slot: b.tile.slot, color });
+        }
+    }
+
+    /**
+     * The background of a tile: from its background state, else its own colour, else the theme. Sent only when it
+     * changes; a firmware without tile_background (before 2.0.4) gets none.
+     *
+     * @param {SatelliteLink} link - Connection of the satellite
+     * @param {Bound} b - Tile
+     * @param {unknown} val - Value of the background state, null when not known yet
+     */
+    sendBackground(link, b, val) {
+        if (!link.has('tile_background')) {
+            return;
+        }
+        const background = backgroundOf(b.tile.bgState ? val : null, b.tile, colorOf);
+        if (background !== b.lastBackground) {
+            b.lastBackground = background;
+            link.call('tile_background', { page: b.tile.page, slot: b.tile.slot, color: background });
         }
     }
 

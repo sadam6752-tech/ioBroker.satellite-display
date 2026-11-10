@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const { normalizeSatellites, normalizeTiles, idOf, numberOrNull, ICONS } = require('../../lib/layout');
+const { normalizeSatellites, normalizeTiles, idOf, numberOrNull, ICONS, colorOf } = require('../../lib/layout');
 
 const SATS = [
     { enabled: true, name: 'Gast', host: '192.168.1.246', port: 6053 },
@@ -134,6 +134,48 @@ describe('layout', () => {
                 ['', '', 0.5],
             ],
         );
+    });
+
+    it('shows the toggle of a switch as set, else by its size and icon', () => {
+        const problems = [];
+        const sats = normalizeSatellites(SATS, problems);
+        const t = extra => normalizeTiles([row({ type: 'switch', ...extra })], sats, problems)[0].showToggle;
+        assert.equal(t({ size: 's' }), true, 'no icon: with the toggle');
+        assert.equal(t({ size: 's', icon: 'lamp' }), false, 'icon and name: the tile is the switch');
+        assert.equal(t({ size: 's', icon: 'lamp', iconOnly: true }), true, 'only the icon: with the toggle');
+        assert.equal(t({ size: 'q', icon: 'lamp' }), true, 'square: with the toggle');
+        assert.equal(t({ size: 'q', icon: 'lamp', hideToggle: true }), false);
+        assert.equal(t({ size: 's', icon: 'lamp', hideToggle: false }), true);
+        assert.equal(normalizeTiles([row({ type: 'value' })], sats, problems)[0].showToggle, true);
+    });
+
+    it('reads colours of the settings', () => {
+        assert.equal(colorOf('#38BDF8'), 0x38bdf8);
+        assert.equal(colorOf('#fff'), 0xffffff);
+        assert.equal(colorOf(''), null);
+        assert.equal(colorOf('blue'), null);
+        assert.equal(colorOf(undefined), null);
+    });
+
+    it('keeps the colours, the background state and "icon only" of a tile', () => {
+        const problems = [];
+        const sats = normalizeSatellites(SATS, problems);
+        const tiles = normalizeTiles(
+            [
+                row({ size: 's', color: '#ff0000', background: '#111111', bgState: ' a.0.alarm ', bgColor: '#7f1d1d', icon: 'bell', iconOnly: true }),
+                row({ col: 1, size: 's', iconOnly: true }),
+                row({ row: 2, size: 's', type: 'button', icon: 'bell', iconOnly: true }),
+            ],
+            sats,
+            problems,
+        );
+        assert.deepEqual(problems, []);
+        assert.deepEqual(
+            [tiles[0].color, tiles[0].background, tiles[0].bgState, tiles[0].bgColor, tiles[0].iconOnly],
+            [0xff0000, 0x111111, 'a.0.alarm', 0x7f1d1d, true],
+        );
+        assert.equal(tiles[1].iconOnly, false, 'without an icon there is nothing to show instead of the name');
+        assert.equal(tiles[2].iconOnly, false, 'a button always shows its name');
     });
 
     it('keeps thresholds only for the tiles that show a number', () => {

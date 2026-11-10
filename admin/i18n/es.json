@@ -11,5 +11,8 @@
     "Charts": "Gráficos",
     "History adapter for the charts": "Adaptador de historial para los gráficos",
     "Empty: a chart starts empty and draws the values as they come": "Vacío: un gráfico empieza vacío y dibuja los valores a medida que llegan",
-    "Hours shown in a chart": "Horas mostradas en un gráfico"
+    "Hours shown in a chart": "Horas mostradas en un gráfico",
+    "Appearance": "Apariencia",
+    "Main colour of the tiles": "Color principal de los mosaicos",
+    "Value, arc, bar, line and toggles. Empty: the blue of the satellite. A tile can have its own colour.": "Valor, arco, barra, línea e interruptores. Vacío: el azul del satélite. Un mosaico puede tener su propio color."
 }

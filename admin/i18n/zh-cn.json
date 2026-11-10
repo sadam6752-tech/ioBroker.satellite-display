@@ -11,5 +11,8 @@
     "Charts": "图表",
     "History adapter for the charts": "图表使用的历史适配器",
     "Empty: a chart starts empty and draws the values as they come": "留空:图表从空白开始,随数值到达逐步绘制",
-    "Hours shown in a chart": "图表显示的小时数"
+    "Hours shown in a chart": "图表显示的小时数",
+    "Appearance": "外观",
+    "Main colour of the tiles": "磁贴的主颜色",
+    "Value, arc, bar, line and toggles. Empty: the blue of the satellite. A tile can have its own colour.": "数值、圆弧、进度条、线条和开关。留空：卫星的蓝色。每个磁贴可以有自己的颜色。"
 }

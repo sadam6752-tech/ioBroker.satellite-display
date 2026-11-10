@@ -11,5 +11,8 @@
     "Charts": "Графіки",
     "History adapter for the charts": "Адаптер історії для графіків",
     "Empty: a chart starts empty and draws the values as they come": "Порожньо: графік починається порожнім і малює значення в міру надходження",
-    "Hours shown in a chart": "Годин на графіку"
+    "Hours shown in a chart": "Годин на графіку",
+    "Appearance": "Оформлення",
+    "Main colour of the tiles": "Основний колір плиток",
+    "Value, arc, bar, line and toggles. Empty: the blue of the satellite. A tile can have its own colour.": "Значення, дуга, смуга, лінія та перемикачі. Порожньо: синій колір сателіта. Плитка може мати власний колір."
 }

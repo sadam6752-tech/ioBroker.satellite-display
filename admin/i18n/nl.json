@@ -11,5 +11,8 @@
     "Charts": "Grafieken",
     "History adapter for the charts": "Geschiedenisadapter voor de grafieken",
     "Empty: a chart starts empty and draws the values as they come": "Leeg: een grafiek begint leeg en tekent de waarden zoals ze komen",
-    "Hours shown in a chart": "Uren in een grafiek"
+    "Hours shown in a chart": "Uren in een grafiek",
+    "Appearance": "Weergave",
+    "Main colour of the tiles": "Hoofdkleur van de tegels",
+    "Value, arc, bar, line and toggles. Empty: the blue of the satellite. A tile can have its own colour.": "Waarde, boog, balk, lijn en schakelaars. Leeg: het blauw van de satelliet. Een tegel kan een eigen kleur hebben."
 }
