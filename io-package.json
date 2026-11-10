@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "satellite-display",
-        "version": "0.1.0",
+        "version": "0.1.1",
         "news": {
+            "0.1.1": {
+                "en": "Tile panel without voice (Waveshare ESP32-S3-Touch-LCD-2): state brightness, e.g. for a night mode from a script",
+                "de": "Kachel-Panel ohne Sprache (Waveshare ESP32-S3-Touch-LCD-2): Datenpunkt brightness, z. B. für einen Nachtmodus per Skript",
+                "ru": "Панель плиток без голоса (Waveshare ESP32-S3-Touch-LCD-2): состояние brightness, например для ночного режима из скрипта",
+                "pt": "Painel de blocos sem voz (Waveshare ESP32-S3-Touch-LCD-2): estado brightness, p. ex. para um modo noturno por script",
+                "nl": "Tegelpaneel zonder spraak (Waveshare ESP32-S3-Touch-LCD-2): state brightness, bijv. voor een nachtmodus via een script",
+                "fr": "Panneau de tuiles sans voix (Waveshare ESP32-S3-Touch-LCD-2) : état brightness, p. ex. pour un mode nuit par script",
+                "it": "Pannello di riquadri senza voce (Waveshare ESP32-S3-Touch-LCD-2): stato brightness, ad es. per una modalità notte da script",
+                "es": "Panel de mosaicos sin voz (Waveshare ESP32-S3-Touch-LCD-2): estado brightness, p. ej. para un modo nocturno por script",
+                "pl": "Panel kafelków bez głosu (Waveshare ESP32-S3-Touch-LCD-2): stan brightness, np. dla trybu nocnego ze skryptu",
+                "uk": "Панель плиток без голосу (Waveshare ESP32-S3-Touch-LCD-2): стан brightness, наприклад для нічного режиму зі скрипта",
+                "zh-cn": "无语音的磁贴面板（Waveshare ESP32-S3-Touch-LCD-2）：状态 brightness，例如用脚本实现夜间模式"
+            },
             "0.1.0": {
                 "en": "Screen lock with a PIN: only the clock until the PIN is typed, no wake word; tab Authentication decides when it locks again (satellite firmware 2.1.0)",
                 "de": "Bildschirmsperre mit PIN: nur die Uhr bis zur Eingabe der PIN, kein Aktivierungswort; der Reiter Authentifizierung legt fest, wann wieder gesperrt wird (Satelliten-Firmware 2.1.0)",
@@ -80,19 +93,6 @@
                 "pl": "Edytor kafelków: przeciągnięcie kafelka na inny zamienia je miejscami; wybrany stan przynosi nazwę i jednostkę",
                 "uk": "Редактор плиток: перетягніть плитку на іншу, щоб поміняти їх місцями; вибраний стан приносить ім'я та одиницю",
                 "zh-cn": "磁贴编辑器：将一个磁贴拖到另一个上即可交换；选择的状态会带入其名称和单位"
-            },
-            "0.0.3": {
-                "en": "Small bar and chart tiles (1 x 1, satellite firmware 2.0.2); the editor marks tiles that would be left out",
-                "de": "Kleine Balken- und Verlaufskacheln (1 x 1, Satelliten-Firmware 2.0.2); der Editor markiert Kacheln, die weggelassen würden",
-                "ru": "Маленькие плитки с полосой и графиком (1 x 1, прошивка сателлита 2.0.2); редактор отмечает плитки, которые будут пропущены",
-                "pt": "Blocos pequenos de barra e gráfico (1 x 1, firmware do satélite 2.0.2); o editor marca os blocos que seriam omitidos",
-                "nl": "Kleine balk- en grafiektegels (1 x 1, satellietfirmware 2.0.2); de editor markeert tegels die zouden worden weggelaten",
-                "fr": "Petites tuiles barre et courbe (1 x 1, firmware du satellite 2.0.2) ; l'éditeur marque les tuiles qui seraient omises",
-                "it": "Piccoli riquadri con barra e grafico (1 x 1, firmware del satellite 2.0.2); l'editor segna i riquadri che verrebbero omessi",
-                "es": "Mosaicos pequeños de barra y gráfico (1 x 1, firmware del satélite 2.0.2); el editor marca los mosaicos que se omitirían",
-                "pl": "Małe kafelki z paskiem i wykresem (1 x 1, firmware satelity 2.0.2); edytor oznacza kafelki, które zostałyby pominięte",
-                "uk": "Малі плитки зі смугою та графіком (1 x 1, прошивка сателіта 2.0.2); редактор позначає плитки, які буде пропущено",
-                "zh-cn": "小型进度条和图表磁贴（1 x 1，卫星固件 2.0.2）；编辑器会标记将被忽略的磁贴"
             }
         },
         "titleLang": {

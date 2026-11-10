@@ -103,6 +103,8 @@ class SatelliteDisplay extends utils.Adapter {
         await this.bindTiles(tiles);
         await this.subscribeStatesAsync('satellites.*.resend');
         await this.subscribeStatesAsync('satellites.*.locked');
+        await this.subscribeStatesAsync('satellites.*.brightness');
+        await this.subscribeStatesAsync('satellites.*.media.*');
 
         for (const sat of satellites) {
             this.satellites.set(sat.id, sat);
@@ -124,6 +126,7 @@ class SatelliteDisplay extends utils.Adapter {
             link.on('problem', message => this.log.info(`${sat.name} (${sat.host}): ${message}`));
             link.on('input', input => void this.onInput(sat, input));
             link.on('lock', lock => void this.onLockState(sat, lock));
+            link.on('media', media => void this.onMediaState(sat, media));
             this.links.set(sat.id, link);
             try {
                 link.start();
@@ -349,6 +352,8 @@ class SatelliteDisplay extends utils.Adapter {
     async onSatelliteReady(sat) {
         this.log.info(`${sat.name} (${sat.host}) connected`);
         this.sendLock(sat);
+        await this.setupBrightness(sat);
+        await this.setupMedia(sat);
         await this.sendLayout(sat);
         await this.setState(`satellites.${sat.id}.connected`, { val: true, ack: true });
         await this.updateConnection();
@@ -382,6 +387,154 @@ class SatelliteDisplay extends utils.Adapter {
             mode,
             minutes,
         });
+    }
+
+    /**
+     * A display whose firmware takes its brightness from ioBroker (the tile panel) gets the state
+     * satellites.<name>.brightness; after a connect it gets the value of the state again.
+     *
+     * @param {SatelliteConfig} sat - Satellite
+     */
+    async setupBrightness(sat) {
+        const link = this.links.get(sat.id);
+        if (!link?.has('display_brightness')) {
+            return;
+        }
+        const id = `satellites.${sat.id}.brightness`;
+        await this.extendObject(id, {
+            type: 'state',
+            common: {
+                name: NAMES.brightness,
+                type: 'number',
+                role: 'level.dimmer',
+                unit: '%',
+                min: 0,
+                max: 100,
+                read: true,
+                write: true,
+            },
+            native: {},
+        });
+        const state = await this.getStateAsync(id);
+        if (state && state.val !== null && state.val !== undefined) {
+            this.sendBrightness(sat, state.val);
+        }
+    }
+
+    /**
+     * A display with a player of its own (the tile panel with an I2S amplifier) gets satellites.<name>.media.*:
+     * url plays a stream (e.g. from an AirPlay receiver), volume, stop, and state reports what it does.
+     *
+     * @param {SatelliteConfig} sat - Satellite
+     */
+    async setupMedia(sat) {
+        if (!this.links.get(sat.id)?.has('media_play')) {
+            return;
+        }
+        const base = `satellites.${sat.id}.media`;
+        await this.extendObject(base, { type: 'channel', common: { name: NAMES.media }, native: {} });
+        /** @type {Record<string, Partial<ioBroker.StateCommon>>} */
+        const states = {
+            url: { name: NAMES.mediaUrl, type: 'string', role: 'media.url', read: true, write: true, def: '' },
+            volume: {
+                name: NAMES.mediaVolume,
+                type: 'number',
+                role: 'level.volume',
+                unit: '%',
+                min: 0,
+                max: 100,
+                read: true,
+                write: true,
+            },
+            title: { name: NAMES.mediaTitle, type: 'string', role: 'media.title', read: true, write: true, def: '' },
+            stop: { name: NAMES.mediaStop, type: 'boolean', role: 'button.stop', read: false, write: true, def: false },
+            state: {
+                name: NAMES.mediaState,
+                type: 'string',
+                role: 'media.state',
+                read: true,
+                write: false,
+                def: 'idle',
+            },
+        };
+        for (const [key, common] of Object.entries(states)) {
+            await this.extendObject(`${base}.${key}`, {
+                type: 'state',
+                common: /** @type {ioBroker.StateCommon} */ (common),
+                native: {},
+            });
+        }
+    }
+
+    /**
+     * What the player of a display does.
+     *
+     * @param {SatelliteConfig} sat - Satellite
+     * @param {{state: string, volume: number | null}} media - Its state
+     */
+    async onMediaState(sat, media) {
+        const base = `satellites.${sat.id}.media`;
+        await this.setState(`${base}.state`, { val: media.state, ack: true });
+        if (media.volume !== null) {
+            await this.setState(`${base}.volume`, { val: media.volume, ack: true });
+        }
+    }
+
+    /**
+     * A write to satellites.<name>.media.*: play, stop, volume.
+     *
+     * @param {string} id - State id
+     * @param {ioBroker.State} state - New state
+     */
+    async onMediaCommand(id, state) {
+        const parts = id.split('.');
+        const sat = this.satellites.get(parts[3]);
+        const link = sat ? this.links.get(sat.id) : undefined;
+        if (!sat || !link?.ready || !link.has('media_play')) {
+            this.log.info(`${sat?.name ?? id}: the player cannot be used now (not connected or no player)`);
+            return;
+        }
+        const key = parts[5];
+        if (key === 'url') {
+            const url = String(state.val ?? '').trim();
+            if (url) {
+                link.call('media_play', { url });
+                this.log.debug(`${sat.name}: plays ${url}`);
+            } else {
+                link.call('media_stop', {});
+            }
+            await this.setState(id, { val: url, ack: true });
+        } else if (key === 'title') {
+            const title = String(state.val ?? '').slice(0, 48);
+            if (link.has('media_title')) {
+                link.call('media_title', { title });
+            }
+            await this.setState(id, { val: title, ack: true });
+        } else if (key === 'stop' && state.val) {
+            link.call('media_stop', {});
+            await this.setState(id, { val: false, ack: true });
+        } else if (key === 'volume') {
+            const n = toNumber(state.val);
+            if (n !== null) {
+                link.call('media_volume', { volume: Math.max(0, Math.min(100, Math.round(n))) });
+            }
+        }
+    }
+
+    /**
+     * @param {SatelliteConfig} sat - Satellite
+     * @param {ioBroker.StateValue} val - Brightness 0..100, 0 = dark
+     * @returns {number | null} The brightness sent, null when not
+     */
+    sendBrightness(sat, val) {
+        const link = this.links.get(sat.id);
+        const n = toNumber(val);
+        if (n === null || !link?.ready || !link.has('display_brightness')) {
+            return null;
+        }
+        const brightness = Math.max(0, Math.min(100, Math.round(n)));
+        link.call('display_brightness', { brightness });
+        return brightness;
     }
 
     /**
@@ -759,6 +912,24 @@ class SatelliteDisplay extends utils.Adapter {
      */
     async onStateChange(id, state) {
         if (!state || this.stopping) {
+            return;
+        }
+        if (id.startsWith(`${this.namespace}.satellites.`) && id.split('.')[4] === 'media') {
+            if (!state.ack) {
+                await this.onMediaCommand(id, state);
+            }
+            return;
+        }
+        if (id.startsWith(`${this.namespace}.satellites.`) && id.endsWith('.brightness')) {
+            if (!state.ack) {
+                const sat = this.satellites.get(id.split('.')[3]);
+                const sent = sat ? this.sendBrightness(sat, state.val) : null;
+                if (sent !== null) {
+                    await this.setState(id, { val: sent, ack: true });
+                } else {
+                    this.log.info(`${sat?.name ?? id}: the brightness cannot be set now (not connected)`);
+                }
+            }
             return;
         }
         if (id.startsWith(`${this.namespace}.satellites.`) && id.endsWith('.locked')) {

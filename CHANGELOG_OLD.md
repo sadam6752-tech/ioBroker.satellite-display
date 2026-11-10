@@ -2,6 +2,13 @@
 
 Versions that no longer fit into the changelog of the [README](README.md) (it keeps the last five) are moved here.
 
+### 0.0.5 (2026-11-09)
+
+- Tile editor: "Copy page" copies the visible page to another page or another satellite (the tiles there are
+  replaced)
+- The icons are shown in the list and in the preview
+- Undo with Ctrl+Z or the undo button (the last 50 changes)
+
 ### 0.0.4 (2026-11-09)
 
 - Tile editor: drag a tile onto another one to swap the two (the target shows blue when they fit, red when not)

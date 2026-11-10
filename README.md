@@ -19,6 +19,10 @@ with the [Waveshare 2.8inch Capacitive Touch LCD](https://www.waveshare.com/wiki
 [ioBroker.assistant](https://github.com/ioBroker/ioBroker.assistant): this adapter opens its own connection to the
 ESPHome Native API next to it and only handles the display.
 
+A display without voice works too: the firmware repository has `panel-lcd2.yaml` for the
+[Waveshare ESP32-S3-Touch-LCD-2](https://www.waveshare.com/wiki/ESP32-S3-Touch-LCD-2), a 2 inch tile panel with the
+same tile pages and screen lock. Add it like a satellite (IP address, port 6053).
+
 ```
 ioBroker states  ──▶  satellite-display  ──▶  satellite (tile pages)
        ▲                                           │
@@ -121,6 +125,12 @@ works after a restart and without ioBroker. Needs the satellite firmware **2.1.0
 | `satellites.<name>.resend` | button: sends all tiles again |
 | `satellites.<name>.locked` | the screen is locked; write `true` / `false` to lock or unlock (only with a screen lock) |
 | `satellites.<name>.failedPins` | wrong PINs in a row on the display (only with a screen lock) |
+| `satellites.<name>.media.url` | play this stream URL (only displays with a player, e.g. the tile panel with an I2S amplifier); empty = stop |
+| `satellites.<name>.media.volume` | volume 0-100 % |
+| `satellites.<name>.media.title` | title shown in the bar of the clock while it plays (e.g. the station) |
+| `satellites.<name>.media.stop` | button: stop playing |
+| `satellites.<name>.media.state` | `playing`, `paused`, `announcing` or `idle` |
+| `satellites.<name>.brightness` | brightness of the display 0-100 %, 0 = dark (only displays that take it from ioBroker, e.g. the tile panel) |
 
 The satellite keeps no layout: after a restart or a lost connection the adapter sends all tiles and their values
 again by itself.
@@ -144,6 +154,13 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+
+### 0.1.1 (2026-11-10)
+
+- The tile panel without voice (Waveshare ESP32-S3-Touch-LCD-2, `panel-lcd2.yaml` of the firmware) works as a
+  satellite; its state `satellites.<name>.brightness` sets the brightness of the display (0 = dark)
+- A display with a player (the panel with a MAX98357A amplifier) gets `satellites.<name>.media.*`: a stream URL to
+  play (e.g. from an AirPlay receiver), volume, stop and its state
 
 ### 0.1.0 (2026-11-10)
 
@@ -172,13 +189,6 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 - A value tile shows the text that `common.states` of the object gives the value (e.g. 1 → "Heizen")
 - The editor warns about a state that does not exist, a read-only state on a switch, and a number tile on a state
   that is no number
-
-### 0.0.5 (2026-11-09)
-
-- Tile editor: "Copy page" copies the visible page to another page or another satellite (the tiles there are
-  replaced)
-- The icons are shown in the list and in the preview
-- Undo with Ctrl+Z or the undo button (the last 50 changes)
 
 ## License
 

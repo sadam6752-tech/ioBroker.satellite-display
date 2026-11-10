@@ -205,6 +205,23 @@ describe('satellite link', () => {
         assert.deepEqual(inputs, [{ page: 2, slot: 1, input: 'level', value: 53 }]);
     });
 
+    it('passes on the state of the player of a display', () => {
+        const link = startLink();
+        const conn = FakeConnection.last;
+        /** @type {any[]} */
+        const media = [];
+        link.on('media', m => media.push(m));
+        conn.emit('message.HomeassistantActionRequest', {
+            service: 'esphome.media_state',
+            isEvent: true,
+            dataList: [
+                { key: 'state', value: 'playing' },
+                { key: 'volume', value: '45' },
+            ],
+        });
+        assert.deepEqual(media, [{ state: 'playing', volume: 45 }]);
+    });
+
     it('passes on the state of the screen lock', () => {
         const link = startLink();
         const conn = FakeConnection.last;
