@@ -155,6 +155,11 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
     ### **WORK IN PROGRESS**
 -->
 
+### **WORK IN PROGRESS**
+
+- `media.url` plays only an `http://` or `https://` address; an empty value or `stop` (as other players of ioBroker
+  take it, e.g. ioBroker.spotify-connect) stops the player
+
 ### 0.1.1 (2026-11-10)
 
 - The tile panel without voice (Waveshare ESP32-S3-Touch-LCD-2, `panel-lcd2.yaml` of the firmware) works as a

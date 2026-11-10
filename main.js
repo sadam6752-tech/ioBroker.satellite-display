@@ -497,7 +497,8 @@ class SatelliteDisplay extends utils.Adapter {
         const key = parts[5];
         if (key === 'url') {
             const url = String(state.val ?? '').trim();
-            if (url) {
+            // only a URL plays; anything else (empty, "stop" as other players of ioBroker take it) stops
+            if (/^https?:\/\//i.test(url)) {
                 link.call('media_play', { url });
                 this.log.debug(`${sat.name}: plays ${url}`);
             } else {
