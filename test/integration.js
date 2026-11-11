@@ -69,6 +69,21 @@ tests.integration(path.join(__dirname, '..'), {
                 assert.ok(unknown.error, JSON.stringify(unknown));
                 const ended = await ask('previewEnd', { satellite: 'Test Room' });
                 assert.equal(ended.ok, true);
+
+                // the commands for an AI agent: a real sendTo through js-controller
+                const help = await ask('help', {});
+                assert.match(String(help.help), /addTile/);
+                const list = await ask('getTiles', {});
+                assert.deepEqual(list.satellites, ['Test Room']);
+                assert.equal(list.tiles.length, 1);
+                const added = await ask('addTile', {
+                    type: 'switch',
+                    size: 's',
+                    state: 'system.adapter.satellite-display.0.alive',
+                    icon: 'lightbulb',
+                });
+                assert.equal(added.ok, true, JSON.stringify(added));
+                assert.deepEqual([added.added.page, added.added.col, added.added.row], [1, 1, 0]);
             });
         });
     },

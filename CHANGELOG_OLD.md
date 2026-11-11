@@ -2,6 +2,11 @@
 
 Versions that no longer fit into the changelog of the [README](README.md) (it keeps the last five) are moved here.
 
+### 0.0.7 (2026-11-09)
+
+- Thresholds: "Red below" / "Red above" turn the value and its arc, bar or line red beyond a value (satellite
+  firmware 2.0.3)
+
 ### 0.0.6 (2026-11-09)
 
 - Tile editor: "Show on the satellite" sends the tiles as they are in the editor to the satellite, without saving

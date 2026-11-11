@@ -10,6 +10,7 @@ const utils = require('@iobroker/adapter-core');
 const { SatelliteLink, OPTIONAL_ACTIONS } = require('./lib/satellite');
 const { normalizeSatellites, normalizeTiles, idOf, colorOf } = require('./lib/layout');
 const { NAMES } = require('./lib/names');
+const { EDIT_COMMANDS, runCommand } = require('./lib/commands');
 const {
     toNumber,
     isOn,
@@ -76,6 +77,10 @@ class SatelliteDisplay extends utils.Adapter {
         this.oldFirmwareWarned = new Set();
         /** @type {Map<string, {bound: Bound[], timer: ioBroker.Timeout | undefined}>} satellite id → tiles of the editor */
         this.previews = new Map();
+        /** @type {Record<string, unknown>[] | undefined} tiles changed by commands, saved a moment later */
+        this.pendingTiles = undefined;
+        /** @type {ioBroker.Timeout | undefined} */
+        this.saveTimer = undefined;
     }
 
     async onReady() {
@@ -292,6 +297,10 @@ class SatelliteDisplay extends utils.Adapter {
                 this.sendTo(obj.from, obj.command, answer, obj.callback);
             }
         };
+        if (EDIT_COMMANDS.includes(obj.command)) {
+            await this.onEditCommand(obj.command, /** @type {Record<string, unknown>} */ (obj.message || {}), reply);
+            return;
+        }
         const sat = this.satellites.get(idOf(String(msg.satellite || '')));
         if (obj.command !== 'preview' && obj.command !== 'previewEnd') {
             return;
@@ -327,6 +336,66 @@ class SatelliteDisplay extends utils.Adapter {
             await this.sendLayout(sat);
         }
         reply({ ok: true, tiles: bound.length, problems, connected: !!link?.ready });
+    }
+
+    /**
+     * A command on the tile list (help, getTiles, addTile, updateTile, moveTile, removeTile), e.g. from an AI agent.
+     * A change is answered first and then saved in the settings of the instance, which restarts it and shows it.
+     *
+     * @param {string} command - Command
+     * @param {Record<string, unknown>} msg - Message
+     * @param {(answer: Record<string, unknown>) => void} reply - Answer
+     */
+    async onEditCommand(command, msg, reply) {
+        /** @type {{answer: Record<string, unknown> | string, tiles?: Record<string, unknown>[]}} */
+        let result;
+        try {
+            result = await runCommand(command, msg, {
+                satellites: /** @type {Record<string, unknown>[]} */ (this.config.satellites || []),
+                // changes of earlier commands that wait for the restart count too
+                tiles: this.pendingTiles ?? /** @type {Record<string, unknown>[]} */ (this.config.tiles || []),
+                stateExists: async id => !!(await this.getForeignObjectAsync(id).catch(() => null)),
+            });
+        } catch (e) {
+            reply({ error: e.message });
+            return;
+        }
+        reply(typeof result.answer === 'string' ? { help: result.answer } : result.answer);
+        if (result.tiles) {
+            this.log.info(`Tiles changed by the command ${command}: ${JSON.stringify(result.answer).slice(0, 200)}`);
+            this.pendingTiles = result.tiles;
+            this.scheduleTileSave();
+        }
+    }
+
+    /** Saves the changed tiles in the settings a moment later (several commands in a row: one restart). */
+    scheduleTileSave() {
+        if (this.saveTimer) {
+            this.clearTimeout(this.saveTimer);
+            this.timers.delete(this.saveTimer);
+        }
+        const timer = this.setTimeout(() => {
+            this.timers.delete(timer);
+            this.saveTimer = undefined;
+            void this.saveTiles();
+        }, 1500);
+        this.saveTimer = timer;
+        this.timers.add(timer);
+    }
+
+    async saveTiles() {
+        const tiles = this.pendingTiles;
+        if (!tiles) {
+            return;
+        }
+        const id = `system.adapter.${this.namespace}`;
+        const obj = await this.getForeignObjectAsync(id);
+        if (!obj) {
+            return;
+        }
+        obj.native = { ...obj.native, tiles };
+        // the whole object: extendForeignObject would merge the old list into the new one; the instance restarts
+        await this.setForeignObjectAsync(id, obj);
     }
 
     /**

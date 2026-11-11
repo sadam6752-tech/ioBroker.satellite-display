@@ -115,6 +115,24 @@ the alarm system); `satellites.<name>.failedPins` counts the wrong PINs.
 The PIN does not leave ioBroker: the satellite gets its SHA-256 hash and keeps it in its flash, so the lock also
 works after a restart and without ioBroker. Needs the satellite firmware **2.1.0**.
 
+## Commands (e.g. for an AI agent)
+
+The tiles can also be changed with `sendTo('satellite-display.0', command, message)`, e.g. by ioBroker.pi-agent
+("add a narrow switch for the light in the living room to the display of Gast"). The answers are short JSON; an error
+names what to ask the user (which satellite, which page when all are full).
+
+| Command | Message | Does |
+| --- | --- | --- |
+| `help` | – | describes the commands, kinds, sizes, icons and the grid |
+| `getTiles` | `{satellite?}` | lists the satellites, their tiles (with an `id`) and the free cells |
+| `addTile` | `{satellite, type, state, size?, icon?, label?, unit?, state2?, state3?, page?, col?, row?}` | adds a tile, without a place in the first free cell; answers where it went |
+| `updateTile` | `{id, ...fields}` | changes a tile |
+| `moveTile` | `{id, page, col?, row?}` | moves a tile, without `col`/`row` to the first free cell of the page |
+| `removeTile` | `{id}` | removes a tile |
+
+A change is saved in the settings of the instance, which then restarts and sends the tiles (a few seconds). In
+ioBroker.pi-agent the instance needs "Write allowed" in the write permissions.
+
 ## States
 
 | State | Meaning |
@@ -155,6 +173,11 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
     ### **WORK IN PROGRESS**
 -->
 
+### 0.2.0 (2026-11-11)
+
+- Commands for AI agents such as ioBroker.pi-agent (sendTo): `help`, `getTiles`, `addTile`, `updateTile`, `moveTile`,
+  `removeTile`; a tile without a place goes to the first free cell, and the answers say what to ask the user
+
 ### 0.1.2 (2026-11-10)
 
 - `media.url` plays only an `http://` or `https://` address; an empty value or `stop` (as other players of ioBroker
@@ -180,11 +203,6 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
   background from another state (on = a chosen colour, or a colour `#RRGGBB` written into the state)
 - Icons on the small, wide and large tiles of every kind, "only the icon" instead of the name; a small or wide
   switch with an icon and a name becomes a tile switch without the toggle (satellite firmware 2.0.4)
-
-### 0.0.7 (2026-11-09)
-
-- Thresholds: "Red below" / "Red above" turn the value and its arc, bar or line red beyond a value (satellite
-  firmware 2.0.3)
 
 ## License
 
