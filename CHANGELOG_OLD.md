@@ -2,6 +2,13 @@
 
 Versions that no longer fit into the changelog of the [README](README.md) (it keeps the last five) are moved here.
 
+### 0.0.8 (2026-11-10)
+
+- Colours: a default main colour of the tiles (tab Appearance), an own main colour and background per tile, and a
+  background from another state (on = a chosen colour, or a colour `#RRGGBB` written into the state)
+- Icons on the small, wide and large tiles of every kind, "only the icon" instead of the name; a small or wide
+  switch with an icon and a name becomes a tile switch without the toggle (satellite firmware 2.0.4)
+
 ### 0.0.7 (2026-11-09)
 
 - Thresholds: "Red below" / "Red above" turn the value and its arc, bar or line red beyond a value (satellite

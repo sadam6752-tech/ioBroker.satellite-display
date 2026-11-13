@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "satellite-display",
-        "version": "0.2.0",
+        "version": "0.2.1",
         "news": {
+            "0.2.1": {
+                "en": "A tile shows a device state only once it is confirmed (states of 0_userdata and scripts at once); media.state has the values play, pause, stop; the satellite state connected has the role indicator.reachable; the tile editor needs admin 8.0.0",
+                "de": "Eine Kachel zeigt einen Gerätezustand erst, wenn er bestätigt ist (States in 0_userdata und von Skripten sofort); media.state hat die Werte play, pause, stop; der State connected des Satelliten hat die Rolle indicator.reachable; der Kachel-Editor braucht Admin 8.0.0",
+                "ru": "Плитка показывает состояние устройства только после подтверждения (состояния 0_userdata и скриптов сразу); media.state принимает значения play, pause, stop; состояние connected сателлита получило роль indicator.reachable; редактору плиток нужен admin 8.0.0",
+                "pt": "Um bloco mostra o estado de um dispositivo só depois de confirmado (estados de 0_userdata e de scripts de imediato); media.state tem os valores play, pause, stop; o estado connected do satélite tem a função indicator.reachable; o editor de blocos precisa do admin 8.0.0",
+                "nl": "Een tegel toont een apparaatstatus pas als die bevestigd is (states in 0_userdata en van scripts meteen); media.state heeft de waarden play, pause, stop; de state connected van de satelliet heeft de rol indicator.reachable; de tegeleditor heeft admin 8.0.0 nodig",
+                "fr": "Une tuile n'affiche l'état d'un appareil qu'une fois confirmé (états de 0_userdata et des scripts tout de suite) ; media.state a les valeurs play, pause, stop ; l'état connected du satellite a le rôle indicator.reachable ; l'éditeur de tuiles nécessite admin 8.0.0",
+                "it": "Un riquadro mostra lo stato di un dispositivo solo quando è confermato (stati di 0_userdata e degli script subito); media.state ha i valori play, pause, stop; lo stato connected del satellite ha il ruolo indicator.reachable; l'editor dei riquadri richiede admin 8.0.0",
+                "es": "Un mosaico muestra el estado de un dispositivo solo cuando está confirmado (estados de 0_userdata y de scripts al momento); media.state tiene los valores play, pause, stop; el estado connected del satélite tiene el rol indicator.reachable; el editor de mosaicos necesita admin 8.0.0",
+                "pl": "Kafelek pokazuje stan urządzenia dopiero po potwierdzeniu (stany 0_userdata i skryptów od razu); media.state ma wartości play, pause, stop; stan connected satelity ma rolę indicator.reachable; edytor kafelków wymaga admin 8.0.0",
+                "uk": "Плитка показує стан пристрою лише після підтвердження (стани 0_userdata і скриптів одразу); media.state має значення play, pause, stop; стан connected сателіта отримав роль indicator.reachable; редактору плиток потрібен admin 8.0.0",
+                "zh-cn": "磁贴仅在设备状态被确认后才显示（0_userdata 和脚本的状态立即显示）；media.state 的取值为 play、pause、stop；卫星的 connected 状态改用 indicator.reachable 角色；磁贴编辑器需要 admin 8.0.0"
+            },
             "0.2.0": {
                 "en": "Commands for AI agents (e.g. ioBroker.pi-agent): help, getTiles, addTile, updateTile, moveTile, removeTile",
                 "de": "Befehle für KI-Agenten (z. B. ioBroker.pi-agent): help, getTiles, addTile, updateTile, moveTile, removeTile",
@@ -80,19 +93,6 @@
                 "pl": "Progi: kafelek robi się czerwony poniżej lub powyżej wartości (firmware satelity 2.0.3)",
                 "uk": "Пороги: плитка стає червоною нижче або вище значення (прошивка сателіта 2.0.3)",
                 "zh-cn": "阈值：数值低于或高于设定值时磁贴变为红色（卫星固件 2.0.3）"
-            },
-            "0.0.6": {
-                "en": "Preview on the satellite without saving, real history in the chart preview, texts of common.states on value tiles, hints on unsuitable states",
-                "de": "Vorschau auf dem Satelliten ohne Speichern, echter Verlauf in der Diagramm-Vorschau, Texte aus common.states auf Wert-Kacheln, Hinweise auf unpassende Datenpunkte",
-                "ru": "Показ на сателлите без сохранения, реальная история в превью графика, тексты из common.states на плитках значений, подсказки о неподходящих состояниях",
-                "pt": "Pré-visualização no satélite sem guardar, histórico real na pré-visualização do gráfico, textos de common.states nos blocos de valor, avisos sobre estados inadequados",
-                "nl": "Voorbeeld op de satelliet zonder opslaan, echte geschiedenis in het grafiekvoorbeeld, teksten uit common.states op waardetegels, hints bij ongeschikte states",
-                "fr": "Aperçu sur le satellite sans enregistrer, historique réel dans l'aperçu des courbes, textes de common.states sur les tuiles de valeur, conseils sur les états inadaptés",
-                "it": "Anteprima sul satellite senza salvare, cronologia reale nell'anteprima del grafico, testi di common.states sui riquadri di valore, avvisi su stati non adatti",
-                "es": "Vista previa en el satélite sin guardar, historial real en la vista previa del gráfico, textos de common.states en los mosaicos de valor, avisos sobre estados inadecuados",
-                "pl": "Podgląd na satelicie bez zapisywania, prawdziwa historia w podglądzie wykresu, teksty z common.states na kafelkach wartości, wskazówki o nieodpowiednich stanach",
-                "uk": "Показ на сателіті без збереження, справжня історія в прев'ю графіка, тексти з common.states на плитках значень, підказки про невідповідні стани",
-                "zh-cn": "无需保存即可在卫星上预览，图表预览显示真实历史，数值磁贴显示 common.states 文本，提示不合适的状态"
             }
         },
         "titleLang": {
@@ -161,7 +161,7 @@
         ],
         "globalDependencies": [
             {
-                "admin": ">=7.6.20"
+                "admin": ">=8.0.0"
             }
         ]
     },

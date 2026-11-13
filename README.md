@@ -138,7 +138,7 @@ ioBroker.pi-agent the instance needs "Write allowed" in the write permissions.
 | State | Meaning |
 | --- | --- |
 | `info.connection` | all satellites are connected and have their tiles |
-| `satellites.<name>.connected` | this satellite is connected and has its tiles |
+| `satellites.<name>.connected` | this satellite is connected and has its tiles (role `indicator.reachable`) |
 | `satellites.<name>.lastTouch` | the last touch on a tile, as JSON (`page`, `slot`, `input`, `value`, `ts`) |
 | `satellites.<name>.resend` | button: sends all tiles again |
 | `satellites.<name>.locked` | the screen is locked; write `true` / `false` to lock or unlock (only with a screen lock) |
@@ -147,7 +147,7 @@ ioBroker.pi-agent the instance needs "Write allowed" in the write permissions.
 | `satellites.<name>.media.volume` | volume 0-100 % |
 | `satellites.<name>.media.title` | title shown in the bar of the clock while it plays (e.g. the station) |
 | `satellites.<name>.media.stop` | button: stop playing |
-| `satellites.<name>.media.state` | `playing`, `paused`, `announcing` or `idle` |
+| `satellites.<name>.media.state` | `play` (also while it announces), `pause` or `stop` |
 | `satellites.<name>.brightness` | brightness of the display 0-100 %, 0 = dark (only displays that take it from ioBroker, e.g. the tile panel) |
 
 The satellite keeps no layout: after a restart or a lost connection the adapter sends all tiles and their values
@@ -173,6 +173,15 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
     ### **WORK IN PROGRESS**
 -->
 
+### 0.2.1 (2026-11-13)
+
+- (sadam6752-tech) A tile shows a state of a device only once it is confirmed (`ack`), never a command the device did
+  not carry out; states in `0_userdata.0` and of scripts show at once, since nobody confirms them
+- (sadam6752-tech) `media.state` has the values of its role: `play`, `pause`, `stop` (was `playing`, `paused`,
+  `announcing`, `idle`)
+- (sadam6752-tech) `satellites.<name>.connected` has the role `indicator.reachable`; the tile editor needs admin 8.0.0
+  or newer
+
 ### 0.2.0 (2026-11-11)
 
 - Commands for AI agents such as ioBroker.pi-agent (sendTo): `help`, `getTiles`, `addTile`, `updateTile`, `moveTile`,
@@ -196,13 +205,6 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
   ignored, a touch opens a keypad; the satellite checks the PIN itself (satellite firmware 2.1.0)
 - Tab Authentication: lock again after some minutes without a touch, when the display goes back to the clock, or only
   by hand; the state `satellites.<name>.locked` locks and unlocks from ioBroker
-
-### 0.0.8 (2026-11-10)
-
-- Colours: a default main colour of the tiles (tab Appearance), an own main colour and background per tile, and a
-  background from another state (on = a chosen colour, or a colour `#RRGGBB` written into the state)
-- Icons on the small, wide and large tiles of every kind, "only the icon" instead of the name; a small or wide
-  switch with an icon and a name becomes a tile switch without the toggle (satellite firmware 2.0.4)
 
 ## License
 

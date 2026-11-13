@@ -15,6 +15,8 @@ const {
     backgroundOf,
     ALERT_COLOR,
     tileArgs,
+    mediaStateOf,
+    showsChange,
 } = require('../../lib/values');
 
 /**
@@ -200,5 +202,33 @@ describe('values', () => {
         assert.equal(setpointValue(35, 0.5, { min: 5, max: 30 }), 30);
         assert.equal(setpointValue(2, 0.5, { min: 5, max: 30 }), 5);
         assert.equal(setpointValue(20.26, 0.1, {}), 20.3);
+    });
+});
+
+describe('mediaStateOf', () => {
+    it('turns what the player reports into the values of the role media.state', () => {
+        assert.equal(mediaStateOf('playing'), 'play');
+        assert.equal(mediaStateOf('announcing'), 'play');
+        assert.equal(mediaStateOf('paused'), 'pause');
+        assert.equal(mediaStateOf('idle'), 'stop');
+        assert.equal(mediaStateOf(''), 'stop');
+        assert.equal(mediaStateOf(undefined), 'stop');
+    });
+});
+
+describe('showsChange', () => {
+    it('shows a device state only when it is confirmed', () => {
+        assert.equal(showsChange('hue.0.lamp.on', { ack: true }), true);
+        assert.equal(showsChange('hue.0.lamp.on', { ack: false }), false);
+        assert.equal(showsChange('alias.0.lamp.on', { ack: false }), false);
+    });
+
+    it('shows states of the user and of scripts also without ack, nobody confirms them', () => {
+        assert.equal(showsChange('0_userdata.0.mode', { ack: false }), true);
+        assert.equal(showsChange('javascript.0.flag', { ack: false }), true);
+    });
+
+    it('shows nothing for a deleted state', () => {
+        assert.equal(showsChange('hue.0.lamp.on', null), false);
     });
 });

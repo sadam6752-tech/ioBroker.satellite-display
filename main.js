@@ -23,6 +23,8 @@ const {
     alertColor,
     backgroundOf,
     tileArgs,
+    mediaStateOf,
+    showsChange,
 } = require('./lib/values');
 
 /** After a touch the tile shows the real state again after this time (when the device did not follow) */
@@ -156,7 +158,8 @@ class SatelliteDisplay extends utils.Adapter {
                 common: {
                     name: NAMES.connected,
                     type: 'boolean',
-                    role: 'indicator.connected',
+                    // indicator.connected belongs to info.connection of an instance only
+                    role: 'indicator.reachable',
                     read: true,
                     write: false,
                     def: false,
@@ -523,7 +526,8 @@ class SatelliteDisplay extends utils.Adapter {
                 role: 'media.state',
                 read: true,
                 write: false,
-                def: 'idle',
+                states: { play: 'play', pause: 'pause', stop: 'stop' },
+                def: 'stop',
             },
         };
         for (const [key, common] of Object.entries(states)) {
@@ -543,7 +547,7 @@ class SatelliteDisplay extends utils.Adapter {
      */
     async onMediaState(sat, media) {
         const base = `satellites.${sat.id}.media`;
-        await this.setState(`${base}.state`, { val: media.state, ack: true });
+        await this.setState(`${base}.state`, { val: mediaStateOf(media.state), ack: true });
         if (media.volume !== null) {
             await this.setState(`${base}.volume`, { val: media.volume, ack: true });
         }
@@ -1024,6 +1028,9 @@ class SatelliteDisplay extends utils.Adapter {
                 await this.setState(id, { val: false, ack: true });
             }
             return;
+        }
+        if (!showsChange(id, state)) {
+            return; // a command the device has not confirmed yet
         }
         for (const b of this.byState.get(id) || []) {
             // during a preview the slots of the satellite belong to the tiles of the editor
