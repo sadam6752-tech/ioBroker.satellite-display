@@ -129,6 +129,9 @@ const SIZE_LABELS: Record<Size, string> = { s: '1 × 1', q: '1 × 2', w: '2 × 1
 
 type StateAttr = 'state' | 'state2' | 'state3' | 'bgState';
 
+/** Units shown with one decimal when the tile names no decimals (lib/values.js ONE_DECIMAL) */
+const ONE_DECIMAL = ['°C', '°F', '°', 'K', 'kW', 'kWh', 'MWh', 'V', 'A', 'm/s', 'km/h', 'mm', 'l', 'm³', 'bar', 'pH'];
+
 /** The colours of the web app of the tablets (www/style.css) */
 const TAB = {
     screen: '#101418',
@@ -1414,50 +1417,85 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
      * @param h - Height in px of the preview
      */
     renderTabletFace(t: TileRow, w: number, h: number): React.JSX.Element {
-        const min = Math.min(w, h);
-        const f = (share: number, least = 7): number => Math.max(least, Math.round(min * share));
+        // the sizes of www/style.css in CSS pixels of the real tablet (with their lower and upper limits), drawn k
+        // times smaller in the editor
+        const g = this.grid();
+        const k = SCALE / (g.css || 1);
+        const W = w / k;
+        const H = h / k;
+        const cqmin = Math.min(W, H) / 100;
+        const cqw = W / 100;
+        const cqh = H / 100;
+        const clamp = (lo: number, v: number, hi: number): number => Math.min(hi, Math.max(lo, v));
+        const px = (css: number): number => Math.round(css * k * 10) / 10;
+
         const accent =
             cssColor(t.color) || cssColor(ConfigGeneric.getValue(this.props.data, 'accentColor')) || TAB.accent;
-        const value = this.state.values[t.state];
-        const num = typeof value === 'number' ? value : Number.NaN;
+        const raw = this.state.values[t.state];
+        // what the adapter sends: a number, a boolean as 1/0 to a tile that shows numbers (lib/values.js)
+        const num =
+            typeof raw === 'number'
+                ? raw
+                : typeof raw === 'boolean' && t.type !== 'value'
+                  ? Number(raw)
+                  : typeof raw === 'string' && raw.trim() !== '' && Number.isFinite(Number(raw)) && t.type !== 'value'
+                    ? Number(raw)
+                    : Number.NaN;
         const name = t.label || this.state.names[t.state] || t.state.split('.').pop() || I18n.t('sd_no_state');
         const unit = t.type === 'dimmer' ? '' : t.unit || this.state.units[t.state] || '';
-        const decimals = t.decimals === '' || t.decimals === null || t.decimals === undefined ? 1 : Number(t.decimals);
-        const mapped = stateTextOf(value, this.state.commons[t.state]);
+        // as the adapter: temperatures, energy and the like with one decimal, counts, percent and watts without
+        const decimals =
+            t.decimals === '' || t.decimals === null || t.decimals === undefined
+                ? ONE_DECIMAL.includes(unit)
+                    ? 1
+                    : 0
+                : Math.max(0, Math.min(3, Number(t.decimals)));
+        const fmt = (v: number, d = decimals): string =>
+            v.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+        const mapped = stateTextOf(raw, this.state.commons[t.state]);
         const text =
-            mapped !== null ? mapped : typeof value === 'string' || typeof value === 'boolean' ? String(value) : null;
+            t.type !== 'value'
+                ? null
+                : mapped !== null
+                  ? mapped
+                  : typeof raw === 'string' || typeof raw === 'boolean'
+                    ? String(raw)
+                    : null;
         const color = Number.isFinite(num) && alerted(t, num) ? TAB.alert : accent;
         const lo = t.min === '' || t.min === null || t.min === undefined ? 0 : Number(t.min);
         const hi = t.max === '' || t.max === null || t.max === undefined ? 100 : Number(t.max);
-        const frac = Number.isFinite(num) && hi > lo ? Math.max(0, Math.min(1, (num - lo) / (hi - lo))) : 0.5;
+        const frac = Number.isFinite(num) && hi > lo ? Math.max(0, Math.min(1, (num - lo) / (hi - lo))) : 0;
         const on =
             t.type === 'dimmer' && t.state2
                 ? !!this.state.values[t.state2]
-                : value === true || (typeof value === 'number' && value > 0);
-        const flat = ['value', 'bar', 'chart', 'switch'].includes(t.type) && w / h >= 1.8;
+                : raw === true || (typeof raw === 'number' && raw > 0);
+        const flat = ['value', 'bar', 'chart', 'switch'].includes(t.type) && W / H >= 1.8;
+        const chartFlat = flat && t.type === 'chart';
         const showIcon = !!t.icon && !(t.type === 'switch' && t.size === 'q');
         const iconOnly = !!t.iconOnly && !!t.icon;
-        // a flat chart keeps name and value along the top edge, the line below them (www/style.css)
-        const chartFlat = flat && t.type === 'chart';
-        const headSize = chartFlat ? Math.max(9, Math.round(h * 0.18)) : flat ? f(0.24 * (h / min), 9) : f(0.11, 8);
+
+        const headFont = chartFlat
+            ? clamp(11, 18 * cqh, 26)
+            : flat
+              ? clamp(11, 24 * cqh, 30)
+              : clamp(11, 11 * cqmin, 28);
         const head = (
             <div
                 style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.4em',
-                    fontSize: headSize,
+                    fontSize: px(headFont),
                     color: TAB.muted,
-                    // room for the relay dot of a thermostat
-                    paddingRight: t.type === 'thermostat' ? f(0.1, 8) : 0,
                     flex: flat ? '1 1 auto' : undefined,
                     minWidth: flat ? '35%' : 0,
+                    paddingRight: t.type === 'thermostat' ? px(Math.max(12, 10 * cqmin)) : 0,
                 }}
             >
                 {showIcon ? (
                     <TileIcon
                         name={t.icon || ''}
-                        size={Math.round(headSize * (flat ? 1.6 : 1.5))}
+                        size={px(headFont * (flat ? 1.6 : 1.5))}
                         color={t.type === 'switch' && on ? accent : TAB.muted}
                     />
                 ) : null}
@@ -1466,18 +1504,19 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                 )}
             </div>
         );
+        const valueFont =
+            text !== null
+                ? clamp(14, 15 * cqmin, 64)
+                : chartFlat
+                  ? clamp(14, Math.min(28 * cqh, 12 * cqw), 72)
+                  : flat
+                    ? clamp(14, Math.min(36 * cqh, 13 * cqw), 90)
+                    : clamp(16, 30 * cqmin, 120);
         const big = (
             <div
                 style={{
                     marginTop: flat ? 0 : 'auto',
-                    fontSize:
-                        text !== null
-                            ? f(0.15, 9)
-                            : chartFlat
-                              ? Math.max(10, Math.round(Math.min(h * 0.28, w * 0.12)))
-                              : flat
-                                ? Math.max(10, Math.round(Math.min(h * 0.36, w * 0.13)))
-                                : f(0.3, 10),
+                    fontSize: px(valueFont),
                     fontWeight: 600,
                     lineHeight: 1.1,
                     color,
@@ -1488,7 +1527,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                     text
                 ) : Number.isFinite(num) ? (
                     <>
-                        {num.toFixed(Math.max(0, Math.min(3, decimals)))}
+                        {fmt(num)}
                         {unit ? (
                             <span
                                 style={{ fontSize: '0.5em', fontWeight: 400, marginLeft: '0.15em', color: TAB.muted }}
@@ -1502,13 +1541,13 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                 )}
             </div>
         );
-        const toggleW = f(0.3, 18);
+        const toggleW = clamp(36, 30 * cqmin, 76);
         const toggle = (
             <div
                 style={{
                     flex: 'none',
-                    width: toggleW,
-                    height: Math.round(toggleW / 1.8),
+                    width: px(toggleW),
+                    height: px(toggleW / 1.8),
                     borderRadius: 99,
                     background: on ? accent : TAB.track,
                     position: 'relative',
@@ -1533,14 +1572,14 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             position: 'absolute',
             inset: 0,
             padding: chartFlat
-                ? `${Math.round(h * 0.07)}px ${Math.round(w * 0.05)}px 0`
+                ? `${px(7 * cqh)}px ${px(5 * cqw)}px 0`
                 : flat
-                  ? `0 ${Math.round(w * 0.05)}px`
-                  : `${f(0.07, 2)}px ${f(0.08, 2)}px`,
+                  ? `0 ${px(5 * cqw)}px`
+                  : `${px(7 * cqmin)}px ${px(8 * cqmin)}px`,
             display: 'flex',
             flexDirection: flat ? 'row' : 'column',
             alignItems: chartFlat ? 'flex-start' : flat ? 'center' : undefined,
-            gap: flat ? Math.round(w * 0.05) : f(0.03, 1),
+            gap: flat ? px(5 * cqw) : px(3 * cqmin),
         };
         const arc = (
             <svg
@@ -1572,9 +1611,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                     textAnchor="middle"
                     fill={TAB.text}
                 >
-                    {Number.isFinite(num)
-                        ? `${num.toFixed(Math.max(0, Math.min(3, decimals)))}${unit ? ` ${unit}` : ''}`
-                        : '–'}
+                    {Number.isFinite(num) ? `${fmt(num)}${unit ? ` ${unit}` : ''}` : '–'}
                 </text>
             </svg>
         );
@@ -1589,17 +1626,17 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                 flat
                                     ? {
                                           position: 'absolute',
-                                          left: Math.round(w * 0.05),
-                                          right: Math.round(w * 0.05),
-                                          bottom: Math.round(h * 0.09),
-                                          height: Math.max(3, Math.round(h * 0.07)),
+                                          left: px(5 * cqw),
+                                          right: px(5 * cqw),
+                                          bottom: px(9 * cqh),
+                                          height: px(7 * cqh),
                                           borderRadius: 99,
                                           background: TAB.track,
                                           overflow: 'hidden',
                                       }
                                     : {
                                           marginTop: 'auto',
-                                          height: Math.max(4, Math.round(h * 0.09)),
+                                          height: px(Math.max(6, 9 * cqh)),
                                           borderRadius: 99,
                                           background: TAB.track,
                                           overflow: 'hidden',
@@ -1657,17 +1694,19 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             case 'thermostat': {
                 const target = this.state.values[t.state2 || ''];
                 const relay = t.state3 ? this.state.values[t.state3] : undefined;
+                const step = Number(t.step) > 0 ? Number(t.step) : 0.5;
+                const btn = clamp(34, 24 * cqmin, 80);
                 const button = (label: string): React.JSX.Element => (
                     <div
                         style={{
-                            width: f(0.24, 14),
-                            height: f(0.24, 14),
+                            width: px(btn),
+                            height: px(btn),
                             borderRadius: '50%',
                             background: TAB.track,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontSize: f(0.16, 9),
+                            fontSize: px(clamp(18, 16 * cqmin, 44)),
                             flex: 'none',
                         }}
                     >
@@ -1680,8 +1719,10 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                         {arc}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             {button('−')}
-                            <span style={{ fontSize: f(0.1, 8), whiteSpace: 'nowrap' }}>
-                                {typeof target === 'number' ? `${target.toFixed(1)}${unit ? ` ${unit}` : ''}` : '–'}
+                            <span style={{ fontSize: px(clamp(14, 15 * cqmin, 40)), whiteSpace: 'nowrap' }}>
+                                {typeof target === 'number'
+                                    ? `${fmt(target, Math.max(step < 1 ? 1 : 0, decimals))}${unit ? ` ${unit}` : ''}`
+                                    : '–'}
                             </span>
                             {button('+')}
                         </div>
@@ -1689,10 +1730,10 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                             <div
                                 style={{
                                     position: 'absolute',
-                                    top: f(0.08, 3),
-                                    right: f(0.08, 3),
-                                    width: f(0.06, 5),
-                                    height: f(0.06, 5),
+                                    top: px(8 * cqmin),
+                                    right: px(8 * cqmin),
+                                    width: px(Math.max(8, 6 * cqmin)),
+                                    height: px(Math.max(8, 6 * cqmin)),
                                     borderRadius: '50%',
                                     background: relay === true || Number(relay) > 0 ? TAB.ok : TAB.track,
                                 }}
@@ -1705,10 +1746,10 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                 return (
                     <div style={body}>
                         {t.size === 'q' && t.icon ? (
-                            <div style={{ position: 'absolute', left: f(0.08, 2), bottom: f(0.08, 2) }}>
+                            <div style={{ position: 'absolute', left: px(8 * cqmin), bottom: px(8 * cqmin) }}>
                                 <TileIcon
                                     name={t.icon}
-                                    size={f(0.22, 10)}
+                                    size={px(22 * cqmin)}
                                     color={on ? accent : TAB.muted}
                                 />
                             </div>
@@ -1718,7 +1759,10 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                     </div>
                 );
             case 'dimmer': {
-                const level = Number.isFinite(num) ? Math.max(0, Math.min(100, num)) : 50;
+                const level = Number.isFinite(num) ? Math.max(0, Math.min(100, num)) : 0;
+                const input = clamp(26, 22 * cqh, 60);
+                const knob = clamp(22, 20 * cqh, 52);
+                const narrow = W / H <= 1.3;
                 return (
                     <div style={body}>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -1729,35 +1773,46 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                             style={{
                                 display: 'flex',
                                 // a narrow dimmer: the percent above the slider (www/style.css)
-                                flexDirection: w / h <= 1.3 ? 'column-reverse' : 'row',
-                                alignItems: w / h <= 1.3 ? 'stretch' : 'center',
-                                gap: f(0.05, 2),
+                                flexDirection: narrow ? 'column-reverse' : 'row',
+                                alignItems: narrow ? 'stretch' : 'center',
+                                gap: px(narrow ? 2 * cqmin : 5 * cqmin),
                                 marginTop: 'auto',
                             }}
                         >
-                            <div
-                                style={{
-                                    flex: 1,
-                                    position: 'relative',
-                                    height: Math.max(3, Math.round(h * 0.066)),
-                                    borderRadius: 99,
-                                    background: `linear-gradient(to right, ${accent} ${level}%, ${TAB.track} ${level}%)`,
-                                }}
-                            >
+                            <div style={{ flex: narrow ? 'none' : 1, height: px(input), position: 'relative' }}>
                                 <div
                                     style={{
                                         position: 'absolute',
-                                        left: `calc(${level}% - ${Math.round(h * 0.1)}px)`,
+                                        left: 0,
+                                        right: 0,
                                         top: '50%',
                                         transform: 'translateY(-50%)',
-                                        width: Math.max(8, Math.round(h * 0.2)),
-                                        height: Math.max(8, Math.round(h * 0.2)),
+                                        height: px(input * 0.3),
+                                        borderRadius: 99,
+                                        background: `linear-gradient(to right, ${accent} ${level}%, ${TAB.track} ${level}%)`,
+                                    }}
+                                />
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        left: `calc(${level}% - ${px(knob / 2)}px)`,
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        width: px(knob),
+                                        height: px(knob),
                                         borderRadius: '50%',
                                         background: '#fff',
                                     }}
                                 />
                             </div>
-                            <span style={{ fontSize: f(0.14, 8), minWidth: '3.2em', textAlign: 'right' }}>
+                            <span
+                                style={{
+                                    fontSize: px(clamp(12, 14 * cqmin, 32)),
+                                    minWidth: '3.2em',
+                                    textAlign: 'right',
+                                    fontVariantNumeric: 'tabular-nums',
+                                }}
+                            >
                                 {Number.isFinite(num) ? `${Math.round(num)} %` : '–'}
                             </span>
                         </div>
@@ -1772,17 +1827,19 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                             alignItems: 'center',
                             justifyContent: 'center',
                             textAlign: 'center',
-                            gap: f(0.04, 2),
+                            gap: px(4 * cqmin),
                         }}
                     >
                         {t.icon ? (
                             <TileIcon
                                 name={t.icon}
-                                size={f(0.34, 14)}
+                                size={px(clamp(24, 34 * cqmin, 110))}
                                 color={accent}
                             />
                         ) : null}
-                        {iconOnly ? null : <span style={{ fontSize: f(0.13, 8) }}>{name}</span>}
+                        {iconOnly ? null : (
+                            <span style={{ fontSize: px(clamp(12, 13 * cqmin, 30)), color: TAB.text }}>{name}</span>
+                        )}
                     </div>
                 );
             default:
@@ -1799,6 +1856,12 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         const tiles = this.tiles();
         const g = this.grid();
         const tablet = this.isTablet(this.state.satellite);
+        // a size of www/style.css on this tablet, clamp(lo, share * vmin, hi) in CSS pixels, in pixels of the preview
+        const tabletCss = (lo: number, share: number, hi: number): number => {
+            const css = g.css || 1;
+            const vmin = Math.min(g.w, g.h) * css;
+            return Math.min(hi, Math.max(lo, vmin * share)) * (SCALE / css);
+        };
         const extra = new Set(tooMany(tiles, this.state.satellite, this.shownPage(), g));
         const cells: React.JSX.Element[] = [];
         for (let row = 0; row < g.rows; row++) {
@@ -1869,7 +1932,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                             display: 'flex',
                             alignItems: 'center',
                             padding: `0 ${px(g.gap * 1.5)}px`,
-                            fontSize: Math.max(8, Math.round(px(g.top) * 0.45)),
+                            fontSize: Math.round(tabletCss(13, 0.024, 22)),
                             color: TAB.text,
                         }}
                     >
@@ -1925,7 +1988,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                     : on
                                       ? COLOR.tileOn
                                       : this.backgroundOf(tile),
-                                borderRadius: tablet ? Math.max(4, Math.round(Math.min(w, h) * 0.08)) : px(8),
+                                borderRadius: tablet ? Math.round(tabletCss(8, 0.016, 18)) : px(8),
                                 color: '#fff',
                                 cursor: 'grab',
                                 overflow: 'hidden',

@@ -34,23 +34,23 @@ ioBroker states  ──▶  satellite-display  ──▶  satellite (tile pages)
 Each satellite has up to **4 pages**. A page is a grid of 2 columns × 4 rows on the 320 × 240 screen and holds up
 to 8 tiles. Swipe left from the clock to reach them; a page without tiles is skipped.
 
-| Size | Cells | Pixels |
-| --- | --- | --- |
-| small | 1 × 1 | 151 × 52 |
+| Size   | Cells | Pixels    |
+| ------ | ----- | --------- |
+| small  | 1 × 1 | 151 × 52  |
 | square | 1 × 2 | 151 × 111 |
-| wide | 2 × 1 | 308 × 52 |
-| large | 2 × 2 | 308 × 111 |
+| wide   | 2 × 1 | 308 × 52  |
+| large  | 2 × 2 | 308 × 111 |
 
-| Kind | Shows | Sizes | A touch |
-| --- | --- | --- | --- |
-| Value | name, number with unit, or a text | all | – |
-| Gauge | name, arc from the scale start to its end, number | square, large | – |
-| Value with bar | name, number, bar along the scale | all | – |
-| Value with chart | name, number, line of the last 60 values | small, wide, large | – |
-| Switch | name, toggle; the tile lights up when on | small, square, wide | toggles the state |
-| Dimmer | name, toggle, slider, percent | wide, large | toggle and slider write the states |
-| Button | icon, name | small, square, wide | writes `true` to the state |
-| Thermostat | name, arc with the current temperature, − target +, a dot for the heating relay | square, large | − and + write the target |
+| Kind             | Shows                                                                           | Sizes               | A touch                            |
+| ---------------- | ------------------------------------------------------------------------------- | ------------------- | ---------------------------------- |
+| Value            | name, number with unit, or a text                                               | all                 | –                                  |
+| Gauge            | name, arc from the scale start to its end, number                               | square, large       | –                                  |
+| Value with bar   | name, number, bar along the scale                                               | all                 | –                                  |
+| Value with chart | name, number, line of the last 60 values                                        | small, wide, large  | –                                  |
+| Switch           | name, toggle; the tile lights up when on                                        | small, square, wide | toggles the state                  |
+| Dimmer           | name, toggle, slider, percent                                                   | wide, large         | toggle and slider write the states |
+| Button           | icon, name                                                                      | small, square, wide | writes `true` to the state         |
+| Thermostat       | name, arc with the current temperature, − target +, a dot for the heating relay | square, large       | − and + write the target           |
 
 ## Settings
 
@@ -115,6 +115,13 @@ the alarm system); `satellites.<name>.failedPins` counts the wrong PINs.
 The PIN does not leave ioBroker: the satellite gets its SHA-256 hash and keeps it in its flash, so the lock also
 works after a restart and without ioBroker. Needs the satellite firmware **2.1.0**.
 
+**Tablets** (tab **Tablets**: "Screen lock" and "PIN") lock the same way and follow the same tab **Authentication**:
+"when the display goes back to the clock" is the moment their clock page comes (a minute without a touch when the
+clock is off), and the lock in their bar locks at once. A locked tablet with the clock page shows the clock first and
+the keypad after a touch. Their states are `tablets.<name>.locked` and `tablets.<name>.failedPins`. A tablet checks
+the PIN in its browser: that keeps children and guests out, but it does not stop someone who knows the developer tools
+of a browser (a satellite checks the PIN in its firmware).
+
 ## Tablets (web app, off by default)
 
 An Android or iOS tablet can show tiles like a satellite without voice: the adapter serves a web app (PWA) and the
@@ -151,6 +158,10 @@ a tablet the same way, and `getTiles` names the grid of every display. The scree
   old name with "Move to ..." and "Delete these tiles".
 - The port is declared in the registry of used resources of js-controller 8, so the admin can show it as taken.
 - The tile editor of the admin shows the tablets next to the satellites, on the grid of each.
+- **Clock when idle** (tab **Tablets**, off by default): after the set minutes without a touch the tablets show the
+  time and the date, as a satellite shows its clock. A touch shows the keypad of the screen lock, or the tiles when the
+  tablet is not locked. With the lock mode "when the display goes back to the clock" the tablet locks when its clock
+  comes.
 - **Page titles**: a page of a tablet can have a title (e.g. "Heizung"), set in the tile editor next to the page
   buttons or by an AI agent (`setPageTitle`). The bar of the tablet shows it next to the name of the tablet while that
   page is shown; the keypad of the screen lock shows only the name. Satellites have no place for it.
@@ -161,37 +172,37 @@ The tiles can also be changed with `sendTo('satellite-display.0', command, messa
 ("add a narrow switch for the light in the living room to the display of Gast"). The answers are short JSON; an error
 names what to ask the user (which satellite, which page when all are full).
 
-| Command | Message | Does |
-| --- | --- | --- |
-| `help` | – | describes the commands, kinds, sizes, icons and the grid |
-| `getTiles` | `{satellite?}` | lists the satellites and tablets, their grids, their tiles (with an `id`) and the free cells |
-| `addTile` | `{satellite, type, state, size?, icon?, label?, unit?, state2?, state3?, page?, col?, row?}` | adds a tile, without a place in the first free cell; answers where it went |
-| `updateTile` | `{id, ...fields}` | changes a tile |
-| `moveTile` | `{id, page, col?, row?}` | moves a tile, without `col`/`row` to the first free cell of the page |
-| `removeTile` | `{id}` | removes a tile |
-| `setPageTitle` | `{satellite, page, title}` | the title of a page of a tablet, shown in its bar; empty removes it |
+| Command        | Message                                                                                      | Does                                                                                         |
+| -------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `help`         | –                                                                                            | describes the commands, kinds, sizes, icons and the grid                                     |
+| `getTiles`     | `{satellite?}`                                                                               | lists the satellites and tablets, their grids, their tiles (with an `id`) and the free cells |
+| `addTile`      | `{satellite, type, state, size?, icon?, label?, unit?, state2?, state3?, page?, col?, row?}` | adds a tile, without a place in the first free cell; answers where it went                   |
+| `updateTile`   | `{id, ...fields}`                                                                            | changes a tile                                                                               |
+| `moveTile`     | `{id, page, col?, row?}`                                                                     | moves a tile, without `col`/`row` to the first free cell of the page                         |
+| `removeTile`   | `{id}`                                                                                       | removes a tile                                                                               |
+| `setPageTitle` | `{satellite, page, title}`                                                                   | the title of a page of a tablet, shown in its bar; empty removes it                          |
 
 A change is saved in the settings of the instance, which then restarts and sends the tiles (a few seconds). In
 ioBroker.pi-agent the instance needs "Write allowed" in the write permissions.
 
 ## States
 
-| State | Meaning |
-| --- | --- |
-| `info.connection` | all satellites are connected and have their tiles (with tablets only: the web app runs) |
-| `satellites.<name>.connected` | this satellite is connected and has its tiles (role `indicator.reachable`) |
-| `satellites.<name>.lastTouch` | the last touch on a tile, as JSON (`page`, `slot`, `input`, `value`, `ts`) |
-| `satellites.<name>.resend` | button: sends all tiles again |
-| `satellites.<name>.locked` | the screen is locked; write `true` / `false` to lock or unlock (only with a screen lock) |
-| `satellites.<name>.failedPins` | wrong PINs in a row on the display (only with a screen lock) |
-| `satellites.<name>.media.url` | play this stream URL (only displays with a player, e.g. the tile panel with an I2S amplifier); empty = stop |
-| `satellites.<name>.media.volume` | volume 0-100 % |
-| `satellites.<name>.media.title` | title shown in the bar of the clock while it plays (e.g. the station) |
-| `satellites.<name>.media.stop` | button: stop playing |
-| `satellites.<name>.media.state` | `play` (also while it announces), `pause` or `stop` |
-| `satellites.<name>.brightness` | brightness of the display 0-100 %, 0 = dark (only displays that take it from ioBroker, e.g. the tile panel) |
-| `tablets.<name>.connected` | this tablet is connected and has its tiles (a sleeping tablet is not) |
-| `tablets.<name>.lastTouch`, `.resend`, `.locked`, `.failedPins` | as for a satellite |
+| State                                                           | Meaning                                                                                                     |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `info.connection`                                               | all satellites are connected and have their tiles (with tablets only: the web app runs)                     |
+| `satellites.<name>.connected`                                   | this satellite is connected and has its tiles (role `indicator.reachable`)                                  |
+| `satellites.<name>.lastTouch`                                   | the last touch on a tile, as JSON (`page`, `slot`, `input`, `value`, `ts`)                                  |
+| `satellites.<name>.resend`                                      | button: sends all tiles again                                                                               |
+| `satellites.<name>.locked`                                      | the screen is locked; write `true` / `false` to lock or unlock (only with a screen lock)                    |
+| `satellites.<name>.failedPins`                                  | wrong PINs in a row on the display (only with a screen lock)                                                |
+| `satellites.<name>.media.url`                                   | play this stream URL (only displays with a player, e.g. the tile panel with an I2S amplifier); empty = stop |
+| `satellites.<name>.media.volume`                                | volume 0-100 %                                                                                              |
+| `satellites.<name>.media.title`                                 | title shown in the bar of the clock while it plays (e.g. the station)                                       |
+| `satellites.<name>.media.stop`                                  | button: stop playing                                                                                        |
+| `satellites.<name>.media.state`                                 | `play` (also while it announces), `pause` or `stop`                                                         |
+| `satellites.<name>.brightness`                                  | brightness of the display 0-100 %, 0 = dark (only displays that take it from ioBroker, e.g. the tile panel) |
+| `tablets.<name>.connected`                                      | this tablet is connected and has its tiles (a sleeping tablet is not)                                       |
+| `tablets.<name>.lastTouch`, `.resend`, `.locked`, `.failedPins` | as for a satellite                                                                                          |
 
 The satellite keeps no layout: after a restart or a lost connection the adapter sends all tiles and their values
 again by itself.
@@ -217,6 +228,14 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+
+### 0.3.1 (2026-11-14)
+
+- (sadam6752-tech) Tablets can show a clock with the date when idle (tab Tablets: on/off and the minutes); a touch
+  shows the keypad of the screen lock or the tiles
+- (sadam6752-tech) Tab Authentication and the README describe the screen lock of the tablets
+- (sadam6752-tech) The tile editor draws a tablet as the tablet shows it: the sizes in CSS pixels of its screen with
+  the limits of the web app, the decimals of the adapter, a boolean as 1/0 on tiles that show numbers
 
 ### 0.3.0 (2026-11-14)
 
@@ -247,13 +266,6 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 
 - `media.url` plays only an `http://` or `https://` address; an empty value or `stop` (as other players of ioBroker
   take it, e.g. ioBroker.spotify-connect) stops the player
-
-### 0.1.1 (2026-11-10)
-
-- The tile panel without voice (Waveshare ESP32-S3-Touch-LCD-2, `panel-lcd2.yaml` of the firmware) works as a
-  satellite; its state `satellites.<name>.brightness` sets the brightness of the display (0 = dark)
-- A display with a player (the panel with a MAX98357A amplifier) gets `satellites.<name>.media.*`: a stream URL to
-  play (e.g. from an AirPlay receiver), volume, stop and its state
 
 ## License
 

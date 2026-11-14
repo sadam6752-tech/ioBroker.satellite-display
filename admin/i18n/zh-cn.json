@@ -41,5 +41,9 @@
     "Pages": "页",
     "Screen width (px)": "屏幕宽度 (px)",
     "Screen height (px)": "屏幕高度 (px)",
-    "Screen width x height in pixels (e.g. an iPad: 2048 x 1536 in landscape, 1536 x 2048 upright) gives the tile editor the shape of the tablet; empty: 4:3 landscape. The grid of a page is columns x rows (a 10\" tablet in landscape: 4 x 3). The tile editor and the AI agents place tiles on a tablet like on a satellite.": "以像素为单位的屏幕宽 x 高（例如 iPad：横向 2048 x 1536，竖向 1536 x 2048）让磁贴编辑器知道平板电脑的形状；留空：4:3 横向。页面的网格为列 x 行（横向 10\" 平板电脑：4 x 3）。磁贴编辑器和 AI 代理在平板电脑上放置磁贴的方式与卫星设备相同。"
+    "Screen width x height in pixels (e.g. an iPad: 2048 x 1536 in landscape, 1536 x 2048 upright) gives the tile editor the shape of the tablet; empty: 4:3 landscape. The grid of a page is columns x rows (a 10\" tablet in landscape: 4 x 3). The tile editor and the AI agents place tiles on a tablet like on a satellite.": "以像素为单位的屏幕宽 x 高（例如 iPad：横向 2048 x 1536，竖向 1536 x 2048）让磁贴编辑器知道平板电脑的形状；留空：4:3 横向。页面的网格为列 x 行（横向 10\" 平板电脑：4 x 3）。磁贴编辑器和 AI 代理在平板电脑上放置磁贴的方式与卫星设备相同。",
+    "Clock when a tablet is idle": "平板电脑空闲时显示时钟",
+    "After the minutes below without a touch the tablets show the time and the date. A touch shows the keypad of the screen lock, or the tiles without a lock.": "在下方设置的分钟数内无触摸后，平板电脑显示时间和日期。触摸后显示屏幕锁的数字键盘，未设置锁时显示磁贴。",
+    "Minutes without a touch until the clock": "无触摸多少分钟后显示时钟",
+    "Tablets (tab Tablets: \"Screen lock\" and \"PIN\") lock the same way. \"When the display goes back to the clock\" is the moment their clock page comes (a minute without a touch when it is off); the lock in their bar locks at once. A tablet checks the PIN in its browser: it keeps children and guests out, but it does not stop someone who knows the developer tools of a browser. Their states are tablets.<name>.locked and tablets.<name>.failedPins.": "平板电脑（Tablets 选项卡：“屏幕锁”和“PIN”）以同样方式锁定。“显示屏自行返回时钟时”指的是其时钟页出现的时刻（未开启时钟时为一分钟无触摸）；其顶栏中的锁会立即锁定。平板电脑在浏览器中校验 PIN：这能防住儿童和访客，但挡不住懂得浏览器开发者工具的人。其状态为 tablets.<name>.locked 和 tablets.<name>.failedPins。"
 }

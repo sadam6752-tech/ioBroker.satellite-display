@@ -2,6 +2,13 @@
 
 Versions that no longer fit into the changelog of the [README](README.md) (it keeps the last five) are moved here.
 
+### 0.1.1 (2026-11-10)
+
+- The tile panel without voice (Waveshare ESP32-S3-Touch-LCD-2, `panel-lcd2.yaml` of the firmware) works as a
+  satellite; its state `satellites.<name>.brightness` sets the brightness of the display (0 = dark)
+- A display with a player (the panel with a MAX98357A amplifier) gets `satellites.<name>.media.*`: a stream URL to
+  play (e.g. from an AirPlay receiver), volume, stop and its state
+
 ### 0.1.0 (2026-11-10)
 
 - Screen lock with a PIN per satellite (tab Satellites): the display shows only the clock and a lock, the wake word is

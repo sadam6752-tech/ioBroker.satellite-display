@@ -815,6 +815,8 @@
         { passive: true },
     );
 
+    const KEYPAD_MS = 30_000;
+
     function tick() {
         const now = new Date();
         $('clock').textContent = now.toLocaleTimeString(navigator.language, { hour: '2-digit', minute: '2-digit' });
@@ -835,13 +837,69 @@
         if (idle > IDLE_MS && pagesEl.scrollLeft > 0) {
             pagesEl.scrollTo({ left: 0, behavior: 'smooth' });
         }
+        if (clock.enabled && !clock.shown && idle > clock.minutes * 60_000) {
+            showClock();
+        }
+        // the keypad closes after 30 s without a key: back to the clock (as the satellite)
+        if (clock.enabled && lock.locked && !clock.shown && idle > KEYPAD_MS) {
+            showClock();
+        }
         if (lock.enabled && !lock.locked) {
-            const limit = lock.mode === 0 ? lock.minutes * 60_000 : lock.mode === 1 ? IDLE_MS : 0;
+            // "when the display goes back to the clock": with the clock page that moment, else a minute untouched
+            const limit = lock.mode === 0 ? lock.minutes * 60_000 : lock.mode === 1 && !clock.enabled ? IDLE_MS : 0;
             if (limit && idle > limit) {
                 setLocked(true);
             }
         }
     }, 5000);
+
+    // ---- the clock page of an idle tablet ----------------------------------------------------------------------
+
+    const clock = { enabled: false, minutes: 2, shown: false };
+
+    function drawClock() {
+        const now = new Date();
+        $('bigTime').textContent = now.toLocaleTimeString(navigator.language, { hour: '2-digit', minute: '2-digit' });
+        $('bigDate').textContent = now.toLocaleDateString(navigator.language, {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+        });
+    }
+
+    function showClock() {
+        clock.shown = true;
+        drawClock();
+        $('clockPage').hidden = false;
+        if (lock.enabled && lock.mode === 1 && !lock.locked) {
+            setLocked(true);
+        }
+        drawPad();
+    }
+
+    function hideClock() {
+        clock.shown = false;
+        $('clockPage').hidden = true;
+        drawPad();
+    }
+
+    setInterval(() => clock.shown && drawClock(), 10_000);
+
+    // a touch on the clock: the keypad when the screen is locked, else the tiles
+    $('clockPage').addEventListener('click', ev => {
+        ev.stopPropagation();
+        lastTouch = Date.now();
+        hideClock();
+    });
+
+    /** @param {any} c - clock of the config: {enabled, minutes} */
+    function clockConfig(c) {
+        clock.enabled = !!c?.enabled;
+        clock.minutes = Math.min(120, Math.max(1, Number(c?.minutes) || 2));
+        if (!clock.enabled && clock.shown) {
+            hideClock();
+        }
+    }
 
     // ---- screen lock (lock_config, as the firmware 2.1) -------------------------------------------------------
 
@@ -887,6 +945,10 @@
         if (next !== lock.locked || !quiet) {
             lock.locked = next;
             lock.typed = '';
+            if (next && clock.enabled && !clock.shown) {
+                // locked: the clock until the next touch
+                showClock();
+            }
             drawPad();
             report();
         }
@@ -900,7 +962,8 @@
 
     function drawPad() {
         const pad = $('keypad');
-        pad.hidden = !lock.locked;
+        // a locked tablet with the clock page shows the clock first, the keypad after a touch
+        pad.hidden = !lock.locked || clock.shown;
         $('stars').textContent =
             '•'.repeat(lock.typed.length) + '◦'.repeat(Math.max(0, lock.length - lock.typed.length));
         const wait = Math.ceil((lock.waitUntil - Date.now()) / 1000);
@@ -1048,6 +1111,7 @@
             }
             if (msg.type === 'config') {
                 grid = msg.grid || grid;
+                clockConfig(msg.clock);
                 $('name').textContent = msg.name || '';
                 // the keypad shows only the name of the tablet, never a page
                 $('padName').textContent = msg.name || '';

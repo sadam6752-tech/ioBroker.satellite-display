@@ -113,6 +113,8 @@ tests.integration(path.join(__dirname, '..'), {
                         secure: false,
                         tablets: [{ enabled: true, name: 'Hall', cols: 4, rows: 3, pages: 2 }],
                         pageTitles: { hall: { 1: 'Licht' } },
+                        tabletClock: true,
+                        tabletClockMinutes: 5,
                         tiles: [
                             {
                                 enabled: true,
@@ -167,7 +169,12 @@ tests.integration(path.join(__dirname, '..'), {
                 });
                 ws.send(JSON.stringify({ type: 'hello', version: 'test' }));
                 await new Promise(resolve => setTimeout(resolve, 2000));
-                assert.deepEqual(got[0], { type: 'config', name: 'Hall', grid: { cols: 4, rows: 3, pages: 2 } });
+                assert.deepEqual(got[0], {
+                    type: 'config',
+                    name: 'Hall',
+                    grid: { cols: 4, rows: 3, pages: 2 },
+                    clock: { enabled: true, minutes: 5 },
+                });
                 const names = got.filter(m => m.type === 'action').map(m => m.name);
                 assert.deepEqual(
                     names.slice(0, 4),

@@ -271,10 +271,34 @@
                         }
                     ]
                 },
+                "tabletClock": {
+                    "type": "checkbox",
+                    "label": "Clock when a tablet is idle",
+                    "help": "After the minutes below without a touch the tablets show the time and the date. A touch shows the keypad of the screen lock, or the tiles without a lock.",
+                    "hidden": "!data.pwaEnabled",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 8,
+                    "lg": 8,
+                    "xl": 8
+                },
+                "tabletClockMinutes": {
+                    "type": "number",
+                    "label": "Minutes without a touch until the clock",
+                    "min": 1,
+                    "max": 120,
+                    "hidden": "!data.pwaEnabled || !data.tabletClock",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
                 "_tabletLinks": {
                     "type": "custom",
                     "i18n": true,
-                    "url": "custom/customComponents.js?v=0.3.0",
+                    "url": "custom/customComponents.js?v=0.3.1",
                     "name": "SatDisplay/Components/TabletLinks",
                     "guiApi": 2,
                     "bundlerType": "module",
@@ -295,7 +319,7 @@
                 "_tileEditor": {
                     "type": "custom",
                     "i18n": true,
-                    "url": "custom/customComponents.js?v=0.3.0",
+                    "url": "custom/customComponents.js?v=0.3.1",
                     "name": "SatDisplay/Components/TileEditor",
                     "guiApi": 2,
                     "bundlerType": "module",
@@ -396,6 +420,17 @@
                 "_authHint": {
                     "type": "staticText",
                     "text": "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night.",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_authTablets": {
+                    "type": "staticText",
+                    "text": "Tablets (tab Tablets: \"Screen lock\" and \"PIN\") lock the same way. \"When the display goes back to the clock\" is the moment their clock page comes (a minute without a touch when it is off); the lock in their bar locks at once. A tablet checks the PIN in its browser: it keeps children and guests out, but it does not stop someone who knows the developer tools of a browser. Their states are tablets.<name>.locked and tablets.<name>.failedPins.",
+                    "hidden": "!data.pwaEnabled",
+                    "newLine": true,
                     "xs": 12,
                     "sm": 12,
                     "md": 12,

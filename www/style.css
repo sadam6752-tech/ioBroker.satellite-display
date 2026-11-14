@@ -557,6 +557,36 @@ input.level::-moz-range-thumb {
     line-height: 1.5;
 }
 
+/* the clock page of an idle tablet (as the clock of the satellite firmware) */
+#clockPage {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2vmin;
+    cursor: pointer;
+}
+
+#clockPage[hidden] {
+    display: none;
+}
+
+#bigTime {
+    font-size: 26vmin;
+    font-weight: 300;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+}
+
+#bigDate {
+    font-size: 5vmin;
+    color: var(--muted);
+}
+
 #keypad {
     position: fixed;
     inset: 0;

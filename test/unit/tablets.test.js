@@ -333,7 +333,12 @@ describe('tablets: TabletLink', () => {
         assert.equal(link.call('tile_clear', { page: 0 }), false, 'nothing before the hello');
         socket.say({ type: 'hello', version: '1' });
         assert.deepEqual(events, ['ready']);
-        assert.deepEqual(socket.sent[0], { type: 'config', name: 'Flur', grid: { cols: 4, rows: 3, pages: 2 } });
+        assert.deepEqual(socket.sent[0], {
+            type: 'config',
+            name: 'Flur',
+            grid: { cols: 4, rows: 3, pages: 2 },
+            clock: { enabled: false, minutes: 2 },
+        });
         assert.equal(link.call('tile_value', { page: 1, slot: 2, value: 21.5 }), true);
         assert.deepEqual(socket.sent[1], {
             type: 'action',
@@ -538,7 +543,12 @@ describe('tablets: TabletServer', () => {
         await new Promise(resolve => ws.once('open', resolve));
         ws.send(JSON.stringify({ type: 'hello', version: 'test' }));
         await ready;
-        assert.deepEqual(await first, { type: 'config', name: 'Flur', grid: { cols: 4, rows: 3, pages: 2 } });
+        assert.deepEqual(await first, {
+            type: 'config',
+            name: 'Flur',
+            grid: { cols: 4, rows: 3, pages: 2 },
+            clock: { enabled: false, minutes: 2 },
+        });
 
         const touch = new Promise(resolve => link.once('input', resolve));
         ws.send(JSON.stringify({ type: 'input', page: 1, slot: 3, input: 'press', value: 1 }));

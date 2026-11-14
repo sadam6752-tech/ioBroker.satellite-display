@@ -183,7 +183,16 @@ class SatelliteDisplay extends utils.Adapter {
      * @returns {TabletLink} Its connection: the web app comes to the adapter
      */
     tabletLinkOf(sat) {
-        return new TabletLink({ name: sat.name, grid: sat.grid });
+        const minutes = Math.round(Number(this.config.tabletClockMinutes));
+        return new TabletLink({
+            name: sat.name,
+            grid: sat.grid,
+            // the clock page of the web app (a satellite has its own in the firmware)
+            clock: {
+                enabled: this.config.tabletClock === true,
+                minutes: Number.isFinite(minutes) ? Math.min(120, Math.max(1, minutes)) : 2,
+            },
+        });
     }
 
     /**

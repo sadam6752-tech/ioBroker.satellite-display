@@ -20,6 +20,8 @@ export interface Grid {
     gap: number;
     /** Where the first row starts: the gap on a satellite, below the bar with the name and the clock on a tablet */
     top: number;
+    /** A tablet: CSS pixels of its real screen per unit of the editor (the web app sizes by CSS pixels) */
+    css?: number;
 }
 
 /** A satellite: 2 x 4 cells, 4 pages, 8 tiles a page (the firmware), its screen 320 x 240 */
@@ -41,15 +43,27 @@ const TABLET_SIDE = 400;
  * The screen of a tablet in the editor: the shape of its display as the settings give it (width x height in pixels;
  * landscape or portrait is the user's choice), a 4:3 landscape screen without them.
  */
-function tabletScreen(width: unknown, height: unknown): { w: number; h: number; gap: number; top: number } {
-    const pw = Number(width);
-    const ph = Number(height);
-    const ratio = pw > 0 && ph > 0 ? ph / pw : 3 / 4;
+function tabletScreen(
+    width: unknown,
+    height: unknown,
+): { w: number; h: number; gap: number; top: number; css: number } {
+    let pw = Number(width);
+    let ph = Number(height);
+    if (!(pw > 0 && ph > 0)) {
+        pw = 1024;
+        ph = 768;
+    }
+    const ratio = ph / pw;
     const w = ratio <= 1 ? TABLET_SIDE : Math.round(TABLET_SIDE / ratio);
     const h = ratio <= 1 ? Math.round(TABLET_SIDE * ratio) : TABLET_SIDE;
-    // as www/style.css: the gap 1.2 % and the bar 5.5 % of the shorter side
-    const short = Math.min(w, h);
-    return { w, h, gap: Math.max(3, Math.round(short * 0.012)), top: Math.round(short * 0.055) };
+    // the web app sizes by CSS pixels: a screen given in device pixels (an iPad: 2048 x 1536) has two of them per CSS
+    // pixel; the sizes of www/style.css have lower and upper limits in CSS pixels, so the preview needs them
+    const cssW = Math.max(pw, ph) > 1400 ? pw / 2 : pw;
+    const css = cssW / w;
+    const vmin = Math.min(pw, ph) * (cssW / pw);
+    const clamp = (lo: number, v: number, hi: number): number => Math.min(hi, Math.max(lo, v));
+    // as www/style.css: the gap clamp(6px, 1.2vmin, 14px), the bar clamp(32px, 5.5vmin, 52px)
+    return { w, h, gap: clamp(6, vmin * 0.012, 14) / css, top: clamp(32, vmin * 0.055, 52) / css, css };
 }
 
 /** A tablet: what its row says, within these limits (lib/layout.js TABLET_LIMITS, TABLET_DEFAULT) */

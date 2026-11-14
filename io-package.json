@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "satellite-display",
-        "version": "0.3.0",
+        "version": "0.3.1",
         "news": {
+            "0.3.1": {
+                "en": "Tablets can show a clock with the date when idle (tab Tablets: on/off and minutes); a touch shows the keypad of the screen lock or the tiles. The tile editor draws a tablet exactly as the tablet shows it. Tab Authentication describes the screen lock of the tablets.",
+                "de": "Tablets können im Ruhezustand eine Uhr mit Datum zeigen (Reiter Tablets: an/aus und Minuten); eine Berührung zeigt das Ziffernfeld der Bildschirmsperre oder die Kacheln. Der Kachel-Editor zeichnet ein Tablet genau so, wie das Tablet es zeigt. Der Reiter Authentifizierung beschreibt die Bildschirmsperre der Tablets.",
+                "ru": "Планшеты в простое могут показывать часы с датой (вкладка Tablets: вкл./выкл. и минуты); касание открывает клавиатуру блокировки экрана или плитки. Редактор плиток рисует планшет точно так, как его показывает планшет. Вкладка «Аутентификация» описывает блокировку экрана планшетов.",
+                "pt": "Os tablets podem mostrar um relógio com a data quando inativos (separador Tablets: ligar/desligar e minutos); um toque mostra o teclado do bloqueio de ecrã ou os mosaicos. O editor de mosaicos desenha um tablet exatamente como o tablet o mostra. O separador Autenticação descreve o bloqueio de ecrã dos tablets.",
+                "nl": "Tablets kunnen in rust een klok met datum tonen (tabblad Tablets: aan/uit en minuten); een aanraking toont het toetsenblok van de schermvergrendeling of de tegels. De tegeleditor tekent een tablet precies zoals de tablet het toont. Het tabblad Authenticatie beschrijft de schermvergrendeling van de tablets.",
+                "fr": "Les tablettes peuvent afficher une horloge avec la date au repos (onglet Tablets : activé/désactivé et minutes) ; un contact affiche le pavé du verrouillage d'écran ou les tuiles. L'éditeur de tuiles dessine une tablette exactement comme la tablette l'affiche. L'onglet Authentification décrit le verrouillage d'écran des tablettes.",
+                "it": "I tablet possono mostrare un orologio con la data quando sono inattivi (scheda Tablets: on/off e minuti); un tocco mostra il tastierino del blocco schermo o i riquadri. L'editor dei riquadri disegna un tablet esattamente come lo mostra il tablet. La scheda Autenticazione descrive il blocco schermo dei tablet.",
+                "es": "Las tabletas pueden mostrar un reloj con la fecha en reposo (pestaña Tablets: activado/desactivado y minutos); un toque muestra el teclado del bloqueo de pantalla o los mosaicos. El editor de mosaicos dibuja una tableta exactamente como la muestra la tableta. La pestaña Autenticación describe el bloqueo de pantalla de las tabletas.",
+                "pl": "Tablety w bezczynności mogą pokazywać zegar z datą (karta Tablets: wł./wył. i minuty); dotknięcie pokazuje klawiaturę blokady ekranu albo kafelki. Edytor kafelków rysuje tablet dokładnie tak, jak pokazuje go tablet. Karta Uwierzytelnianie opisuje blokadę ekranu tabletów.",
+                "uk": "Планшети в простої можуть показувати годинник з датою (вкладка Tablets: увімк./вимк. і хвилини); дотик відкриває клавіатуру блокування екрана або плитки. Редактор плиток малює планшет точно так, як його показує планшет. Вкладка «Автентифікація» описує блокування екрана планшетів.",
+                "zh-cn": "平板电脑空闲时可显示带日期的时钟（Tablets 选项卡：开/关及分钟数）；触摸后显示屏幕锁的数字键盘或磁贴。磁贴编辑器按平板电脑实际显示的样子绘制平板电脑。身份验证选项卡说明了平板电脑的屏幕锁。"
+            },
             "0.3.0": {
                 "en": "Tablets with a web app (off by default): an Android or iOS tablet shows tiles like a satellite, on a grid and screen of its own and with every tile type in every size; the tile editor and the commands for AI agents place tiles on it. Links with QR codes, an own port with HTTPS, the port declared in the used resources registry. A renamed satellite or tablet keeps its tiles. A page of a tablet can have a title, shown next to the name of the tablet.",
                 "de": "Tablets mit Web-App (standardmäßig aus): ein Android- oder iOS-Tablet zeigt Kacheln wie ein Satellit, auf eigenem Raster und Bildschirm und mit jeder Kachelart in jeder Größe; der Kachel-Editor und die Befehle für KI-Agenten setzen Kacheln darauf. Links mit QR-Codes, eigener Port mit HTTPS, der Port im Register belegter Ressourcen. Ein umbenannter Satellit oder ein umbenanntes Tablet behält seine Kacheln. Eine Seite eines Tablets kann einen Titel haben, er steht neben dem Namen des Tablets.",
@@ -80,19 +93,6 @@
                 "pl": "Blokada ekranu z PIN: tylko zegar do wpisania PIN, bez słowa aktywującego; zakładka Uwierzytelnianie określa, kiedy blokować ponownie (firmware satelity 2.1.0)",
                 "uk": "Блокування екрана з PIN: лише годинник до введення PIN, без слова активації; вкладка Автентифікація визначає, коли блокувати знову (прошивка сателіта 2.1.0)",
                 "zh-cn": "带 PIN 的屏幕锁：输入 PIN 前只显示时钟，不响应唤醒词；在“身份验证”选项卡中设置何时再次锁定（卫星固件 2.1.0）"
-            },
-            "0.0.8": {
-                "en": "Colours: a default main colour, own main colour and background per tile, background from another state; icons on small, wide and large tiles (satellite firmware 2.0.4)",
-                "de": "Farben: Standard-Hauptfarbe, eigene Hauptfarbe und eigener Hintergrund je Kachel, Hintergrund aus einem anderen Datenpunkt; Symbole auf kleinen, breiten und großen Kacheln (Satelliten-Firmware 2.0.4)",
-                "ru": "Цвета: основной цвет по умолчанию, свой основной цвет и фон у плитки, фон по другому состоянию; иконки на маленьких, широких и больших плитках (прошивка сателлита 2.0.4)",
-                "pt": "Cores: cor principal predefinida, cor principal e fundo próprios por bloco, fundo a partir de outro estado; ícones em blocos pequenos, largos e grandes (firmware do satélite 2.0.4)",
-                "nl": "Kleuren: standaard hoofdkleur, eigen hoofdkleur en achtergrond per tegel, achtergrond uit een andere state; pictogrammen op kleine, brede en grote tegels (satellietfirmware 2.0.4)",
-                "fr": "Couleurs : couleur principale par défaut, couleur principale et arrière-plan propres par tuile, arrière-plan selon un autre état ; icônes sur les petites, larges et grandes tuiles (firmware du satellite 2.0.4)",
-                "it": "Colori: colore principale predefinito, colore principale e sfondo propri per riquadro, sfondo da un altro stato; icone sui riquadri piccoli, larghi e grandi (firmware del satellite 2.0.4)",
-                "es": "Colores: color principal predeterminado, color principal y fondo propios por mosaico, fondo según otro estado; iconos en mosaicos pequeños, anchos y grandes (firmware del satélite 2.0.4)",
-                "pl": "Kolory: domyślny kolor główny, własny kolor główny i tło kafelka, tło z innego stanu; ikony na małych, szerokich i dużych kafelkach (firmware satelity 2.0.4)",
-                "uk": "Кольори: основний колір за замовчуванням, власний основний колір і тло плитки, тло з іншого стану; іконки на малих, широких і великих плитках (прошивка сателіта 2.0.4)",
-                "zh-cn": "颜色：默认主颜色、每个磁贴自己的主颜色和背景、由其他状态控制的背景；小型、宽型和大型磁贴上的图标（卫星固件 2.0.4）"
             }
         },
         "titleLang": {
@@ -186,7 +186,9 @@
         "certPrivate": "",
         "certChained": "",
         "tablets": [],
-        "pageTitles": {}
+        "pageTitles": {},
+        "tabletClock": false,
+        "tabletClockMinutes": 2
     },
     "objects": [],
     "instanceObjects": [
