@@ -146,7 +146,9 @@ describe('values', () => {
     });
 
     it('takes the scale and the unit of a thermostat from its target temperature', () => {
-        const target = { common: { name: 'Soll', type: 'number', role: 'level.temperature', unit: '°C', min: 10, max: 28 } };
+        const target = {
+            common: { name: 'Soll', type: 'number', role: 'level.temperature', unit: '°C', min: 10, max: 28 },
+        };
         const args = tileArgs(tile({ type: 'thermostat', size: 'q', state2: 'a.0.soll' }), null, 'en', target);
         assert.equal(args.min, 10);
         assert.equal(args.max, 28);
@@ -168,7 +170,11 @@ describe('values', () => {
     });
 
     it('sends no name for a tile that shows only its icon', () => {
-        const args = tileArgs(tile({ type: 'switch', size: 's', icon: 'lamp', iconOnly: true, label: 'Licht' }), null, 'en');
+        const args = tileArgs(
+            tile({ type: 'switch', size: 's', icon: 'lamp', iconOnly: true, label: 'Licht' }),
+            null,
+            'en',
+        );
         assert.equal(args.label, '');
         assert.equal(args.icon, 'lamp');
     });

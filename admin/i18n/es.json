@@ -24,5 +24,22 @@
     "When the display goes back to the clock by itself": "Cuando la pantalla vuelve sola al reloj",
     "Only by hand (the open lock next to the gear)": "Solo a mano (el candado abierto junto al engranaje)",
     "Minutes without a touch": "Minutos sin tocar",
-    "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night.": "El candado abierto junto al engranaje bloquea al instante en cualquier modo. El estado satellites.<nombre>.locked muestra el bloqueo y bloquea o desbloquea desde ioBroker, p. ej. de noche."
+    "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night.": "El candado abierto junto al engranaje bloquea al instante en cualquier modo. El estado satellites.<nombre>.locked muestra el bloqueo y bloquea o desbloquea desde ioBroker, p. ej. de noche.",
+    "Tablets": "Tabletas",
+    "Android and iOS tablets show the tiles in the browser, like a satellite without voice. Only while this is switched on does the adapter start a web server for them.": "Las tabletas Android e iOS muestran los mosaicos en el navegador, como un satélite sin voz. El adaptador solo inicia un servidor web para ellas mientras esto esté activado.",
+    "Tablets with the web app (PWA)": "Tabletas con la aplicación web (PWA)",
+    "Port of the web app": "Puerto de la aplicación web",
+    "Bind address": "Dirección de escucha",
+    "0.0.0.0 = all interfaces, which the tablets need": "0.0.0.0 = todas las interfaces, que necesitan las tabletas",
+    "Use HTTPS": "Usar HTTPS",
+    "Needed to install the web app on a tablet (on iOS always) and to keep its screen on. It uses a certificate of the ioBroker collection (Admin > Settings > Certificates); without a working certificate the web app stays off.": "Necesario para instalar la aplicación web en una tableta (en iOS siempre) y mantener su pantalla encendida. Usa un certificado de la colección de ioBroker (Admin > Ajustes > Certificados); sin un certificado que funcione, la aplicación web queda apagada.",
+    "Public certificate": "Certificado público",
+    "Private key": "Clave privada",
+    "Certificate chain (optional)": "Cadena de certificados (opcional)",
+    "Columns": "Columnas",
+    "Rows": "Filas",
+    "Pages": "Páginas",
+    "Screen width (px)": "Ancho de pantalla (px)",
+    "Screen height (px)": "Alto de pantalla (px)",
+    "Screen width x height in pixels (e.g. an iPad: 2048 x 1536 in landscape, 1536 x 2048 upright) gives the tile editor the shape of the tablet; empty: 4:3 landscape. The grid of a page is columns x rows (a 10\" tablet in landscape: 4 x 3). The tile editor and the AI agents place tiles on a tablet like on a satellite.": "Ancho x alto de la pantalla en píxeles (p. ej. un iPad: 2048 x 1536 en horizontal, 1536 x 2048 en vertical) da al editor de mosaicos la forma de la tableta; vacío: 4:3 en horizontal. La cuadrícula de una página es columnas x filas (una tableta de 10\" en horizontal: 4 x 3). El editor de mosaicos y los agentes de IA colocan mosaicos en una tableta como en un satélite."
 }

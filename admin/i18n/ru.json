@@ -24,5 +24,22 @@
     "When the display goes back to the clock by itself": "Когда экран сам возвращается к часам",
     "Only by hand (the open lock next to the gear)": "Только вручную (открытый замок рядом с шестерёнкой)",
     "Minutes without a touch": "Минут без касаний",
-    "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night.": "Открытый замок рядом с шестерёнкой блокирует сразу при любом режиме. Состояние satellites.<имя>.locked показывает блокировку и блокирует или разблокирует из ioBroker, например на ночь."
+    "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night.": "Открытый замок рядом с шестерёнкой блокирует сразу при любом режиме. Состояние satellites.<имя>.locked показывает блокировку и блокирует или разблокирует из ioBroker, например на ночь.",
+    "Tablets": "Планшеты",
+    "Android and iOS tablets show the tiles in the browser, like a satellite without voice. Only while this is switched on does the adapter start a web server for them.": "Планшеты Android и iOS показывают плитки в браузере, как сателлит без голоса. Веб-сервер для них адаптер запускает, только пока это включено.",
+    "Tablets with the web app (PWA)": "Планшеты с веб-приложением (PWA)",
+    "Port of the web app": "Порт веб-приложения",
+    "Bind address": "Адрес привязки",
+    "0.0.0.0 = all interfaces, which the tablets need": "0.0.0.0 = все интерфейсы, они нужны планшетам",
+    "Use HTTPS": "Использовать HTTPS",
+    "Needed to install the web app on a tablet (on iOS always) and to keep its screen on. It uses a certificate of the ioBroker collection (Admin > Settings > Certificates); without a working certificate the web app stays off.": "Нужно, чтобы установить веб-приложение на планшет (на iOS всегда) и не давать экрану гаснуть. Используется сертификат из коллекции ioBroker (Admin > Настройки > Сертификаты); без рабочего сертификата веб-приложение не запускается.",
+    "Public certificate": "Открытый сертификат",
+    "Private key": "Закрытый ключ",
+    "Certificate chain (optional)": "Цепочка сертификатов (необязательно)",
+    "Columns": "Столбцы",
+    "Rows": "Строки",
+    "Pages": "Страницы",
+    "Screen width (px)": "Ширина экрана (px)",
+    "Screen height (px)": "Высота экрана (px)",
+    "Screen width x height in pixels (e.g. an iPad: 2048 x 1536 in landscape, 1536 x 2048 upright) gives the tile editor the shape of the tablet; empty: 4:3 landscape. The grid of a page is columns x rows (a 10\" tablet in landscape: 4 x 3). The tile editor and the AI agents place tiles on a tablet like on a satellite.": "Ширина x высота экрана в пикселях (например, iPad: 2048 x 1536 горизонтально, 1536 x 2048 вертикально) задают редактору плиток форму планшета; пусто: 4:3 горизонтально. Сетка страницы: столбцы x строки (10\" планшет горизонтально: 4 x 3). Редактор плиток и ИИ-агенты размещают плитки на планшете так же, как на сателлите."
 }

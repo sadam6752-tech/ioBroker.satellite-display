@@ -24,7 +24,17 @@ const ctx = (tiles = [], satellites = SATS) => ({
  * @param {Record<string, unknown>} extra - Fields
  * @returns {Record<string, unknown>} A tile row on Gast, page 1
  */
-const tile = extra => ({ enabled: true, satellite: 'Gast', page: 1, col: 0, row: 0, size: 's', type: 'value', state: 'a.0.x', ...extra });
+const tile = extra => ({
+    enabled: true,
+    satellite: 'Gast',
+    page: 1,
+    col: 0,
+    row: 0,
+    size: 's',
+    type: 'value',
+    state: 'a.0.x',
+    ...extra,
+});
 
 /** Eight small tiles: page 1 of Gast is full */
 const fullPage = () => {
@@ -41,10 +51,27 @@ describe('commands on the tiles', () => {
     it('explains itself for an agent: commands, sizes, icons and when to ask the user', async () => {
         const { answer } = await runCommand('help', {}, ctx());
         assert.equal(answer, HELP);
-        for (const word of ['addTile', 'moveTile', 'removeTile', 'getTiles', 'ceiling-light', 's = 1x1', 'ask which one', 'never reuse']) {
+        for (const word of [
+            'addTile',
+            'moveTile',
+            'removeTile',
+            'getTiles',
+            'ceiling-light',
+            's = 1x1',
+            'ask which one',
+            'never reuse',
+        ]) {
             assert.ok(String(answer).includes(word), word);
         }
-        assert.deepEqual(EDIT_COMMANDS, ['help', 'getTiles', 'addTile', 'updateTile', 'moveTile', 'removeTile']);
+        assert.deepEqual(EDIT_COMMANDS, [
+            'help',
+            'getTiles',
+            'addTile',
+            'updateTile',
+            'moveTile',
+            'removeTile',
+            'setPageTitle',
+        ]);
     });
 
     it('asks which satellite when there are several and none was named', async () => {
@@ -76,7 +103,14 @@ describe('commands on the tiles', () => {
         );
         assert.equal(answer.ok, true);
         assert.deepEqual(
-            [answer.added.id, answer.added.satellite, answer.added.page, answer.added.col, answer.added.row, answer.added.icon],
+            [
+                answer.added.id,
+                answer.added.satellite,
+                answer.added.page,
+                answer.added.col,
+                answer.added.row,
+                answer.added.icon,
+            ],
             [3, 'Gast', 1, 0, 1, 'ceiling-light'],
         );
         assert.equal(tiles.length, 3);
@@ -89,7 +123,11 @@ describe('commands on the tiles', () => {
     });
 
     it('goes to the next page when the first is full, and says so when all are', async () => {
-        const { answer } = await runCommand('addTile', { satellite: 'Gast', type: 'switch', state: 'a.0.on' }, ctx(fullPage()));
+        const { answer } = await runCommand(
+            'addTile',
+            { satellite: 'Gast', type: 'switch', state: 'a.0.on' },
+            ctx(fullPage()),
+        );
         assert.equal(answer.added.page, 2);
 
         let rows = [];
@@ -104,23 +142,43 @@ describe('commands on the tiles', () => {
     });
 
     it('refuses what the firmware cannot show, with what it can', async () => {
-        const icon = await runCommand('addTile', { satellite: 'Gast', type: 'switch', state: 'a.0.on', icon: 'rocket' }, ctx());
+        const icon = await runCommand(
+            'addTile',
+            { satellite: 'Gast', type: 'switch', state: 'a.0.on', icon: 'rocket' },
+            ctx(),
+        );
         assert.match(String(icon.answer.error), /no icon "rocket"/);
         assert.ok(Array.isArray(icon.answer.icons));
-        const size = await runCommand('addTile', { satellite: 'Gast', type: 'gauge', size: 's', state: 'a.0.t' }, ctx());
+        const size = await runCommand(
+            'addTile',
+            { satellite: 'Gast', type: 'gauge', size: 's', state: 'a.0.t' },
+            ctx(),
+        );
         assert.match(String(size.answer.error), /comes in the sizes q, l/);
         const kind = await runCommand('addTile', { satellite: 'Gast', type: 'lamp', state: 'a.0.on' }, ctx());
         assert.match(String(kind.answer.error), /unknown type/);
-        const thermostat = await runCommand('addTile', { satellite: 'Gast', type: 'thermostat', state: 'a.0.t' }, ctx());
+        const thermostat = await runCommand(
+            'addTile',
+            { satellite: 'Gast', type: 'thermostat', state: 'a.0.t' },
+            ctx(),
+        );
         assert.match(String(thermostat.answer.error), /needs state2/);
         const missing = await runCommand('addTile', { satellite: 'Gast', type: 'switch', state: 'a.0.missing' }, ctx());
         assert.match(String(missing.answer.error), /does not exist/);
-        const taken = await runCommand('addTile', { satellite: 'Gast', type: 'switch', state: 'a.0.on', page: 1, col: 0, row: 0 }, ctx([tile({})]));
+        const taken = await runCommand(
+            'addTile',
+            { satellite: 'Gast', type: 'switch', state: 'a.0.on', page: 1, col: 0, row: 0 },
+            ctx([tile({})]),
+        );
         assert.match(String(taken.answer.error), /no room for a s tile at col 0, row 0/);
     });
 
     it('lists the tiles and the free cells of a satellite', async () => {
-        const { answer } = await runCommand('getTiles', { satellite: 'Gast' }, ctx([tile({}), tile({ satellite: 'Panel-Mini' })]));
+        const { answer } = await runCommand(
+            'getTiles',
+            { satellite: 'Gast' },
+            ctx([tile({}), tile({ satellite: 'Panel-Mini' })]),
+        );
         assert.deepEqual(answer.satellites, ['Gast', 'Panel-Mini']);
         assert.deepEqual(
             answer.tiles.map(t => [t.id, t.satellite]),

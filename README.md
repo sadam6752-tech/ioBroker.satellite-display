@@ -115,6 +115,46 @@ the alarm system); `satellites.<name>.failedPins` counts the wrong PINs.
 The PIN does not leave ioBroker: the satellite gets its SHA-256 hash and keeps it in its flash, so the lock also
 works after a restart and without ioBroker. Needs the satellite firmware **2.1.0**.
 
+## Tablets (web app, off by default)
+
+An Android or iOS tablet can show tiles like a satellite without voice: the adapter serves a web app (PWA) and the
+tablet keeps a connection to it. Nothing of this runs until it is switched on: without the checkbox the adapter opens
+no port and creates no objects for tablets.
+
+1. Tab **Tablets**: switch on "Tablets with the web app (PWA)", choose the port (default 8094) and enter a row per
+   tablet: its screen size in pixels (e.g. an iPad 2048 x 1536 in landscape, 1536 x 2048 upright: the tile editor
+   draws the tablet in that shape) and its grid, columns x rows of a page and the number of pages (a 10" tablet in
+   landscape: 4 x 3).
+2. Save, then press "Show links and QR codes": each tablet has its own link with an access key, as text and as a
+   QR code.
+3. Point the camera of the tablet at its code (or open the link there) and add the page to the home screen. It starts full screen, keeps the screen on (where
+   the browser allows it) and connects again by itself after the tablet was asleep.
+
+A tile names its tablet in the field "satellite" like a satellite; the commands for an AI agent (below) place tiles on
+a tablet the same way, and `getTiles` names the grid of every display. The screen lock with a PIN (tab **Tablets**,
+"Screen lock") works as on a satellite; the tablet checks the PIN itself.
+
+- **HTTPS**: a browser installs the web app and keeps the screen on only from a secure origin, on iOS always. Switch
+  on "Use HTTPS" and choose a certificate of the ioBroker collection (Admin > Settings > Certificates), the same pair
+  the web adapter uses. When HTTPS is on and the certificate cannot be loaded, the web app stays off (it does not fall
+  back to plain HTTP). Without HTTPS the page still works in a browser or a kiosk app, without installing it.
+- **iOS** closes the connection when the screen goes dark; the page connects again when it is shown. For a panel on
+  the wall use Guided Access and keep the display on in the settings of the iPad.
+- The **access key** is kept in the object `tablets.<name>` and stays the same across restarts. Who knows the link
+  can see and switch the tiles of that tablet, nothing else. Remove the row of the tablet (or switch the web app off)
+  to make its link invalid; a new row gets a new key, and a tablet with an old link says that its link is out of date.
+  "New link" on the card of a tablet gives it a new key at once (when the link got into wrong hands or the tablet is
+  given away): the old link stops working, also on the home screen of the tablet.
+- **Renaming** a tablet or a satellite in the settings keeps it the same device: at the next start the adapter finds
+  that one name is gone and one is new, gives the tablet its old access key (its link keeps working) and moves the
+  tiles to the new name. When more than one device of a kind changed at once, the tile editor shows the tiles of an
+  old name with "Move to ..." and "Delete these tiles".
+- The port is declared in the registry of used resources of js-controller 8, so the admin can show it as taken.
+- The tile editor of the admin shows the tablets next to the satellites, on the grid of each.
+- **Page titles**: a page of a tablet can have a title (e.g. "Heizung"), set in the tile editor next to the page
+  buttons or by an AI agent (`setPageTitle`). The bar of the tablet shows it next to the name of the tablet while that
+  page is shown; the keypad of the screen lock shows only the name. Satellites have no place for it.
+
 ## Commands (e.g. for an AI agent)
 
 The tiles can also be changed with `sendTo('satellite-display.0', command, message)`, e.g. by ioBroker.pi-agent
@@ -124,11 +164,12 @@ names what to ask the user (which satellite, which page when all are full).
 | Command | Message | Does |
 | --- | --- | --- |
 | `help` | – | describes the commands, kinds, sizes, icons and the grid |
-| `getTiles` | `{satellite?}` | lists the satellites, their tiles (with an `id`) and the free cells |
+| `getTiles` | `{satellite?}` | lists the satellites and tablets, their grids, their tiles (with an `id`) and the free cells |
 | `addTile` | `{satellite, type, state, size?, icon?, label?, unit?, state2?, state3?, page?, col?, row?}` | adds a tile, without a place in the first free cell; answers where it went |
 | `updateTile` | `{id, ...fields}` | changes a tile |
 | `moveTile` | `{id, page, col?, row?}` | moves a tile, without `col`/`row` to the first free cell of the page |
 | `removeTile` | `{id}` | removes a tile |
+| `setPageTitle` | `{satellite, page, title}` | the title of a page of a tablet, shown in its bar; empty removes it |
 
 A change is saved in the settings of the instance, which then restarts and sends the tiles (a few seconds). In
 ioBroker.pi-agent the instance needs "Write allowed" in the write permissions.
@@ -137,7 +178,7 @@ ioBroker.pi-agent the instance needs "Write allowed" in the write permissions.
 
 | State | Meaning |
 | --- | --- |
-| `info.connection` | all satellites are connected and have their tiles |
+| `info.connection` | all satellites are connected and have their tiles (with tablets only: the web app runs) |
 | `satellites.<name>.connected` | this satellite is connected and has its tiles (role `indicator.reachable`) |
 | `satellites.<name>.lastTouch` | the last touch on a tile, as JSON (`page`, `slot`, `input`, `value`, `ts`) |
 | `satellites.<name>.resend` | button: sends all tiles again |
@@ -149,6 +190,8 @@ ioBroker.pi-agent the instance needs "Write allowed" in the write permissions.
 | `satellites.<name>.media.stop` | button: stop playing |
 | `satellites.<name>.media.state` | `play` (also while it announces), `pause` or `stop` |
 | `satellites.<name>.brightness` | brightness of the display 0-100 %, 0 = dark (only displays that take it from ioBroker, e.g. the tile panel) |
+| `tablets.<name>.connected` | this tablet is connected and has its tiles (a sleeping tablet is not) |
+| `tablets.<name>.lastTouch`, `.resend`, `.locked`, `.failedPins` | as for a satellite |
 
 The satellite keeps no layout: after a restart or a lost connection the adapter sends all tiles and their values
 again by itself.
@@ -162,6 +205,8 @@ again by itself.
 - The format between adapter and firmware is described in
   [docs/TILES.md of the firmware](https://github.com/sadam6752-tech/esphome-waveshare-esp32-s3-audio-va/blob/main/docs/TILES.md).
 - The icons are a fixed set built into the firmware; the settings offer exactly that list.
+- The web app of the tablets draws the same icons from [Material Design Icons](https://pictogrammers.com) 7.4.47
+  (Apache License 2.0), generated into `www/icons.js` by `tools/build-icons.js`.
 - After an update of the adapter, reload the admin page (F5) once: an open admin keeps the old tile editor in memory.
 
 ## Changelog
@@ -172,6 +217,17 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+
+### 0.3.0 (2026-11-14)
+
+- (sadam6752-tech) Tablets with a web app (PWA), off by default: an Android or iOS tablet shows tiles like a satellite
+  on a grid of its own size; the AI agent commands place tiles on it too. The adapter serves the app on its own port
+  (HTTPS with a certificate of ioBroker) and declares the port in the used resources registry of js-controller 8
+- (sadam6752-tech) A satellite or tablet renamed in the settings keeps its tiles, and a tablet its link; the tile
+  editor offers to move or delete the tiles of a name that is gone
+- (sadam6752-tech) Links of the tablets with QR codes and a "New link" button; a tablet keeps the icon and the toggle of
+  a switch together, and takes every tile type in every size
+- (sadam6752-tech) Page titles on tablets (e.g. "Heizung"), set in the tile editor or with the command `setPageTitle`
 
 ### 0.2.1 (2026-11-13)
 
@@ -198,13 +254,6 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
   satellite; its state `satellites.<name>.brightness` sets the brightness of the display (0 = dark)
 - A display with a player (the panel with a MAX98357A amplifier) gets `satellites.<name>.media.*`: a stream URL to
   play (e.g. from an AirPlay receiver), volume, stop and its state
-
-### 0.1.0 (2026-11-10)
-
-- Screen lock with a PIN per satellite (tab Satellites): the display shows only the clock and a lock, the wake word is
-  ignored, a touch opens a keypad; the satellite checks the PIN itself (satellite firmware 2.1.0)
-- Tab Authentication: lock again after some minutes without a touch, when the display goes back to the clock, or only
-  by hand; the state `satellites.<name>.locked` locks and unlocks from ioBroker
 
 ## License
 

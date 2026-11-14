@@ -90,7 +90,7 @@ describe('translations of the tile editor', () => {
     const dir = path.join(ROOT, 'src-admin', 'src', 'i18n');
     const en = JSON.parse(fs.readFileSync(path.join(dir, 'en.json'), 'utf8'));
     // the editor and the reasons of layout.ts (problemOf)
-    const source = ['TileEditor.tsx', 'layout.ts']
+    const source = ['TileEditor.tsx', 'TabletLinks.tsx', 'layout.ts']
         .map(f => fs.readFileSync(path.join(ROOT, 'src-admin', 'src', f), 'utf8'))
         .join('\n');
 
@@ -112,4 +112,3 @@ describe('translations of the tile editor', () => {
         });
     }
 });
-

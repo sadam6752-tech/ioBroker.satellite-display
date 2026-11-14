@@ -94,7 +94,14 @@ const pb = { SubscribeHomeassistantServicesRequest: class SubscribeHomeassistant
 
 /** @returns {SatelliteLink} A started link on a fake connection */
 function startLink() {
-    const link = new SatelliteLink({ host: '10.0.0.5', port: 6053, encryptionKey: '', clientInfo: 'test', Connection: FakeConnection, pb });
+    const link = new SatelliteLink({
+        host: '10.0.0.5',
+        port: 6053,
+        encryptionKey: '',
+        clientInfo: 'test',
+        Connection: FakeConnection,
+        pb,
+    });
     link.start();
     return link;
 }
@@ -201,7 +208,11 @@ describe('satellite link', () => {
             ],
         });
         conn.emit('message.HomeassistantActionRequest', { service: 'esphome.stt_text', isEvent: true, dataList: [] });
-        conn.emit('message.HomeassistantActionRequest', { service: 'esphome.tile_input', isEvent: false, dataList: [] });
+        conn.emit('message.HomeassistantActionRequest', {
+            service: 'esphome.tile_input',
+            isEvent: false,
+            dataList: [],
+        });
         assert.deepEqual(inputs, [{ page: 2, slot: 1, input: 'level', value: 53 }]);
     });
 
@@ -238,7 +249,11 @@ describe('satellite link', () => {
         });
         conn.emit('message.HomeassistantActionRequest', event('1', '2'));
         conn.emit('message.HomeassistantActionRequest', event('0', '0'));
-        conn.emit('message.HomeassistantActionRequest', { service: 'esphome.screen_lock', isEvent: false, dataList: [] });
+        conn.emit('message.HomeassistantActionRequest', {
+            service: 'esphome.screen_lock',
+            isEvent: false,
+            dataList: [],
+        });
         assert.deepEqual(locks, [
             { locked: true, failed: 2 },
             { locked: false, failed: 0 },
@@ -280,7 +295,10 @@ describe('satellite link', () => {
         assert.equal(convertArg(ARG.FLOAT, 'x'), 0);
         assert.equal(convertArg(ARG.STRING, null), '');
         assert.equal(convertArg(ARG.BOOL, 0), false);
-        assert.equal(parseTileInput({ service: 'esphome.tile_input', isEvent: true, dataList: [{ key: 'page', value: 'x' }] }), null);
+        assert.equal(
+            parseTileInput({ service: 'esphome.tile_input', isEvent: true, dataList: [{ key: 'page', value: 'x' }] }),
+            null,
+        );
     });
 });
 

@@ -24,5 +24,22 @@
     "When the display goes back to the clock by itself": "显示屏自动返回时钟时",
     "Only by hand (the open lock next to the gear)": "仅手动（齿轮旁边的打开的锁）",
     "Minutes without a touch": "无触摸的分钟数",
-    "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night.": "在任何模式下，齿轮旁打开的锁都会立即锁定。状态 satellites.<名称>.locked 显示锁定状态，并可从 ioBroker 锁定或解锁，例如在夜间。"
+    "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night.": "在任何模式下，齿轮旁打开的锁都会立即锁定。状态 satellites.<名称>.locked 显示锁定状态，并可从 ioBroker 锁定或解锁，例如在夜间。",
+    "Tablets": "平板电脑",
+    "Android and iOS tablets show the tiles in the browser, like a satellite without voice. Only while this is switched on does the adapter start a web server for them.": "Android 和 iOS 平板电脑在浏览器中显示磁贴，就像没有语音的卫星设备。只有开启此项时，适配器才会为它们启动 Web 服务器。",
+    "Tablets with the web app (PWA)": "使用 Web 应用 (PWA) 的平板电脑",
+    "Port of the web app": "Web 应用端口",
+    "Bind address": "绑定地址",
+    "0.0.0.0 = all interfaces, which the tablets need": "0.0.0.0 = 所有接口，平板电脑需要它",
+    "Use HTTPS": "使用 HTTPS",
+    "Needed to install the web app on a tablet (on iOS always) and to keep its screen on. It uses a certificate of the ioBroker collection (Admin > Settings > Certificates); without a working certificate the web app stays off.": "在平板电脑上安装 Web 应用（iOS 上总是需要）并保持屏幕常亮时需要。它使用 ioBroker 证书集合中的证书（管理 > 设置 > 证书）；没有可用的证书时 Web 应用保持关闭。",
+    "Public certificate": "公共证书",
+    "Private key": "私钥",
+    "Certificate chain (optional)": "证书链（可选）",
+    "Columns": "列",
+    "Rows": "行",
+    "Pages": "页",
+    "Screen width (px)": "屏幕宽度 (px)",
+    "Screen height (px)": "屏幕高度 (px)",
+    "Screen width x height in pixels (e.g. an iPad: 2048 x 1536 in landscape, 1536 x 2048 upright) gives the tile editor the shape of the tablet; empty: 4:3 landscape. The grid of a page is columns x rows (a 10\" tablet in landscape: 4 x 3). The tile editor and the AI agents place tiles on a tablet like on a satellite.": "以像素为单位的屏幕宽 x 高（例如 iPad：横向 2048 x 1536，竖向 1536 x 2048）让磁贴编辑器知道平板电脑的形状；留空：4:3 横向。页面的网格为列 x 行（横向 10\" 平板电脑：4 x 3）。磁贴编辑器和 AI 代理在平板电脑上放置磁贴的方式与卫星设备相同。"
 }

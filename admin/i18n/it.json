@@ -24,5 +24,22 @@
     "When the display goes back to the clock by itself": "Quando il display torna da solo all'orologio",
     "Only by hand (the open lock next to the gear)": "Solo a mano (il lucchetto aperto accanto all'ingranaggio)",
     "Minutes without a touch": "Minuti senza tocco",
-    "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night.": "Il lucchetto aperto accanto all'ingranaggio blocca subito in ogni modalità. Lo stato satellites.<nome>.locked mostra il blocco e blocca o sblocca da ioBroker, ad es. di notte."
+    "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night.": "Il lucchetto aperto accanto all'ingranaggio blocca subito in ogni modalità. Lo stato satellites.<nome>.locked mostra il blocco e blocca o sblocca da ioBroker, ad es. di notte.",
+    "Tablets": "Tablet",
+    "Android and iOS tablets show the tiles in the browser, like a satellite without voice. Only while this is switched on does the adapter start a web server for them.": "I tablet Android e iOS mostrano i riquadri nel browser, come un satellite senza voce. L'adattatore avvia un server web per loro solo finché questa opzione è attiva.",
+    "Tablets with the web app (PWA)": "Tablet con l'app web (PWA)",
+    "Port of the web app": "Porta dell'app web",
+    "Bind address": "Indirizzo di ascolto",
+    "0.0.0.0 = all interfaces, which the tablets need": "0.0.0.0 = tutte le interfacce, necessarie ai tablet",
+    "Use HTTPS": "Usa HTTPS",
+    "Needed to install the web app on a tablet (on iOS always) and to keep its screen on. It uses a certificate of the ioBroker collection (Admin > Settings > Certificates); without a working certificate the web app stays off.": "Necessario per installare l'app web su un tablet (su iOS sempre) e tenerne acceso lo schermo. Usa un certificato della raccolta di ioBroker (Admin > Impostazioni > Certificati); senza un certificato funzionante l'app web resta spenta.",
+    "Public certificate": "Certificato pubblico",
+    "Private key": "Chiave privata",
+    "Certificate chain (optional)": "Catena di certificati (facoltativa)",
+    "Columns": "Colonne",
+    "Rows": "Righe",
+    "Pages": "Pagine",
+    "Screen width (px)": "Larghezza schermo (px)",
+    "Screen height (px)": "Altezza schermo (px)",
+    "Screen width x height in pixels (e.g. an iPad: 2048 x 1536 in landscape, 1536 x 2048 upright) gives the tile editor the shape of the tablet; empty: 4:3 landscape. The grid of a page is columns x rows (a 10\" tablet in landscape: 4 x 3). The tile editor and the AI agents place tiles on a tablet like on a satellite.": "Larghezza x altezza dello schermo in pixel (ad es. un iPad: 2048 x 1536 in orizzontale, 1536 x 2048 in verticale) dà all'editor dei riquadri la forma del tablet; vuoto: 4:3 in orizzontale. La griglia di una pagina è colonne x righe (un tablet da 10\" in orizzontale: 4 x 3). L'editor dei riquadri e gli agenti IA posizionano i riquadri su un tablet come su un satellite."
 }

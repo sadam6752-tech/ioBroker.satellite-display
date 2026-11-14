@@ -12,7 +12,17 @@ const SATS = [
  * @param {object} extra - Fields of the row
  * @returns {object} A tile row
  */
-const row = extra => ({ enabled: true, satellite: 'Gast', page: 1, col: 0, row: 0, size: 'q', type: 'value', state: 'a.0.x', ...extra });
+const row = extra => ({
+    enabled: true,
+    satellite: 'Gast',
+    page: 1,
+    col: 0,
+    row: 0,
+    size: 'q',
+    type: 'value',
+    state: 'a.0.x',
+    ...extra,
+});
 
 describe('layout', () => {
     it('makes object ids of satellite names', () => {
@@ -32,7 +42,10 @@ describe('layout', () => {
 
     it('takes the enabled satellites, port 6053 by default', () => {
         const problems = [];
-        const sats = normalizeSatellites([...SATS, { enabled: false, name: 'Off', host: '1.2.3.4' }, { name: 'NoHost' }], problems);
+        const sats = normalizeSatellites(
+            [...SATS, { enabled: false, name: 'Off', host: '1.2.3.4' }, { name: 'NoHost' }],
+            problems,
+        );
         assert.deepEqual(
             sats.map(s => [s.id, s.port]),
             [
@@ -105,7 +118,7 @@ describe('layout', () => {
         assert.match(problems[3], /^Tile 5: a gauge tile comes in the sizes q, l/);
         assert.match(problems[4], /unknown type "blink"/);
         assert.match(problems[5], /page must be 1 to 4/);
-        assert.match(problems[6], /no enabled satellite "Keller"/);
+        assert.match(problems[6], /no enabled satellite or tablet "Keller"/);
         assert.match(problems[7], /no state chosen/);
     });
 
@@ -181,7 +194,15 @@ describe('layout', () => {
         const sats = normalizeSatellites(SATS, problems);
         const tiles = normalizeTiles(
             [
-                row({ size: 's', color: '#ff0000', background: '#111111', bgState: ' a.0.alarm ', bgColor: '#7f1d1d', icon: 'bell', iconOnly: true }),
+                row({
+                    size: 's',
+                    color: '#ff0000',
+                    background: '#111111',
+                    bgState: ' a.0.alarm ',
+                    bgColor: '#7f1d1d',
+                    icon: 'bell',
+                    iconOnly: true,
+                }),
                 row({ col: 1, size: 's', iconOnly: true }),
                 row({ row: 2, size: 's', type: 'button', icon: 'bell', iconOnly: true }),
             ],
@@ -266,7 +287,8 @@ describe('layout', () => {
         const path = require('node:path');
         const { TYPES, SIZES } = require('../../lib/layout');
         const src = fs.readFileSync(path.join(__dirname, '..', '..', 'src-admin', 'src', 'layout.ts'), 'utf8');
-        const block = name => src.slice(src.indexOf(`export const ${name}`), src.indexOf(';', src.indexOf(`export const ${name}`)));
+        const block = name =>
+            src.slice(src.indexOf(`export const ${name}`), src.indexOf(';', src.indexOf(`export const ${name}`)));
         const icons = [...block('ICONS').matchAll(/'([a-z-]+)'/g)].map(m => m[1]);
         assert.deepEqual(icons, ICONS);
         for (const [kind, sizes] of Object.entries(TYPES)) {

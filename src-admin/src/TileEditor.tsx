@@ -34,12 +34,10 @@ import { DialogSelectID, I18n } from '@iobroker/gui-components';
 import { ConfigGeneric, type ConfigGenericProps, type ConfigGenericState } from '@iobroker/json-config';
 
 import {
-    COLS,
     ALERT_KINDS,
     ICONS,
     KINDS,
-    PAGES,
-    ROWS,
+    SATELLITE_GRID,
     alerted,
     cssColor,
     showToggle,
@@ -52,6 +50,10 @@ import {
     swapPlaces,
     tileAt,
     tooMany,
+    tabletGrid,
+    sizesOf,
+    displayId,
+    type Grid,
     type Kind,
     type Size,
     type TileRow,
@@ -97,11 +99,21 @@ const UNDO_STEPS = 50;
 /** Changes of the same field within this time are one undo step (typing a name) */
 const UNDO_MERGE_MS = 1000;
 
-/** The screen is 320 x 240; the preview is drawn this much bigger */
+/** The screen of a satellite is 320 x 240 (a tablet is drawn the same size); the preview is drawn this much bigger */
 const SCALE = 1.5;
 const px = (v: number): number => Math.round(v * SCALE);
-const colX = (col: number): number => 6 + col * 157;
-const rowY = (row: number): number => 6 + Math.floor((row * 117) / 2);
+/** Width of a column and height of a row with their gap: 157 x 58.5 on a satellite (2 x 4) */
+const cellW = (g: Grid): number => (g.w - g.gap) / g.cols;
+const cellH = (g: Grid): number => (g.h - g.top) / g.rows;
+const colX = (col: number, g: Grid): number => g.gap + Math.floor(col * cellW(g));
+const rowY = (row: number, g: Grid): number => g.top + Math.floor(row * cellH(g));
+
+/** A display of the settings: a satellite, or a tablet while the web app is on */
+interface Display {
+    name: string;
+    kind: 'satellite' | 'tablet';
+    grid: Grid;
+}
 
 const KIND_KEYS: Record<Kind, string> = {
     value: 'sd_kind_value',
@@ -116,6 +128,19 @@ const KIND_KEYS: Record<Kind, string> = {
 const SIZE_LABELS: Record<Size, string> = { s: '1 × 1', q: '1 × 2', w: '2 × 1', l: '2 × 2' };
 
 type StateAttr = 'state' | 'state2' | 'state3' | 'bgState';
+
+/** The colours of the web app of the tablets (www/style.css) */
+const TAB = {
+    screen: '#101418',
+    tile: '#1d232a',
+    tileOn: '#24303c',
+    text: '#e8edf2',
+    muted: '#8a96a3',
+    track: '#33404c',
+    accent: '#3d8bfd',
+    alert: '#e5484d',
+    ok: '#30a46c',
+};
 
 const COLOR = {
     screen: '#0B1118',
@@ -188,7 +213,10 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         }
         // a text field undoes its own typing; the editor only while it is on screen
         const target = e.target as HTMLElement | null;
-        if (target && (target.closest('input, textarea, [contenteditable="true"]') || target.closest('[role="dialog"]'))) {
+        if (
+            target &&
+            (target.closest('input, textarea, [contenteditable="true"]') || target.closest('[role="dialog"]'))
+        ) {
             return;
         }
         if (!this.root.current || this.root.current.offsetParent === null || !this.history.length) {
@@ -217,12 +245,48 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         return Array.isArray(tiles) ? (tiles as TileRow[]) : [];
     }
 
-    /** Satellites of the settings, then the names only tiles still use */
+    /** Satellites, and tablets while the web app is on (tab Tablets) */
+    displays(): Display[] {
+        const rowsOf = (attr: string): Record<string, unknown>[] => {
+            const v = ConfigGeneric.getValue(this.props.data, attr);
+            return Array.isArray(v) ? v : v && typeof v === 'object' ? Object.values(v) : [];
+        };
+        const result: Display[] = [];
+        for (const s of rowsOf('satellites')) {
+            const name = String(s?.name || '').trim();
+            if (name && !result.some(d => sameSatellite(d.name, name))) {
+                result.push({ name, kind: 'satellite', grid: SATELLITE_GRID });
+            }
+        }
+        if (ConfigGeneric.getValue(this.props.data, 'pwaEnabled') === true) {
+            for (const t of rowsOf('tablets')) {
+                const name = String(t?.name || '').trim();
+                if (name && !result.some(d => sameSatellite(d.name, name))) {
+                    result.push({ name, kind: 'tablet', grid: tabletGrid(t) });
+                }
+            }
+        }
+        return result;
+    }
+
+    /** The grid of a display; a name only tiles still use gets the grid of a satellite */
+    gridOf(name: string): Grid {
+        return this.displays().find(d => sameSatellite(d.name, name))?.grid ?? SATELLITE_GRID;
+    }
+
+    /** The grid of the display shown */
+    grid(): Grid {
+        return this.gridOf(this.state.satellite);
+    }
+
+    /** The page shown, within the pages of the display */
+    shownPage(): number {
+        return Math.min(this.state.page, this.grid().pages);
+    }
+
+    /** Satellites and tablets of the settings, then the names only tiles still use */
     satelliteNames(): string[] {
-        const sats = ConfigGeneric.getValue(this.props.data, 'satellites');
-        const names: string[] = (Array.isArray(sats) ? sats : [])
-            .map((s: { name?: string }) => String(s?.name || '').trim())
-            .filter(Boolean);
+        const names: string[] = this.displays().map(d => d.name);
         for (const t of this.tiles()) {
             const name = String(t.satellite || '').trim();
             if (name && !names.some(n => sameSatellite(n, name))) {
@@ -233,8 +297,100 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
     }
 
     isConfigured(name: string): boolean {
-        const sats = ConfigGeneric.getValue(this.props.data, 'satellites');
-        return (Array.isArray(sats) ? sats : []).some((s: { name?: string }) => sameSatellite(s?.name || '', name));
+        return this.displays().some(d => sameSatellite(d.name, name));
+    }
+
+    isTablet(name: string): boolean {
+        return this.displays().some(d => d.kind === 'tablet' && sameSatellite(d.name, name));
+    }
+
+    /** The title of a page of a tablet (native.pageTitles: display id → page → title) */
+    pageTitle(name: string, page: number): string {
+        const all = ConfigGeneric.getValue(this.props.data, 'pageTitles') as
+            Record<string, Record<string, string>> | undefined;
+        return String(all?.[displayId(name)]?.[page] ?? '');
+    }
+
+    setPageTitle(name: string, page: number, title: string): void {
+        const all = {
+            ...((ConfigGeneric.getValue(this.props.data, 'pageTitles') as Record<string, Record<string, string>>) ||
+                {}),
+        };
+        const mine = { ...(all[displayId(name)] || {}) };
+        const text = title.slice(0, 32);
+        if (text.trim()) {
+            mine[page] = text;
+        } else {
+            delete mine[page];
+        }
+        all[displayId(name)] = mine;
+        void this.onChange('pageTitles', all);
+    }
+
+    /** The tiles of a name that is no display of the settings (renamed or removed) go to another display */
+    moveOrphans(from: string, to: string): void {
+        const tiles = this.tiles().map(t => (sameSatellite(t.satellite, from) ? { ...t, satellite: to } : t));
+        this.setTiles(tiles, -1);
+        this.setState({ satellite: to }, () => void this.readStates());
+    }
+
+    /** The tiles of a name that is no display of the settings are removed */
+    removeOrphans(name: string): void {
+        this.setTiles(
+            this.tiles().filter(t => !sameSatellite(t.satellite, name)),
+            -1,
+        );
+        this.setState({ satellite: this.displays()[0]?.name || '' }, () => void this.readStates());
+    }
+
+    /** A name only tiles use: what happened, and where its tiles can go */
+    renderOrphan(name: string): React.JSX.Element | null {
+        if (this.isConfigured(name)) {
+            return null;
+        }
+        const count = this.tiles().filter(t => sameSatellite(t.satellite, name)).length;
+        const targets = this.displays();
+        return (
+            <Box
+                sx={{
+                    display: 'flex',
+                    gap: 2,
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    mb: 2,
+                    p: 1.5,
+                    border: '1px solid',
+                    borderColor: 'warning.main',
+                    borderRadius: 1,
+                }}
+            >
+                <Typography
+                    variant="body2"
+                    sx={{ flex: '1 1 260px' }}
+                >
+                    {I18n.t('sd_orphan_hint', name, count)}
+                </Typography>
+                {targets.map(d => (
+                    <Button
+                        key={d.name}
+                        size="small"
+                        variant="outlined"
+                        onClick={() => this.moveOrphans(name, d.name)}
+                    >
+                        {I18n.t('sd_orphan_move', d.name)}
+                    </Button>
+                ))}
+                <Button
+                    size="small"
+                    color="error"
+                    variant="outlined"
+                    startIcon={<IconDelete />}
+                    onClick={() => this.removeOrphans(name)}
+                >
+                    {I18n.t('sd_orphan_delete')}
+                </Button>
+            </Box>
+        );
     }
 
     /**
@@ -250,8 +406,9 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             }
         }
         this.lastChange = { key: mergeKey, ts: now };
-        this.setState({ selected, undoCount: this.history.length }, () =>
-            void this.onChange('tiles', tiles, () => void this.readStates()),
+        this.setState(
+            { selected, undoCount: this.history.length },
+            () => void this.onChange('tiles', tiles, () => void this.readStates()),
         );
     }
 
@@ -268,8 +425,9 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         }
         this.lastChange = { key: '', ts: 0 };
         const selected = this.state.selected < previous.length ? this.state.selected : -1;
-        this.setState({ selected, undoCount: this.history.length }, () =>
-            void this.onChange('tiles', previous, () => void this.readStates()),
+        this.setState(
+            { selected, undoCount: this.history.length },
+            () => void this.onChange('tiles', previous, () => void this.readStates()),
         );
     }
 
@@ -334,7 +492,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                         value={copy.page}
                         onChange={e => this.setState({ copy: { ...copy, page: Number(e.target.value) } })}
                     >
-                        {Array.from({ length: PAGES }, (_v, i) => i + 1).map(p => (
+                        {Array.from({ length: this.gridOf(copy.satellite).pages }, (_v, i) => i + 1).map(p => (
                             <MenuItem
                                 key={p}
                                 value={p}
@@ -475,7 +633,11 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         const tiles = this.tiles().filter(t => sameSatellite(t.satellite, satellite));
         try {
             const answer = await Promise.race([
-                socket.sendTo(target, end ? 'previewEnd' : 'preview', { satellite, tiles }),
+                socket.sendTo(target, end ? 'previewEnd' : 'preview', {
+                    satellite,
+                    tiles,
+                    pageTitles: ConfigGeneric.getValue(this.props.data, 'pageTitles') || {},
+                }),
                 new Promise((_resolve, reject) => setTimeout(() => reject(new Error('timeout')), 8000)),
             ]);
             const a = (answer || {}) as { error?: string; tiles?: number; problems?: string[]; connected?: boolean };
@@ -522,7 +684,11 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             hints.push('sd_hint_read_only');
         }
         const numeric =
-            t.type === 'gauge' || t.type === 'bar' || t.type === 'chart' || t.type === 'dimmer' || t.type === 'thermostat';
+            t.type === 'gauge' ||
+            t.type === 'bar' ||
+            t.type === 'chart' ||
+            t.type === 'dimmer' ||
+            t.type === 'thermostat';
         const type = common(t.state)?.type;
         if (numeric && type && type !== 'number' && type !== 'mixed') {
             hints.push('sd_hint_not_number');
@@ -531,7 +697,9 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
     }
 
     /** Name (in the language of the admin) and unit of the object of a state */
-    async readObject(id: string): Promise<{ name: string; unit: string; common: Partial<ioBroker.StateCommon> | null }> {
+    async readObject(
+        id: string,
+    ): Promise<{ name: string; unit: string; common: Partial<ioBroker.StateCommon> | null }> {
         const lang = I18n.getLanguage();
         const obj = await this.props.oContext.socket.getObject(id);
         const name = obj?.common?.name;
@@ -571,7 +739,10 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         if (attr === 'state' && autoName && info.name) {
             change.label = info.name.slice(0, 24);
         }
-        if (info.unit && ((attr === 'state' && autoUnit) || (attr === 'state2' && t.type === 'thermostat' && !t.unit))) {
+        if (
+            info.unit &&
+            ((attr === 'state' && autoUnit) || (attr === 'state2' && t.type === 'thermostat' && !t.unit))
+        ) {
             change.unit = info.unit.slice(0, 8);
         }
         this.setState(s => ({
@@ -589,22 +760,23 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                 x =>
                     x.tile.enabled !== false &&
                     sameSatellite(x.tile.satellite, this.state.satellite) &&
-                    Number(x.tile.page) === this.state.page &&
+                    Number(x.tile.page) === this.shownPage() &&
                     !!SIZES[x.tile.size],
             );
     }
 
     addAt(col: number, row: number): void {
-        const tiles = [...this.tiles(), newTile(this.state.satellite, this.state.page, col, row)];
+        const tiles = [...this.tiles(), newTile(this.state.satellite, this.shownPage(), col, row)];
         this.setTiles(tiles, tiles.length - 1);
     }
 
     /** The cell of the screen under the pointer */
     cellAt(e: React.DragEvent<HTMLDivElement>): { col: number; row: number } {
         const box = e.currentTarget.getBoundingClientRect();
+        const g = this.grid();
         return {
-            col: Math.min(COLS - 1, Math.max(0, Math.floor((e.clientX - box.left) / px(157)))),
-            row: Math.min(ROWS - 1, Math.max(0, Math.floor((e.clientY - box.top) / px(58.5)))),
+            col: Math.min(g.cols - 1, Math.max(0, Math.floor((e.clientX - box.left - px(g.gap)) / px(cellW(g))))),
+            row: Math.min(g.rows - 1, Math.max(0, Math.floor((e.clientY - box.top - px(g.top)) / px(cellH(g))))),
         };
     }
 
@@ -615,7 +787,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             return -1;
         }
         const { col, row } = this.cellAt(e);
-        const target = tileAt(this.tiles(), this.state.satellite, this.state.page, col, row);
+        const target = tileAt(this.tiles(), this.state.satellite, this.shownPage(), col, row);
         return target === from ? -1 : target;
     }
 
@@ -632,7 +804,9 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                 this.setState({ dropOn: null });
             }
         } else if (current?.index !== target) {
-            this.setState({ dropOn: { index: target, ok: !!swapPlaces(this.tiles(), this.state.dragging, target) } });
+            this.setState({
+                dropOn: { index: target, ok: !!swapPlaces(this.tiles(), this.state.dragging, target, this.grid()) },
+            });
         }
     }
 
@@ -655,7 +829,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
 
     /** The dragged tile and the one it was dropped on trade places */
     swapWith(target: number, from: number): void {
-        const places = swapPlaces(this.tiles(), from, target);
+        const places = swapPlaces(this.tiles(), from, target, this.grid());
         if (places) {
             const tiles = this.tiles().map((t, i) =>
                 i === from ? { ...t, ...places.a } : i === target ? { ...t, ...places.b } : t,
@@ -666,7 +840,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
 
     moveTo(index: number, col: number, row: number): void {
         const t = this.tiles()[index];
-        if (t && fits(this.tiles(), this.state.satellite, this.state.page, t.size, col, row, index)) {
+        if (t && fits(this.tiles(), this.state.satellite, this.shownPage(), t.size, col, row, index, this.grid())) {
             this.update(index, { col, row });
         }
     }
@@ -678,14 +852,15 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             return null;
         }
         const first = Number(t.page);
-        for (let i = 0; i < PAGES; i++) {
-            const page = ((first - 1 + i) % PAGES) + 1;
-            const cell = freeCell(this.tiles(), t.satellite, page, t.size);
-            if (cell && tooMany(this.tiles(), t.satellite, page).length === 0) {
+        const g = this.gridOf(t.satellite);
+        for (let i = 0; i < g.pages; i++) {
+            const page = ((first - 1 + i) % g.pages) + 1;
+            const cell = freeCell(this.tiles(), t.satellite, page, t.size, -1, g);
+            if (cell && tooMany(this.tiles(), t.satellite, page, g).length === 0) {
                 const onPage = this.tiles().filter(
                     x => x.enabled !== false && sameSatellite(x.satellite, t.satellite) && Number(x.page) === page,
                 ).length;
-                if (onPage < 8) {
+                if (onPage < g.slots) {
                     return { page, ...cell };
                 }
             }
@@ -714,14 +889,16 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
     changeKind(index: number, type: Kind): void {
         const t = this.tiles()[index];
         let { size, col, row } = t;
-        if (!KINDS[type].includes(size)) {
+        const sizes = sizesOf(type, this.isTablet(t.satellite));
+        if (!sizes.includes(size)) {
             // the first size of the new kind that fits here or somewhere on the page
-            const here = KINDS[type].find(s => fits(this.tiles(), t.satellite, Number(t.page), s, col, row, index));
+            const g = this.gridOf(t.satellite);
+            const here = sizes.find(s => fits(this.tiles(), t.satellite, Number(t.page), s, col, row, index, g));
             if (here) {
                 size = here;
             } else {
-                for (const s of KINDS[type]) {
-                    const cell = freeCell(this.tiles(), t.satellite, Number(t.page), s, index);
+                for (const s of sizes) {
+                    const cell = freeCell(this.tiles(), t.satellite, Number(t.page), s, index, g);
                     if (cell) {
                         size = s;
                         ({ col, row } = cell);
@@ -742,7 +919,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
 
     changePage(index: number, page: number): void {
         const t = this.tiles()[index];
-        const cell = freeCell(this.tiles(), t.satellite, page, t.size, index);
+        const cell = freeCell(this.tiles(), t.satellite, page, t.size, index, this.gridOf(t.satellite));
         if (cell) {
             this.update(index, { page, ...cell });
             this.setState({ page });
@@ -764,7 +941,10 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         if (typeof val === 'string' && cssColor(val)) {
             return cssColor(val);
         }
-        const on = val === true || (typeof val === 'number' && val !== 0) || (typeof val === 'string' && ['on', 'true', '1'].includes(val.toLowerCase()));
+        const on =
+            val === true ||
+            (typeof val === 'number' && val !== 0) ||
+            (typeof val === 'string' && ['on', 'true', '1'].includes(val.toLowerCase()));
         return on && cssColor(t.bgColor) ? cssColor(t.bgColor) : own;
     }
 
@@ -775,7 +955,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
 
     /** A switch without its toggle: the whole tile switches and lights up */
     tileSwitch(t: TileRow): boolean {
-        return t.type === 'switch' && !showToggle(t);
+        return t.type === 'switch' && !showToggle(t, this.isTablet(t.satellite));
     }
 
     renderTileFace(t: TileRow, w: number, h: number): React.JSX.Element {
@@ -817,10 +997,10 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             mapped !== null
                 ? mapped
                 : value === undefined || value === null
-                ? '–'
-                : typeof value === 'number'
-                  ? `${Number(value.toFixed(t.decimals === '' || t.decimals === null ? 1 : Number(t.decimals)))}${unit}`
-                  : `${String(value)}${typeof value === 'boolean' ? '' : unit}`;
+                  ? '–'
+                  : typeof value === 'number'
+                    ? `${Number(value.toFixed(t.decimals === '' || t.decimals === null ? 1 : Number(t.decimals)))}${unit}`
+                    : `${String(value)}${typeof value === 'boolean' ? '' : unit}`;
         const on =
             t.type === 'dimmer' && t.state2
                 ? !!this.state.values[t.state2]
@@ -829,19 +1009,22 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         const lo = t.min === '' || t.min === null ? 0 : Number(t.min);
         const hi = t.max === '' || t.max === null ? 100 : Number(t.max);
         const frac = Number.isFinite(num) && hi > lo ? Math.max(0, Math.min(1, (num - lo) / (hi - lo))) : 0.5;
-        const label = t.iconOnly && this.showsIcon(t) ? <span /> : (
-            <div
-                style={{
-                    color: COLOR.label,
-                    fontSize: px(10),
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                }}
-            >
-                {name}
-            </div>
-        );
+        const label =
+            t.iconOnly && this.showsIcon(t) ? (
+                <span />
+            ) : (
+                <div
+                    style={{
+                        color: COLOR.label,
+                        fontSize: px(10),
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                    }}
+                >
+                    {name}
+                </div>
+            );
         const big = h > px(60);
         const accent = alerted(t, num) ? COLOR.alert : this.accentOf(t);
         const own = cssColor(t.color) || cssColor(ConfigGeneric.getValue(this.props.data, 'accentColor'));
@@ -948,7 +1131,12 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                         }}
                     >
                         <span style={{ fontSize: px(18), fontWeight: 700 }}>−</span>
-                        <span style={{ fontSize: t.size === 'l' ? px(22) : px(11), color: t.size === 'l' ? '#fff' : COLOR.label }}>
+                        <span
+                            style={{
+                                fontSize: t.size === 'l' ? px(22) : px(11),
+                                color: t.size === 'l' ? '#fff' : COLOR.label,
+                            }}
+                        >
                             {targetText}
                         </span>
                         <span style={{ fontSize: px(18), fontWeight: 700 }}>+</span>
@@ -1115,12 +1303,29 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                 );
             case 'switch':
                 return (
-                    <div style={{ display: 'flex', alignItems: big ? 'flex-start' : 'center', gap: px(6), height: '100%', flexDirection: big ? 'column' : 'row', justifyContent: 'space-between' }}>
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: big ? 'flex-start' : 'center',
+                            gap: px(6),
+                            height: '100%',
+                            flexDirection: big ? 'column' : 'row',
+                            justifyContent: 'space-between',
+                        }}
+                    >
                         <div style={{ flex: 1, minWidth: 0 }}>{label}</div>
                         {big ? (
-                            // a square switch: its icon bottom left, the toggle bottom right
-                            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', width: '100%' }}>
-                                {t.icon ? (
+                            // a square switch: its icon bottom left, the toggle bottom right (a tall small tile on a
+                            // tablet shows its icon in the head already)
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'flex-end',
+                                    justifyContent: 'space-between',
+                                    width: '100%',
+                                }}
+                            >
+                                {t.icon && !this.showsIcon(t) ? (
                                     <TileIcon
                                         name={t.icon}
                                         size={px(20)}
@@ -1180,7 +1385,14 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                 );
             default:
                 return h <= px(53) && w <= px(151) ? (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '100%' }}>
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            height: '100%',
+                        }}
+                    >
                         <div style={{ minWidth: 0, flex: 1 }}>{label}</div>
                         <div style={{ fontSize: px(13) }}>{shown}</div>
                     </div>
@@ -1193,13 +1405,405 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         }
     }
 
+    /**
+     * A tile of a tablet as the web app draws it (www/app.js, www/style.css): the sizes follow the shorter side of
+     * the tile, a flat tile puts its name and value in one line, a switch keeps its icon and its toggle.
+     *
+     * @param t - Tile
+     * @param w - Width in px of the preview
+     * @param h - Height in px of the preview
+     */
+    renderTabletFace(t: TileRow, w: number, h: number): React.JSX.Element {
+        const min = Math.min(w, h);
+        const f = (share: number, least = 7): number => Math.max(least, Math.round(min * share));
+        const accent =
+            cssColor(t.color) || cssColor(ConfigGeneric.getValue(this.props.data, 'accentColor')) || TAB.accent;
+        const value = this.state.values[t.state];
+        const num = typeof value === 'number' ? value : Number.NaN;
+        const name = t.label || this.state.names[t.state] || t.state.split('.').pop() || I18n.t('sd_no_state');
+        const unit = t.type === 'dimmer' ? '' : t.unit || this.state.units[t.state] || '';
+        const decimals = t.decimals === '' || t.decimals === null || t.decimals === undefined ? 1 : Number(t.decimals);
+        const mapped = stateTextOf(value, this.state.commons[t.state]);
+        const text =
+            mapped !== null ? mapped : typeof value === 'string' || typeof value === 'boolean' ? String(value) : null;
+        const color = Number.isFinite(num) && alerted(t, num) ? TAB.alert : accent;
+        const lo = t.min === '' || t.min === null || t.min === undefined ? 0 : Number(t.min);
+        const hi = t.max === '' || t.max === null || t.max === undefined ? 100 : Number(t.max);
+        const frac = Number.isFinite(num) && hi > lo ? Math.max(0, Math.min(1, (num - lo) / (hi - lo))) : 0.5;
+        const on =
+            t.type === 'dimmer' && t.state2
+                ? !!this.state.values[t.state2]
+                : value === true || (typeof value === 'number' && value > 0);
+        const flat = ['value', 'bar', 'chart', 'switch'].includes(t.type) && w / h >= 1.8;
+        const showIcon = !!t.icon && !(t.type === 'switch' && t.size === 'q');
+        const iconOnly = !!t.iconOnly && !!t.icon;
+        // a flat chart keeps name and value along the top edge, the line below them (www/style.css)
+        const chartFlat = flat && t.type === 'chart';
+        const headSize = chartFlat ? Math.max(9, Math.round(h * 0.18)) : flat ? f(0.24 * (h / min), 9) : f(0.11, 8);
+        const head = (
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4em',
+                    fontSize: headSize,
+                    color: TAB.muted,
+                    // room for the relay dot of a thermostat
+                    paddingRight: t.type === 'thermostat' ? f(0.1, 8) : 0,
+                    flex: flat ? '1 1 auto' : undefined,
+                    minWidth: flat ? '35%' : 0,
+                }}
+            >
+                {showIcon ? (
+                    <TileIcon
+                        name={t.icon || ''}
+                        size={Math.round(headSize * (flat ? 1.6 : 1.5))}
+                        color={t.type === 'switch' && on ? accent : TAB.muted}
+                    />
+                ) : null}
+                {iconOnly ? null : (
+                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
+                )}
+            </div>
+        );
+        const big = (
+            <div
+                style={{
+                    marginTop: flat ? 0 : 'auto',
+                    fontSize:
+                        text !== null
+                            ? f(0.15, 9)
+                            : chartFlat
+                              ? Math.max(10, Math.round(Math.min(h * 0.28, w * 0.12)))
+                              : flat
+                                ? Math.max(10, Math.round(Math.min(h * 0.36, w * 0.13)))
+                                : f(0.3, 10),
+                    fontWeight: 600,
+                    lineHeight: 1.1,
+                    color,
+                    whiteSpace: text !== null ? 'normal' : 'nowrap',
+                }}
+            >
+                {text !== null ? (
+                    text
+                ) : Number.isFinite(num) ? (
+                    <>
+                        {num.toFixed(Math.max(0, Math.min(3, decimals)))}
+                        {unit ? (
+                            <span
+                                style={{ fontSize: '0.5em', fontWeight: 400, marginLeft: '0.15em', color: TAB.muted }}
+                            >
+                                {unit}
+                            </span>
+                        ) : null}
+                    </>
+                ) : (
+                    '–'
+                )}
+            </div>
+        );
+        const toggleW = f(0.3, 18);
+        const toggle = (
+            <div
+                style={{
+                    flex: 'none',
+                    width: toggleW,
+                    height: Math.round(toggleW / 1.8),
+                    borderRadius: 99,
+                    background: on ? accent : TAB.track,
+                    position: 'relative',
+                    marginLeft: 'auto',
+                    marginTop: flat ? 0 : 'auto',
+                }}
+            >
+                <div
+                    style={{
+                        position: 'absolute',
+                        top: '8%',
+                        left: on ? '45%' : '5%',
+                        height: '84%',
+                        aspectRatio: '1',
+                        borderRadius: '50%',
+                        background: '#fff',
+                    }}
+                />
+            </div>
+        );
+        const body: React.CSSProperties = {
+            position: 'absolute',
+            inset: 0,
+            padding: chartFlat
+                ? `${Math.round(h * 0.07)}px ${Math.round(w * 0.05)}px 0`
+                : flat
+                  ? `0 ${Math.round(w * 0.05)}px`
+                  : `${f(0.07, 2)}px ${f(0.08, 2)}px`,
+            display: 'flex',
+            flexDirection: flat ? 'row' : 'column',
+            alignItems: chartFlat ? 'flex-start' : flat ? 'center' : undefined,
+            gap: flat ? Math.round(w * 0.05) : f(0.03, 1),
+        };
+        const arc = (
+            <svg
+                viewBox="0 0 100 82"
+                style={{ flex: 1, minHeight: 0, width: '100%' }}
+            >
+                <path
+                    d="M 18.2 71.8 A 40 40 0 1 1 81.8 71.8"
+                    fill="none"
+                    stroke={TAB.track}
+                    strokeWidth={9}
+                    strokeLinecap="round"
+                    pathLength={100}
+                />
+                <path
+                    d="M 18.2 71.8 A 40 40 0 1 1 81.8 71.8"
+                    fill="none"
+                    stroke={color}
+                    strokeWidth={9}
+                    strokeLinecap="round"
+                    pathLength={100}
+                    strokeDasharray={`${Number.isFinite(num) ? frac * 100 : 0} 100`}
+                />
+                <text
+                    x={50}
+                    y={52}
+                    fontSize={17}
+                    fontWeight={600}
+                    textAnchor="middle"
+                    fill={TAB.text}
+                >
+                    {Number.isFinite(num)
+                        ? `${num.toFixed(Math.max(0, Math.min(3, decimals)))}${unit ? ` ${unit}` : ''}`
+                        : '–'}
+                </text>
+            </svg>
+        );
+        switch (t.type) {
+            case 'bar':
+                return (
+                    <div style={body}>
+                        {head}
+                        {big}
+                        <div
+                            style={
+                                flat
+                                    ? {
+                                          position: 'absolute',
+                                          left: Math.round(w * 0.05),
+                                          right: Math.round(w * 0.05),
+                                          bottom: Math.round(h * 0.09),
+                                          height: Math.max(3, Math.round(h * 0.07)),
+                                          borderRadius: 99,
+                                          background: TAB.track,
+                                          overflow: 'hidden',
+                                      }
+                                    : {
+                                          marginTop: 'auto',
+                                          height: Math.max(4, Math.round(h * 0.09)),
+                                          borderRadius: 99,
+                                          background: TAB.track,
+                                          overflow: 'hidden',
+                                      }
+                            }
+                        >
+                            <div style={{ width: `${frac * 100}%`, height: '100%', background: color }} />
+                        </div>
+                    </div>
+                );
+            case 'chart': {
+                const line = this.chartLine(t);
+                const n = Math.max(1, line.points.length - 1);
+                return (
+                    <div style={body}>
+                        {head}
+                        {big}
+                        <svg
+                            viewBox="0 0 100 100"
+                            preserveAspectRatio="none"
+                            style={
+                                flat
+                                    ? {
+                                          position: 'absolute',
+                                          left: 0,
+                                          right: 0,
+                                          bottom: 0,
+                                          height: '50%',
+                                          opacity: 0.55,
+                                      }
+                                    : { flex: 1, minHeight: 0, width: '100%' }
+                            }
+                        >
+                            <polyline
+                                points={line.points
+                                    .map((p, i) => `${((i / n) * 100).toFixed(1)},${(4 + p * 92).toFixed(1)}`)
+                                    .join(' ')}
+                                fill="none"
+                                stroke={color}
+                                strokeWidth={2}
+                                vectorEffect="non-scaling-stroke"
+                                opacity={line.real ? 1 : 0.5}
+                            />
+                        </svg>
+                    </div>
+                );
+            }
+            case 'gauge':
+                return (
+                    <div style={body}>
+                        {head}
+                        {arc}
+                    </div>
+                );
+            case 'thermostat': {
+                const target = this.state.values[t.state2 || ''];
+                const relay = t.state3 ? this.state.values[t.state3] : undefined;
+                const button = (label: string): React.JSX.Element => (
+                    <div
+                        style={{
+                            width: f(0.24, 14),
+                            height: f(0.24, 14),
+                            borderRadius: '50%',
+                            background: TAB.track,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: f(0.16, 9),
+                            flex: 'none',
+                        }}
+                    >
+                        {label}
+                    </div>
+                );
+                return (
+                    <div style={body}>
+                        {head}
+                        {arc}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            {button('−')}
+                            <span style={{ fontSize: f(0.1, 8), whiteSpace: 'nowrap' }}>
+                                {typeof target === 'number' ? `${target.toFixed(1)}${unit ? ` ${unit}` : ''}` : '–'}
+                            </span>
+                            {button('+')}
+                        </div>
+                        {t.state3 ? (
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    top: f(0.08, 3),
+                                    right: f(0.08, 3),
+                                    width: f(0.06, 5),
+                                    height: f(0.06, 5),
+                                    borderRadius: '50%',
+                                    background: relay === true || Number(relay) > 0 ? TAB.ok : TAB.track,
+                                }}
+                            />
+                        ) : null}
+                    </div>
+                );
+            }
+            case 'switch':
+                return (
+                    <div style={body}>
+                        {t.size === 'q' && t.icon ? (
+                            <div style={{ position: 'absolute', left: f(0.08, 2), bottom: f(0.08, 2) }}>
+                                <TileIcon
+                                    name={t.icon}
+                                    size={f(0.22, 10)}
+                                    color={on ? accent : TAB.muted}
+                                />
+                            </div>
+                        ) : null}
+                        {head}
+                        {showToggle(t, true) ? toggle : null}
+                    </div>
+                );
+            case 'dimmer': {
+                const level = Number.isFinite(num) ? Math.max(0, Math.min(100, num)) : 50;
+                return (
+                    <div style={body}>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            {head}
+                            {toggle}
+                        </div>
+                        <div
+                            style={{
+                                display: 'flex',
+                                // a narrow dimmer: the percent above the slider (www/style.css)
+                                flexDirection: w / h <= 1.3 ? 'column-reverse' : 'row',
+                                alignItems: w / h <= 1.3 ? 'stretch' : 'center',
+                                gap: f(0.05, 2),
+                                marginTop: 'auto',
+                            }}
+                        >
+                            <div
+                                style={{
+                                    flex: 1,
+                                    position: 'relative',
+                                    height: Math.max(3, Math.round(h * 0.066)),
+                                    borderRadius: 99,
+                                    background: `linear-gradient(to right, ${accent} ${level}%, ${TAB.track} ${level}%)`,
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        left: `calc(${level}% - ${Math.round(h * 0.1)}px)`,
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        width: Math.max(8, Math.round(h * 0.2)),
+                                        height: Math.max(8, Math.round(h * 0.2)),
+                                        borderRadius: '50%',
+                                        background: '#fff',
+                                    }}
+                                />
+                            </div>
+                            <span style={{ fontSize: f(0.14, 8), minWidth: '3.2em', textAlign: 'right' }}>
+                                {Number.isFinite(num) ? `${Math.round(num)} %` : '–'}
+                            </span>
+                        </div>
+                    </div>
+                );
+            }
+            case 'button':
+                return (
+                    <div
+                        style={{
+                            ...body,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            textAlign: 'center',
+                            gap: f(0.04, 2),
+                        }}
+                    >
+                        {t.icon ? (
+                            <TileIcon
+                                name={t.icon}
+                                size={f(0.34, 14)}
+                                color={accent}
+                            />
+                        ) : null}
+                        {iconOnly ? null : <span style={{ fontSize: f(0.13, 8) }}>{name}</span>}
+                    </div>
+                );
+            default:
+                return (
+                    <div style={body}>
+                        {head}
+                        {big}
+                    </div>
+                );
+        }
+    }
+
     renderScreen(): React.JSX.Element {
         const tiles = this.tiles();
-        const extra = new Set(tooMany(tiles, this.state.satellite, this.state.page));
+        const g = this.grid();
+        const tablet = this.isTablet(this.state.satellite);
+        const extra = new Set(tooMany(tiles, this.state.satellite, this.shownPage(), g));
         const cells: React.JSX.Element[] = [];
-        for (let row = 0; row < ROWS; row++) {
-            for (let col = 0; col < COLS; col++) {
-                if (tileAt(tiles, this.state.satellite, this.state.page, col, row) !== -1) {
+        for (let row = 0; row < g.rows; row++) {
+            for (let col = 0; col < g.cols; col++) {
+                if (tileAt(tiles, this.state.satellite, this.shownPage(), col, row) !== -1) {
                     continue;
                 }
                 cells.push(
@@ -1211,10 +1815,10 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                             onClick={() => this.addAt(col, row)}
                             style={{
                                 position: 'absolute',
-                                left: px(colX(col)),
-                                top: px(rowY(row)),
-                                width: px(151),
-                                height: px(rowY(row + 1) - 6 - rowY(row)),
+                                left: px(colX(col, g)),
+                                top: px(rowY(row, g)),
+                                width: px(colX(col + 1, g) - g.gap - colX(col, g)),
+                                height: px(rowY(row + 1, g) - g.gap - rowY(row, g)),
                                 border: `1px dashed #3a4654`,
                                 borderRadius: px(8),
                                 display: 'flex',
@@ -1243,9 +1847,9 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                 onDrop={e => this.onScreenDrop(e)}
                 style={{
                     position: 'relative',
-                    width: px(320),
-                    height: px(240),
-                    background: COLOR.screen,
+                    width: px(g.w),
+                    height: px(g.h),
+                    background: tablet ? TAB.screen : COLOR.screen,
                     borderRadius: 10,
                     outline: '8px solid #2a2a2a',
                     margin: 8,
@@ -1253,15 +1857,42 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                     fontFamily: 'Roboto, sans-serif',
                 }}
             >
+                {tablet ? (
+                    // the bar of the web app: name and clock
+                    <div
+                        style={{
+                            position: 'absolute',
+                            left: 0,
+                            right: 0,
+                            top: 0,
+                            height: px(g.top),
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: `0 ${px(g.gap * 1.5)}px`,
+                            fontSize: Math.max(8, Math.round(px(g.top) * 0.45)),
+                            color: TAB.text,
+                        }}
+                    >
+                        <span style={{ fontWeight: 600 }}>{this.state.satellite}</span>
+                        {this.pageTitle(this.state.satellite, this.shownPage()) ? (
+                            <span style={{ color: TAB.muted, marginLeft: '0.6em' }}>
+                                – {this.pageTitle(this.state.satellite, this.shownPage())}
+                            </span>
+                        ) : null}
+                        <span style={{ marginLeft: 'auto' }}>12:00</span>
+                    </div>
+                ) : null}
                 {cells}
                 {this.pageTiles().map(({ tile, index }) => {
                     const [cols, rows] = SIZES[tile.size];
-                    const w = px(cols === 2 ? 308 : 151);
-                    const h = px(rowY(tile.row + rows) - 6 - rowY(tile.row));
+                    const w = px(colX(tile.col + cols, g) - g.gap - colX(tile.col, g));
+                    const h = px(rowY(tile.row + rows, g) - g.gap - rowY(tile.row, g));
                     const selected = index === this.state.selected;
-                    const problem = extra.has(index) ? 'sd_too_many' : problemOf(tile);
+                    const problem = extra.has(index) ? 'sd_too_many' : problemOf(tile, tablet);
                     const dropOn = this.state.dropOn?.index === index ? this.state.dropOn : null;
-                    const on = tile.type === 'switch' && (this.state.values[tile.state] === true || Number(this.state.values[tile.state]) > 0);
+                    const on =
+                        tile.type === 'switch' &&
+                        (this.state.values[tile.state] === true || Number(this.state.values[tile.state]) > 0);
                     return (
                         <div
                             key={index}
@@ -1274,19 +1905,27 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                             }}
                             onDragEnd={() => this.setState({ dragging: -1, dropOn: null })}
                             onClick={() => this.setState({ selected: index })}
-                            title={dropOn ? I18n.t(dropOn.ok ? 'sd_swap' : 'sd_no_swap') : problem ? I18n.t(problem) : ''}
+                            title={
+                                dropOn ? I18n.t(dropOn.ok ? 'sd_swap' : 'sd_no_swap') : problem ? I18n.t(problem) : ''
+                            }
                             style={{
                                 position: 'absolute',
-                                left: px(colX(tile.col)),
-                                top: px(rowY(tile.row)),
+                                left: px(colX(tile.col, g)),
+                                top: px(rowY(tile.row, g)),
                                 width: w,
                                 height: h,
                                 boxSizing: 'border-box',
-                                padding: `${px(4)}px ${px(7)}px`,
-                                display: tile.type === 'thermostat' ? 'flex' : undefined,
-                                flexDirection: tile.type === 'thermostat' ? 'column' : undefined,
-                                background: on ? COLOR.tileOn : this.backgroundOf(tile),
-                                borderRadius: px(8),
+                                padding: tablet ? 0 : `${px(4)}px ${px(7)}px`,
+                                display: !tablet && tile.type === 'thermostat' ? 'flex' : undefined,
+                                flexDirection: !tablet && tile.type === 'thermostat' ? 'column' : undefined,
+                                background: tablet
+                                    ? on && (tile.type === 'switch' || tile.type === 'dimmer')
+                                        ? TAB.tileOn
+                                        : cssColor(tile.background) || TAB.tile
+                                    : on
+                                      ? COLOR.tileOn
+                                      : this.backgroundOf(tile),
+                                borderRadius: tablet ? Math.max(4, Math.round(Math.min(w, h) * 0.08)) : px(8),
                                 color: '#fff',
                                 cursor: 'grab',
                                 overflow: 'hidden',
@@ -1305,7 +1944,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                 userSelect: 'none',
                             }}
                         >
-                            {this.renderTileFace(tile, w, h)}
+                            {tablet ? this.renderTabletFace(tile, w, h) : this.renderTileFace(tile, w, h)}
                         </div>
                     );
                 })}
@@ -1401,12 +2040,12 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             t.type === 'dimmer' ? 'sd_level_state' : t.type === 'thermostat' ? 'sd_current_state' : 'sd_state';
         return (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, minWidth: 260, maxWidth: 360, flex: 1 }}>
-                {problemOf(t) ? (
+                {problemOf(t, this.isTablet(t.satellite)) ? (
                     <Typography
                         variant="body2"
                         color="error"
                     >
-                        {I18n.t(problemOf(t))}
+                        {I18n.t(problemOf(t, this.isTablet(t.satellite)))}
                     </Typography>
                 ) : null}
                 {this.hintsOf(t).map(hint => (
@@ -1457,12 +2096,24 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                         sx={{ display: 'flex' }}
                         onChange={(_e, size: Size | null) => size && this.update(index, { size })}
                     >
-                        {KINDS[t.type].map(s => (
+                        {sizesOf(t.type, this.isTablet(t.satellite)).map(s => (
                             <ToggleButton
                                 key={s}
                                 value={s}
                                 sx={{ flex: 1 }}
-                                disabled={s !== t.size && !fits(tiles, t.satellite, Number(t.page), s, t.col, t.row, index)}
+                                disabled={
+                                    s !== t.size &&
+                                    !fits(
+                                        tiles,
+                                        t.satellite,
+                                        Number(t.page),
+                                        s,
+                                        t.col,
+                                        t.row,
+                                        index,
+                                        this.gridOf(t.satellite),
+                                    )
+                                }
                             >
                                 {SIZE_LABELS[s]}
                             </ToggleButton>
@@ -1523,7 +2174,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                     <FormControlLabel
                         control={
                             <Checkbox
-                                checked={!showToggle(t)}
+                                checked={!showToggle(t, this.isTablet(t.satellite))}
                                 onChange={e => this.update(index, { hideToggle: e.target.checked })}
                             />
                         }
@@ -1618,11 +2269,14 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                     value={Number(t.page)}
                     onChange={e => this.changePage(index, Number(e.target.value))}
                 >
-                    {[1, 2, 3, 4].map(p => (
+                    {Array.from({ length: this.gridOf(t.satellite).pages }, (_v, i) => i + 1).map(p => (
                         <MenuItem
                             key={p}
                             value={p}
-                            disabled={p !== Number(t.page) && !freeCell(tiles, t.satellite, p, t.size, index)}
+                            disabled={
+                                p !== Number(t.page) &&
+                                !freeCell(tiles, t.satellite, p, t.size, index, this.gridOf(t.satellite))
+                            }
                         >
                             {p}
                         </MenuItem>
@@ -1682,14 +2336,16 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             return <Typography sx={{ p: 2 }}>{I18n.t('sd_no_satellites')}</Typography>;
         }
         const satellite = names.find(n => sameSatellite(n, this.state.satellite)) || names[0];
-        const counts = [1, 2, 3, 4].map(
+        const g = this.gridOf(satellite);
+        const page = Math.min(this.state.page, g.pages);
+        const counts = Array.from({ length: g.pages }, (_v, i) => i + 1).map(
             p =>
                 this.tiles().filter(
                     t => t.enabled !== false && sameSatellite(t.satellite, satellite) && Number(t.page) === p,
                 ).length,
         );
         const disabledHere = this.tiles().filter(
-            t => t.enabled === false && sameSatellite(t.satellite, satellite) && Number(t.page) === this.state.page,
+            t => t.enabled === false && sameSatellite(t.satellite, satellite) && Number(t.page) === page,
         ).length;
         return (
             <Box
@@ -1712,19 +2368,23 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                 key={n}
                                 value={n}
                             >
-                                {this.isConfigured(n) ? n : `${n} (${I18n.t('sd_not_configured')})`}
+                                {!this.isConfigured(n)
+                                    ? `${n} (${I18n.t('sd_not_configured')})`
+                                    : this.isTablet(n)
+                                      ? `${n} (${I18n.t('sd_tablet')})`
+                                      : n}
                             </MenuItem>
                         ))}
                     </TextField>
                     <ToggleButtonGroup
                         exclusive
                         size="small"
-                        value={this.state.page}
-                        onChange={(_e, page: number | null) =>
-                            page && this.setState({ page, selected: -1 }, () => void this.readStates())
+                        value={page}
+                        onChange={(_e, p: number | null) =>
+                            p && this.setState({ page: p, selected: -1 }, () => void this.readStates())
                         }
                     >
-                        {Array.from({ length: PAGES }, (_v, i) => i + 1).map(p => (
+                        {Array.from({ length: g.pages }, (_v, i) => i + 1).map(p => (
                             <ToggleButton
                                 key={p}
                                 value={p}
@@ -1734,16 +2394,29 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                             </ToggleButton>
                         ))}
                     </ToggleButtonGroup>
+                    {this.isTablet(satellite) ? (
+                        <TextField
+                            variant="standard"
+                            size="small"
+                            label={I18n.t('sd_page_title')}
+                            placeholder={I18n.t('sd_page_title_hint')}
+                            value={this.pageTitle(satellite, page)}
+                            slotProps={{ htmlInput: { maxLength: 32 } }}
+                            sx={{ width: 180 }}
+                            onChange={e => this.setPageTitle(satellite, page, e.target.value)}
+                        />
+                    ) : null}
                     <Button
                         size="small"
                         variant="outlined"
                         startIcon={<IconCopyPage />}
-                        disabled={!this.tilesOf(satellite, this.state.page).length}
+                        disabled={!this.tilesOf(satellite, page).length}
                         onClick={() =>
                             this.setState({
+                                page,
                                 copy: {
                                     satellite,
-                                    page: (this.state.page % PAGES) + 1,
+                                    page: (page % g.pages) + 1,
                                 },
                             })
                         }
@@ -1792,13 +2465,15 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                         </Typography>
                     ) : null}
                 </Box>
+                {this.renderOrphan(satellite)}
                 <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                     <Box>
                         {this.renderScreen()}
+
                         <Typography
                             variant="caption"
                             component="div"
-                            sx={{ opacity: 0.7, mt: 2, maxWidth: px(320) }}
+                            sx={{ opacity: 0.7, mt: 2, maxWidth: px(g.w) }}
                         >
                             {I18n.t('sd_how')}
                             {disabledHere ? ` ${I18n.t('sd_disabled_count', disabledHere)}` : ''}

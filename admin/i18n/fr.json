@@ -24,5 +24,22 @@
     "When the display goes back to the clock by itself": "Quand l'affichage revient seul à l'horloge",
     "Only by hand (the open lock next to the gear)": "Seulement à la main (le cadenas ouvert à côté de la roue dentée)",
     "Minutes without a touch": "Minutes sans toucher",
-    "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night.": "Le cadenas ouvert à côté de la roue dentée verrouille aussitôt dans tous les modes. L'état satellites.<nom>.locked montre le verrouillage et verrouille ou déverrouille depuis ioBroker, p. ex. la nuit."
+    "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night.": "Le cadenas ouvert à côté de la roue dentée verrouille aussitôt dans tous les modes. L'état satellites.<nom>.locked montre le verrouillage et verrouille ou déverrouille depuis ioBroker, p. ex. la nuit.",
+    "Tablets": "Tablettes",
+    "Android and iOS tablets show the tiles in the browser, like a satellite without voice. Only while this is switched on does the adapter start a web server for them.": "Les tablettes Android et iOS affichent les tuiles dans le navigateur, comme un satellite sans voix. L'adaptateur ne démarre un serveur web pour elles que tant que ceci est activé.",
+    "Tablets with the web app (PWA)": "Tablettes avec l'application web (PWA)",
+    "Port of the web app": "Port de l'application web",
+    "Bind address": "Adresse d'écoute",
+    "0.0.0.0 = all interfaces, which the tablets need": "0.0.0.0 = toutes les interfaces, nécessaires aux tablettes",
+    "Use HTTPS": "Utiliser HTTPS",
+    "Needed to install the web app on a tablet (on iOS always) and to keep its screen on. It uses a certificate of the ioBroker collection (Admin > Settings > Certificates); without a working certificate the web app stays off.": "Nécessaire pour installer l'application web sur une tablette (toujours sous iOS) et garder son écran allumé. Elle utilise un certificat de la collection ioBroker (Admin > Paramètres > Certificats) ; sans certificat valide, l'application web reste éteinte.",
+    "Public certificate": "Certificat public",
+    "Private key": "Clé privée",
+    "Certificate chain (optional)": "Chaîne de certificats (facultatif)",
+    "Columns": "Colonnes",
+    "Rows": "Lignes",
+    "Pages": "Nombre de pages",
+    "Screen width (px)": "Largeur de l'écran (px)",
+    "Screen height (px)": "Hauteur de l'écran (px)",
+    "Screen width x height in pixels (e.g. an iPad: 2048 x 1536 in landscape, 1536 x 2048 upright) gives the tile editor the shape of the tablet; empty: 4:3 landscape. The grid of a page is columns x rows (a 10\" tablet in landscape: 4 x 3). The tile editor and the AI agents place tiles on a tablet like on a satellite.": "Largeur x hauteur de l'écran en pixels (par ex. un iPad : 2048 x 1536 en paysage, 1536 x 2048 en portrait) donne à l'éditeur de tuiles la forme de la tablette ; vide : 4:3 en paysage. La grille d'une page est colonnes x lignes (une tablette 10\" en paysage : 4 x 3). L'éditeur de tuiles et les agents IA placent les tuiles sur une tablette comme sur un satellite."
 }

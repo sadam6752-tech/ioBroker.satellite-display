@@ -20,7 +20,9 @@ export default [
             'admin/admin.d.ts',
             'admin/blockly.js',
             '**/adapter-config.d.ts',
-            'widgets/**/*.js'
+            'widgets/**/*.js',
+            // the web app of the tablets runs in the browser; checked in a real browser, not by the Node rules
+            'www/',
         ],
     },
     {

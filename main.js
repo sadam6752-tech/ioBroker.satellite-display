@@ -4,11 +4,19 @@
  * ioBroker.satellite-display: the tile pages of the touch display of ESPHome voice satellites
  * (Waveshare ESP32-S3-AUDIO firmware 2.0.0+). The layout and the values of ioBroker states go to the
  * satellite over the ESPHome Native API, a touch on a tile switches the bound state.
+ * Optional (off by default): tablets show the same tiles in a web app (www/) served by the adapter itself.
  */
 
+const crypto = require('node:crypto');
+const path = require('node:path');
 const utils = require('@iobroker/adapter-core');
 const { SatelliteLink, OPTIONAL_ACTIONS } = require('./lib/satellite');
-const { normalizeSatellites, normalizeTiles, idOf, colorOf } = require('./lib/layout');
+const { TabletLink } = require('./lib/tablet');
+const { TabletServer } = require('./lib/tablet-server');
+const { decideTls } = require('./lib/tls');
+const { checkTcpPort, registerTcpPort } = require('./lib/used-resources');
+const { normalizeDisplays, normalizeTiles, idOf, colorOf, pageTitlesOf } = require('./lib/layout');
+const { findRenames, renameTiles, renamePageTitles } = require('./lib/renames');
 const { NAMES } = require('./lib/names');
 const { EDIT_COMMANDS, runCommand } = require('./lib/commands');
 const {
@@ -33,6 +41,8 @@ const RESYNC_MS = 3000;
 const CHART_POINTS = 60;
 /** A preview from the editor ends by itself after this time */
 const PREVIEW_MS = 10 * 60_000;
+/** Port of the web app of the tablets when the settings name none */
+const DEFAULT_PWA_PORT = 8094;
 
 /**
  * @typedef {import('./lib/layout').Tile} Tile
@@ -61,8 +71,12 @@ class SatelliteDisplay extends utils.Adapter {
         this.on('stateChange', this.onStateChange.bind(this));
         this.on('message', this.onMessage.bind(this));
         this.on('unload', this.onUnload.bind(this));
-        /** @type {Map<string, SatelliteLink>} */
+        /** @type {Map<string, SatelliteLink | TabletLink>} */
         this.links = new Map();
+        /** @type {TabletServer | null} the web server of the tablets, while it runs */
+        this.tabletServer = null;
+        /** @type {Map<string, string>} access key → id of the tablet */
+        this.tabletKeys = new Map();
         /** @type {Map<string, SatelliteConfig>} */
         this.satellites = new Map();
         /** @type {Bound[]} */
@@ -77,10 +91,12 @@ class SatelliteDisplay extends utils.Adapter {
         this.readOnlyWarned = new Set();
         /** @type {Set<string>} satellites already told that their firmware is too old for a tile */
         this.oldFirmwareWarned = new Set();
-        /** @type {Map<string, {bound: Bound[], timer: ioBroker.Timeout | undefined}>} satellite id → tiles of the editor */
+        /** @type {Map<string, {bound: Bound[], timer: ioBroker.Timeout | undefined, pageTitles?: unknown}>} satellite id → tiles (and page titles) of the editor */
         this.previews = new Map();
         /** @type {Record<string, unknown>[] | undefined} tiles changed by commands, saved a moment later */
         this.pendingTiles = undefined;
+        /** @type {Record<string, unknown> | undefined} page titles changed by commands, saved with the tiles */
+        this.pendingPageTitles = undefined;
         /** @type {ioBroker.Timeout | undefined} */
         this.saveTimer = undefined;
     }
@@ -96,44 +112,38 @@ class SatelliteDisplay extends utils.Adapter {
 
         /** @type {string[]} */
         const problems = [];
-        const satellites = normalizeSatellites(this.config.satellites, problems);
-        const tiles = normalizeTiles(this.config.tiles, satellites, problems);
+        const displays = normalizeDisplays(this.config, problems);
+        if (await this.followRenames(displays)) {
+            return; // the tiles follow a rename: the settings are saved and the instance starts again
+        }
+        const tiles = normalizeTiles(this.config.tiles, displays, problems);
         for (const p of problems) {
             this.log.warn(p);
         }
-        if (!satellites.length) {
+        if (!displays.length) {
             this.log.warn('No satellite configured: add one in the settings');
+            await this.removeTabletObjects();
             return;
         }
 
-        await this.createObjects(satellites);
+        await this.createObjects(displays);
         await this.bindTiles(tiles);
-        await this.subscribeStatesAsync('satellites.*.resend');
-        await this.subscribeStatesAsync('satellites.*.locked');
+        for (const folder of ['satellites', 'tablets']) {
+            await this.subscribeStatesAsync(`${folder}.*.resend`);
+            await this.subscribeStatesAsync(`${folder}.*.locked`);
+        }
         await this.subscribeStatesAsync('satellites.*.brightness');
         await this.subscribeStatesAsync('satellites.*.media.*');
 
-        for (const sat of satellites) {
+        for (const sat of displays) {
             this.satellites.set(sat.id, sat);
             const count = tiles.filter(t => t.satellite === sat.id).length;
-            this.log.info(`${sat.name} (${sat.host}): ${count} tile${count === 1 ? '' : 's'}`);
-            const link = new SatelliteLink({
-                host: sat.host,
-                port: sat.port,
-                encryptionKey: sat.encryptionKey,
-                clientInfo: `ioBroker.satellite-display ${this.namespace}`,
-            });
+            this.log.info(`${this.labelOf(sat)}: ${count} tile${count === 1 ? '' : 's'}`);
+            const link = sat.kind === 'tablet' ? this.tabletLinkOf(sat) : this.satelliteLinkOf(sat);
             link.on('ready', () => void this.onSatelliteReady(sat));
             link.on('disconnected', () => void this.onSatelliteLost(sat));
-            link.on('incompatible', missing =>
-                this.log.warn(
-                    `${sat.name}: the firmware has no ${missing.join(', ')} - tile pages need the satellite firmware 2.0.0 or newer`,
-                ),
-            );
-            link.on('problem', message => this.log.info(`${sat.name} (${sat.host}): ${message}`));
             link.on('input', input => void this.onInput(sat, input));
             link.on('lock', lock => void this.onLockState(sat, lock));
-            link.on('media', media => void this.onMediaState(sat, media));
             this.links.set(sat.id, link);
             try {
                 link.start();
@@ -141,18 +151,297 @@ class SatelliteDisplay extends utils.Adapter {
                 this.log.error(`${sat.name}: cannot connect: ${e.message}`);
             }
         }
+        if (this.config.pwaEnabled === true) {
+            await this.startTabletServer(displays.filter(d => d.kind === 'tablet'));
+        }
+        await this.updateConnection();
     }
 
     /**
-     * Creates the objects of the satellites and removes those of satellites no longer configured.
+     * @param {SatelliteConfig} sat - A satellite
+     * @returns {SatelliteLink} Its connection over the ESPHome Native API, with the events only a satellite has
+     */
+    satelliteLinkOf(sat) {
+        const link = new SatelliteLink({
+            host: sat.host,
+            port: sat.port,
+            encryptionKey: sat.encryptionKey,
+            clientInfo: `ioBroker.satellite-display ${this.namespace}`,
+        });
+        link.on('incompatible', missing =>
+            this.log.warn(
+                `${sat.name}: the firmware has no ${missing.join(', ')} - tile pages need the satellite firmware 2.0.0 or newer`,
+            ),
+        );
+        link.on('problem', message => this.log.info(`${this.labelOf(sat)}: ${message}`));
+        link.on('media', media => void this.onMediaState(sat, media));
+        return link;
+    }
+
+    /**
+     * @param {SatelliteConfig} sat - A tablet
+     * @returns {TabletLink} Its connection: the web app comes to the adapter
+     */
+    tabletLinkOf(sat) {
+        return new TabletLink({ name: sat.name, grid: sat.grid });
+    }
+
+    /**
+     * @param {SatelliteConfig} sat - Satellite or tablet
+     * @returns {string} Its name for the log, with the address of a satellite
+     */
+    labelOf(sat) {
+        return sat.host ? `${sat.name} (${sat.host})` : `${sat.name} (tablet)`;
+    }
+
+    /**
+     * @param {SatelliteConfig} sat - Satellite or tablet
+     * @returns {string} Id of its device object below the namespace, e.g. satellites.kitchen or tablets.hall
+     */
+    baseOf(sat) {
+        return `${sat.kind === 'tablet' ? 'tablets' : 'satellites'}.${sat.id}`;
+    }
+
+    /**
+     * @param {string} id - State id
+     * @returns {boolean} The state belongs to a device of this instance (satellites.* or tablets.*)
+     */
+    isDisplayState(id) {
+        return id.startsWith(`${this.namespace}.satellites.`) || id.startsWith(`${this.namespace}.tablets.`);
+    }
+
+    /**
+     * A satellite or tablet renamed in the settings stays the same device (lib/renames.js): a tablet keeps its access
+     * key, so its link still works, and the tiles of the old name go to the new one.
      *
-     * @param {SatelliteConfig[]} satellites - Enabled satellites
+     * @param {SatelliteConfig[]} displays - Displays of the settings
+     * @returns {Promise<boolean>} True when the tiles changed: they are saved and the instance restarts
+     */
+    async followRenames(displays) {
+        /** @type {import('./lib/renames').OldDevice[]} */
+        const devices = [];
+        for (const dev of await this.getDevicesAsync()) {
+            const parts = dev._id.split('.');
+            if (parts.length === 4 && (parts[2] === 'satellites' || parts[2] === 'tablets')) {
+                devices.push({
+                    kind: parts[2] === 'tablets' ? 'tablet' : 'satellite',
+                    id: parts[3],
+                    name: typeof dev.common?.name === 'string' ? dev.common.name : '',
+                });
+            }
+        }
+        const renames = findRenames(devices, displays);
+        for (const r of renames) {
+            const folder = r.kind === 'tablet' ? 'tablets' : 'satellites';
+            this.log.info(
+                `${r.from} was renamed to ${r.to}: ${r.kind === 'tablet' ? 'its link stays valid, ' : ''}its tiles go along`,
+            );
+            if (r.kind === 'tablet') {
+                const key = (await this.getObjectAsync(`${folder}.${r.fromId}`))?.native?.key;
+                if (typeof key === 'string' && key) {
+                    await this.extendObject(`${folder}.${r.toId}`, {
+                        type: 'device',
+                        common: { name: r.to },
+                        native: { key },
+                    });
+                }
+            }
+            await this.delObjectAsync(`${folder}.${r.fromId}`, { recursive: true });
+        }
+        const { tiles, changed } = renameTiles(/** @type {Record<string, unknown>[]} */ (this.config.tiles), renames);
+        const titles = renamePageTitles(this.config.pageTitles, renames);
+        if (!changed && !titles.changed) {
+            return false;
+        }
+        this.log.info(
+            `${changed} tile(s)${titles.changed ? ' and the page titles' : ''} moved to the new name; the settings are saved and the instance starts again`,
+        );
+        this.pendingTiles = tiles;
+        this.pendingPageTitles = titles.pageTitles;
+        await this.saveTiles();
+        return true;
+    }
+
+    /** The PWA is off or no tablet is left: the objects of the tablets go, with their access keys. */
+    async removeTabletObjects() {
+        if (await this.getObjectAsync('tablets')) {
+            await this.delObjectAsync('tablets', { recursive: true });
+        }
+    }
+
+    /**
+     * Starts the web server of the tablets, when there is a tablet and the certificate (with HTTPS) is there.
+     * Port and address go to the used resources registry of js-controller 8 (doc/used-resources.md).
+     *
+     * @param {SatelliteConfig[]} tablets - Enabled tablets
+     */
+    async startTabletServer(tablets) {
+        if (!tablets.length) {
+            this.log.warn('Tablets with the web app are on, but no tablet is entered: the web server stays off');
+            return;
+        }
+        const decision = await decideTls(this.config, (pub, priv, chained) =>
+            this.getCertificatesAsync(pub, priv, chained),
+        );
+        if (decision.mode === 'unavailable') {
+            this.log.error(`The web app of the tablets stays off: ${decision.reason}`);
+            return;
+        }
+        const n = Number(this.config.pwaPort);
+        const port = Number.isInteger(n) && n > 0 && n < 65536 ? n : DEFAULT_PWA_PORT;
+        const bind = String(this.config.pwaBind || '').trim() || '0.0.0.0';
+        // asked before listening, but not waited for: the host may take up to 5 s to answer, and its answer only
+        // names the instance that holds the port when listening fails (it is a hint, not a permission)
+        const held = checkTcpPort(this, port, bind, 'Web app of the tablets');
+        const server = new TabletServer({
+            root: path.join(__dirname, 'www'),
+            linkOf: key => this.tabletOfKey(key),
+            timers: {
+                setInterval: (cb, ms) => (this.stopping ? undefined : this.setInterval(cb, ms)),
+                clearInterval: handle => this.clearInterval(/** @type {ioBroker.Interval} */ (handle)),
+            },
+            log: this.log,
+        });
+        try {
+            const address = await server.start({
+                port,
+                bind,
+                tls: decision.mode === 'https' ? decision.tls : undefined,
+            });
+            if (this.stopping) {
+                server.stop();
+                return;
+            }
+            this.tabletServer = server;
+            this.log.info(
+                `Web app of the tablets on ${decision.mode}://${address.address}:${address.port}/ - the links with the access keys: settings, tab Tablets`,
+            );
+            await this.updateConnection();
+            void registerTcpPort(this, address.port, address.address);
+        } catch (e) {
+            const instances = await held;
+            this.log.error(
+                `The web app of the tablets cannot listen on ${bind}:${port}: ${e.message}${
+                    instances.length ? ` (the port is used by ${instances.join(', ')})` : ''
+                } - choose another port in the settings, tab Tablets`,
+            );
+        }
+    }
+
+    /**
+     * @param {string} key - Access key from the link of a tablet
+     * @returns {TabletLink | null} Its tablet, null when the key is wrong
+     */
+    tabletOfKey(key) {
+        const given = crypto.createHash('sha256').update(String(key)).digest();
+        let found = null;
+        // compared in constant time, all of them, so the time does not tell how much of a key was right
+        for (const [k, id] of this.tabletKeys) {
+            if (crypto.timingSafeEqual(given, crypto.createHash('sha256').update(k).digest())) {
+                found = id;
+            }
+        }
+        const link = found ? this.links.get(found) : undefined;
+        return link instanceof TabletLink ? link : null;
+    }
+
+    /**
+     * The links of the tablets for the settings: address of this host, port, access key.
+     *
+     * @returns {Promise<{name: string, url: string}[]>} One link a tablet
+     */
+    async tabletLinks() {
+        const scheme = this.config.secure === true ? 'https' : 'http';
+        const bind = String(this.config.pwaBind || '').trim();
+        const host = bind && bind !== '0.0.0.0' && bind !== '::' ? bind : await this.lanAddress();
+        const n = Number(this.config.pwaPort);
+        const port = Number.isInteger(n) && n > 0 && n < 65536 ? n : DEFAULT_PWA_PORT;
+        const links = [];
+        for (const [key, id] of this.tabletKeys) {
+            const sat = this.satellites.get(id);
+            if (sat) {
+                links.push({
+                    name: sat.name,
+                    url: `${scheme}://${host.includes(':') ? `[${host}]` : host}:${port}/t/${encodeURIComponent(key)}/`,
+                });
+            }
+        }
+        return links;
+    }
+
+    /**
+     * A new access key for a tablet (its link got into wrong hands, or the tablet is given away): the old link stops
+     * working at once, a tablet still connected with it is told that its link is out of date.
+     *
+     * @param {SatelliteConfig} sat - The tablet
+     * @returns {Promise<{name: string, url: string} | undefined>} Its new link
+     */
+    async renewTabletKey(sat) {
+        for (const [key, id] of this.tabletKeys) {
+            if (id === sat.id) {
+                this.tabletKeys.delete(key);
+            }
+        }
+        const key = crypto.randomBytes(24).toString('base64url');
+        await this.extendObject(this.baseOf(sat), { native: { key } });
+        this.tabletKeys.set(key, sat.id);
+        const link = this.links.get(sat.id);
+        if (link instanceof TabletLink) {
+            link.revoke();
+        }
+        this.log.info(`${sat.name}: new link for the tablet, the old one no longer works`);
+        return (await this.tabletLinks()).find(l => l.name === sat.name);
+    }
+
+    /** @returns {Promise<string>} The first IPv4 address of this host in the LAN, else its name */
+    async lanAddress() {
+        const obj = await this.getForeignObjectAsync(`system.host.${this.host}`).catch(() => null);
+        const native =
+            /** @type {{hardware?: {networkInterfaces?: Record<string, {family?: string | number, internal?: boolean, address?: string}[]>}}} */ (
+                obj?.native ?? {}
+            );
+        for (const list of Object.values(native.hardware?.networkInterfaces ?? {})) {
+            for (const a of Array.isArray(list) ? list : []) {
+                if ((a.family === 'IPv4' || a.family === 4) && !a.internal && a.address) {
+                    return a.address;
+                }
+            }
+        }
+        return String(this.host || 'localhost');
+    }
+
+    /**
+     * Creates the objects of the satellites and tablets and removes those no longer configured.
+     *
+     * @param {SatelliteConfig[]} satellites - Enabled satellites and tablets
      */
     async createObjects(satellites) {
         await this.extendObject('satellites', { type: 'folder', common: { name: NAMES.satellites }, native: {} });
+        if (satellites.some(s => s.kind === 'tablet')) {
+            await this.extendObject('tablets', { type: 'folder', common: { name: NAMES.tablets }, native: {} });
+        } else {
+            await this.removeTabletObjects();
+        }
+        this.tabletKeys.clear();
         for (const sat of satellites) {
-            const base = `satellites.${sat.id}`;
-            await this.extendObject(base, { type: 'device', common: { name: sat.name }, native: { host: sat.host } });
+            const base = this.baseOf(sat);
+            if (sat.kind === 'tablet') {
+                // the access key of the tablet stays with its object; a new tablet gets a new one
+                const old = await this.getObjectAsync(base);
+                const oldKey = old?.native?.key;
+                const key =
+                    typeof oldKey === 'string' && oldKey.length >= 32
+                        ? oldKey
+                        : crypto.randomBytes(24).toString('base64url');
+                await this.extendObject(base, { type: 'device', common: { name: sat.name }, native: { key } });
+                this.tabletKeys.set(key, sat.id);
+            } else {
+                await this.extendObject(base, {
+                    type: 'device',
+                    common: { name: sat.name },
+                    native: { host: sat.host },
+                });
+            }
             await this.extendObject(`${base}.connected`, {
                 type: 'state',
                 common: {
@@ -197,10 +486,10 @@ class SatelliteDisplay extends utils.Adapter {
                 }
             }
         }
-        const keep = new Set(satellites.map(s => `${this.namespace}.satellites.${s.id}`));
+        const keep = new Set(satellites.map(s => `${this.namespace}.${this.baseOf(s)}`));
         const devices = await this.getDevicesAsync();
         for (const dev of devices) {
-            if (dev._id.startsWith(`${this.namespace}.satellites.`) && !keep.has(dev._id)) {
+            if (this.isDisplayState(dev._id) && !keep.has(dev._id)) {
                 await this.delObjectAsync(dev._id, { recursive: true });
             }
         }
@@ -294,7 +583,7 @@ class SatelliteDisplay extends utils.Adapter {
         if (!obj || typeof obj !== 'object' || !obj.command) {
             return;
         }
-        const msg = /** @type {{satellite?: unknown, tiles?: unknown}} */ (obj.message || {});
+        const msg = /** @type {{satellite?: unknown, tiles?: unknown, pageTitles?: unknown}} */ (obj.message || {});
         const reply = (/** @type {Record<string, unknown>} */ answer) => {
             if (obj.callback) {
                 this.sendTo(obj.from, obj.command, answer, obj.callback);
@@ -304,6 +593,29 @@ class SatelliteDisplay extends utils.Adapter {
             await this.onEditCommand(obj.command, /** @type {Record<string, unknown>} */ (obj.message || {}), reply);
             return;
         }
+        if (obj.command === 'tabletLinks') {
+            if (!this.tabletServer) {
+                reply({
+                    error: 'The web app of the tablets does not run: switch it on, enter a tablet and save (or see the log)',
+                });
+                return;
+            }
+            const links = await this.tabletLinks();
+            // links for the QR codes of the settings, result as text for a plain sendTo
+            reply({ links, result: links.map(l => `${l.name}: ${l.url}`).join('\n') });
+            return;
+        }
+        if (obj.command === 'tabletNewKey') {
+            const name = String(/** @type {{tablet?: unknown}} */ (obj.message || {}).tablet ?? '');
+            const tablet = this.satellites.get(idOf(name));
+            if (!this.tabletServer || tablet?.kind !== 'tablet') {
+                reply({ error: `no tablet "${name}" with a running web app` });
+                return;
+            }
+            reply({ link: await this.renewTabletKey(tablet) });
+            return;
+        }
+
         const sat = this.satellites.get(idOf(String(msg.satellite || '')));
         if (obj.command !== 'preview' && obj.command !== 'previewEnd') {
             return;
@@ -333,7 +645,8 @@ class SatelliteDisplay extends utils.Adapter {
             void this.endPreview(sat);
         }, PREVIEW_MS);
         this.timers.add(timer);
-        this.previews.set(sat.id, { bound, timer });
+        // the page titles of the editor (not saved yet) come along; without them the saved ones
+        this.previews.set(sat.id, { bound, timer, pageTitles: msg.pageTitles });
         this.log.info(`${sat.name}: preview of ${bound.length} tiles from the editor`);
         if (link?.ready) {
             await this.sendLayout(sat);
@@ -350,13 +663,16 @@ class SatelliteDisplay extends utils.Adapter {
      * @param {(answer: Record<string, unknown>) => void} reply - Answer
      */
     async onEditCommand(command, msg, reply) {
-        /** @type {{answer: Record<string, unknown> | string, tiles?: Record<string, unknown>[]}} */
+        /** @type {{answer: Record<string, unknown> | string, tiles?: Record<string, unknown>[], pageTitles?: Record<string, unknown>}} */
         let result;
         try {
             result = await runCommand(command, msg, {
                 satellites: /** @type {Record<string, unknown>[]} */ (this.config.satellites || []),
+                tablets: /** @type {Record<string, unknown>[]} */ (this.config.tablets || []),
+                pwaEnabled: this.config.pwaEnabled === true,
                 // changes of earlier commands that wait for the restart count too
                 tiles: this.pendingTiles ?? /** @type {Record<string, unknown>[]} */ (this.config.tiles || []),
+                pageTitles: this.pendingPageTitles ?? this.config.pageTitles ?? {},
                 stateExists: async id => !!(await this.getForeignObjectAsync(id).catch(() => null)),
             });
         } catch (e) {
@@ -367,6 +683,13 @@ class SatelliteDisplay extends utils.Adapter {
         if (result.tiles) {
             this.log.info(`Tiles changed by the command ${command}: ${JSON.stringify(result.answer).slice(0, 200)}`);
             this.pendingTiles = result.tiles;
+            this.scheduleTileSave();
+        }
+        if (result.pageTitles) {
+            this.log.info(
+                `Page title changed by the command ${command}: ${JSON.stringify(result.answer).slice(0, 200)}`,
+            );
+            this.pendingPageTitles = result.pageTitles;
             this.scheduleTileSave();
         }
     }
@@ -388,7 +711,8 @@ class SatelliteDisplay extends utils.Adapter {
 
     async saveTiles() {
         const tiles = this.pendingTiles;
-        if (!tiles) {
+        const pageTitles = this.pendingPageTitles;
+        if (!tiles && !pageTitles) {
             return;
         }
         const id = `system.adapter.${this.namespace}`;
@@ -396,7 +720,7 @@ class SatelliteDisplay extends utils.Adapter {
         if (!obj) {
             return;
         }
-        obj.native = { ...obj.native, tiles };
+        obj.native = { ...obj.native, ...(tiles ? { tiles } : {}), ...(pageTitles ? { pageTitles } : {}) };
         // the whole object: extendForeignObject would merge the old list into the new one; the instance restarts
         await this.setForeignObjectAsync(id, obj);
     }
@@ -422,12 +746,12 @@ class SatelliteDisplay extends utils.Adapter {
 
     /** @param {SatelliteConfig} sat - The satellite that connected */
     async onSatelliteReady(sat) {
-        this.log.info(`${sat.name} (${sat.host}) connected`);
+        this.log.info(`${this.labelOf(sat)} connected`);
         this.sendLock(sat);
         await this.setupBrightness(sat);
         await this.setupMedia(sat);
         await this.sendLayout(sat);
-        await this.setState(`satellites.${sat.id}.connected`, { val: true, ack: true });
+        await this.setState(`${this.baseOf(sat)}.connected`, { val: true, ack: true });
         await this.updateConnection();
     }
 
@@ -472,7 +796,7 @@ class SatelliteDisplay extends utils.Adapter {
         if (!link?.has('display_brightness')) {
             return;
         }
-        const id = `satellites.${sat.id}.brightness`;
+        const id = `${this.baseOf(sat)}.brightness`;
         await this.extendObject(id, {
             type: 'state',
             common: {
@@ -503,7 +827,7 @@ class SatelliteDisplay extends utils.Adapter {
         if (!this.links.get(sat.id)?.has('media_play')) {
             return;
         }
-        const base = `satellites.${sat.id}.media`;
+        const base = `${this.baseOf(sat)}.media`;
         await this.extendObject(base, { type: 'channel', common: { name: NAMES.media }, native: {} });
         /** @type {Record<string, Partial<ioBroker.StateCommon>>} */
         const states = {
@@ -546,7 +870,7 @@ class SatelliteDisplay extends utils.Adapter {
      * @param {{state: string, volume: number | null}} media - Its state
      */
     async onMediaState(sat, media) {
-        const base = `satellites.${sat.id}.media`;
+        const base = `${this.baseOf(sat)}.media`;
         await this.setState(`${base}.state`, { val: mediaStateOf(media.state), ack: true });
         if (media.volume !== null) {
             await this.setState(`${base}.volume`, { val: media.volume, ack: true });
@@ -621,7 +945,7 @@ class SatelliteDisplay extends utils.Adapter {
         if (!sat.pinHash) {
             return;
         }
-        const base = `satellites.${sat.id}`;
+        const base = this.baseOf(sat);
         await this.setState(`${base}.locked`, { val: lock.locked, ack: true });
         await this.setState(`${base}.failedPins`, { val: lock.failed, ack: true });
         if (lock.failed > 0 && lock.locked) {
@@ -631,14 +955,22 @@ class SatelliteDisplay extends utils.Adapter {
 
     /** @param {SatelliteConfig} sat - The satellite that was lost */
     async onSatelliteLost(sat) {
-        this.log.info(`${sat.name} (${sat.host}) disconnected, connecting again`);
-        await this.setState(`satellites.${sat.id}.connected`, { val: false, ack: true });
+        this.log.info(
+            sat.kind === 'tablet'
+                ? `${this.labelOf(sat)} disconnected, it connects again when it is awake`
+                : `${this.labelOf(sat)} disconnected, connecting again`,
+        );
+        await this.setState(`${this.baseOf(sat)}.connected`, { val: false, ack: true });
         await this.updateConnection();
     }
 
+    /**
+     * Connected: every satellite is. A tablet that sleeps (iOS closes the connection with the screen) does not
+     * count; with tablets only, the web server running is.
+     */
     async updateConnection() {
-        const all = [...this.links.values()];
-        const ok = all.length > 0 && all.every(l => l.ready);
+        const satellites = [...this.satellites.values()].filter(s => s.kind === 'satellite');
+        const ok = satellites.length ? satellites.every(s => this.links.get(s.id)?.ready) : this.tabletServer !== null;
         await this.setState('info.connection', { val: ok, ack: true });
     }
 
@@ -653,7 +985,16 @@ class SatelliteDisplay extends utils.Adapter {
             return;
         }
         link.call('tile_clear', { page: 0 });
+        if (link.has('page_title')) {
+            // the title of every page, also an empty one (it clears a title set before)
+            const preview = this.previews.get(sat.id);
+            const titles = pageTitlesOf(preview?.pageTitles ?? this.config.pageTitles, sat);
+            for (let page = 1; page <= sat.grid.pages; page++) {
+                link.call('page_title', { page, title: titles[page] ?? '' });
+            }
+        }
         const mine = this.shownOn(sat.id).filter(b => this.supported(sat, link, b));
+
         for (const b of mine) {
             link.call('tile_set', b.args);
             // tile_set starts with the colours of the theme
@@ -677,7 +1018,7 @@ class SatelliteDisplay extends utils.Adapter {
      * A thermostat needs the action tile_setpoint of a newer firmware; without it the tile is left out.
      *
      * @param {SatelliteConfig} sat - Satellite
-     * @param {SatelliteLink} link - Its connection
+     * @param {SatelliteLink | TabletLink} link - Its connection
      * @param {Bound} b - Tile
      * @returns {boolean} True when the firmware can show the tile
      */
@@ -809,7 +1150,7 @@ class SatelliteDisplay extends utils.Adapter {
      * Red beyond a threshold of the tile, the colours of the theme else; sent only when it changes. A firmware
      * without tile_color (before 2.0.3) gets none.
      *
-     * @param {SatelliteLink} link - Connection of the satellite
+     * @param {SatelliteLink | TabletLink} link - Connection of the satellite
      * @param {Bound} b - Tile
      * @param {number | null} value - Its value, null = no value (only the colour of the tile)
      */
@@ -830,7 +1171,7 @@ class SatelliteDisplay extends utils.Adapter {
      * The background of a tile: from its background state, else its own colour, else the theme. Sent only when it
      * changes; a firmware without tile_background (before 2.0.4) gets none.
      *
-     * @param {SatelliteLink} link - Connection of the satellite
+     * @param {SatelliteLink | TabletLink} link - Connection of the satellite
      * @param {Bound} b - Tile
      * @param {unknown} val - Value of the background state, null when not known yet
      */
@@ -925,7 +1266,7 @@ class SatelliteDisplay extends utils.Adapter {
      */
     async onInput(sat, input) {
         const b = this.shownOn(sat.id).find(x => x.tile.page === input.page && x.tile.slot === input.slot);
-        await this.setState(`satellites.${sat.id}.lastTouch`, {
+        await this.setState(`${this.baseOf(sat)}.lastTouch`, {
             val: JSON.stringify({ ...input, ts: Date.now() }),
             ack: true,
         });
@@ -1006,7 +1347,7 @@ class SatelliteDisplay extends utils.Adapter {
             }
             return;
         }
-        if (id.startsWith(`${this.namespace}.satellites.`) && id.endsWith('.locked')) {
+        if (this.isDisplayState(id) && id.endsWith('.locked')) {
             if (!state.ack) {
                 // lock or unlock from ioBroker; the satellite answers with its state
                 const sat = this.satellites.get(id.split('.')[3]);
@@ -1019,7 +1360,7 @@ class SatelliteDisplay extends utils.Adapter {
             }
             return;
         }
-        if (id.startsWith(`${this.namespace}.satellites.`) && id.endsWith('.resend')) {
+        if (this.isDisplayState(id) && id.endsWith('.resend')) {
             if (!state.ack && state.val) {
                 const sat = this.satellites.get(id.split('.')[3]);
                 if (sat && this.links.get(sat.id)?.ready) {
@@ -1054,6 +1395,9 @@ class SatelliteDisplay extends utils.Adapter {
                 link.stop();
             }
             this.links.clear();
+            this.tabletServer?.stop();
+            this.tabletServer = null;
+
             void this.setState('info.connection', { val: false, ack: true });
         } catch (e) {
             this.log.error(`unload: ${e.message}`);

@@ -24,5 +24,22 @@
     "When the display goes back to the clock by itself": "When the display goes back to the clock by itself",
     "Only by hand (the open lock next to the gear)": "Only by hand (the open lock next to the gear)",
     "Minutes without a touch": "Minutes without a touch",
-    "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night.": "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night."
+    "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night.": "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night.",
+    "Tablets": "Tablets",
+    "Android and iOS tablets show the tiles in the browser, like a satellite without voice. Only while this is switched on does the adapter start a web server for them.": "Android and iOS tablets show the tiles in the browser, like a satellite without voice. Only while this is switched on does the adapter start a web server for them.",
+    "Tablets with the web app (PWA)": "Tablets with the web app (PWA)",
+    "Port of the web app": "Port of the web app",
+    "Bind address": "Bind address",
+    "0.0.0.0 = all interfaces, which the tablets need": "0.0.0.0 = all interfaces, which the tablets need",
+    "Use HTTPS": "Use HTTPS",
+    "Needed to install the web app on a tablet (on iOS always) and to keep its screen on. It uses a certificate of the ioBroker collection (Admin > Settings > Certificates); without a working certificate the web app stays off.": "Needed to install the web app on a tablet (on iOS always) and to keep its screen on. It uses a certificate of the ioBroker collection (Admin > Settings > Certificates); without a working certificate the web app stays off.",
+    "Public certificate": "Public certificate",
+    "Private key": "Private key",
+    "Certificate chain (optional)": "Certificate chain (optional)",
+    "Columns": "Columns",
+    "Rows": "Rows",
+    "Pages": "Pages",
+    "Screen width (px)": "Screen width (px)",
+    "Screen height (px)": "Screen height (px)",
+    "Screen width x height in pixels (e.g. an iPad: 2048 x 1536 in landscape, 1536 x 2048 upright) gives the tile editor the shape of the tablet; empty: 4:3 landscape. The grid of a page is columns x rows (a 10\" tablet in landscape: 4 x 3). The tile editor and the AI agents place tiles on a tablet like on a satellite.": "Screen width x height in pixels (e.g. an iPad: 2048 x 1536 in landscape, 1536 x 2048 upright) gives the tile editor the shape of the tablet; empty: 4:3 landscape. The grid of a page is columns x rows (a 10\" tablet in landscape: 4 x 3). The tile editor and the AI agents place tiles on a tablet like on a satellite."
 }

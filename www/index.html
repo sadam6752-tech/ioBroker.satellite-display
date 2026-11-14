@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
+        />
+        <meta
+            name="theme-color"
+            content="#101418"
+        />
+        <meta
+            name="color-scheme"
+            content="dark"
+        />
+        <meta
+            name="mobile-web-app-capable"
+            content="yes"
+        />
+        <meta
+            name="apple-mobile-web-app-capable"
+            content="yes"
+        />
+        <meta
+            name="apple-mobile-web-app-status-bar-style"
+            content="black-translucent"
+        />
+        <meta
+            name="apple-mobile-web-app-title"
+            content="Tiles"
+        />
+        <title>Tiles</title>
+        <link
+            rel="manifest"
+            href="manifest.webmanifest"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="192x192"
+            href="icon-192.png"
+        />
+        <!-- iOS: the icon inside the page, so the home screen needs no second request for it (that request fails
+             with a certificate iOS does not trust, and the app was saved without its icon; as in ioBroker.e-invoices) -->
+        <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            href="data:image/png;base64,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"
+        />
+        <link
+            rel="stylesheet"
+            href="style.css"
+        />
+    </head>
+    <body>
+        <header id="bar">
+            <span id="name"></span>
+            <span id="pageTitle"></span>
+            <span id="clock"></span>
+            <span
+                id="dots"
+                aria-hidden="true"
+            ></span>
+            <button
+                id="lockButton"
+                type="button"
+                hidden
+                aria-label="Lock"
+            >
+                <svg viewBox="0 0 24 24">
+                    <path
+                        id="lockIcon"
+                        d=""
+                    />
+                </svg>
+            </button>
+            <span
+                id="link"
+                title=""
+            ></span>
+        </header>
+        <main id="pages"></main>
+        <div
+            id="notice"
+            hidden
+        ></div>
+        <div
+            id="keypad"
+            hidden
+        >
+            <div class="pad">
+                <div id="padName"></div>
+                <svg
+                    class="padLock"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        id="padLockIcon"
+                        d=""
+                    />
+                </svg>
+                <div id="stars"></div>
+                <div id="padMessage"></div>
+                <div class="keys"></div>
+            </div>
+        </div>
+        <script src="icons.js"></script>
+        <script src="app.js"></script>
+    </body>
+</html>

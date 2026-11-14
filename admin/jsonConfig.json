@@ -80,6 +80,214 @@
                 }
             }
         },
+        "_tablets": {
+            "type": "panel",
+            "label": "Tablets",
+            "items": {
+                "_tabletsIntro": {
+                    "type": "staticText",
+                    "text": "Android and iOS tablets show the tiles in the browser, like a satellite without voice. Only while this is switched on does the adapter start a web server for them.",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "pwaEnabled": {
+                    "type": "checkbox",
+                    "label": "Tablets with the web app (PWA)",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "pwaPort": {
+                    "type": "number",
+                    "label": "Port of the web app",
+                    "min": 1024,
+                    "max": 65535,
+                    "hidden": "!data.pwaEnabled",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "pwaBind": {
+                    "type": "ip",
+                    "listenOnAllPorts": true,
+                    "label": "Bind address",
+                    "help": "0.0.0.0 = all interfaces, which the tablets need",
+                    "hidden": "!data.pwaEnabled",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "secure": {
+                    "type": "checkbox",
+                    "label": "Use HTTPS",
+                    "help": "Needed to install the web app on a tablet (on iOS always) and to keep its screen on. It uses a certificate of the ioBroker collection (Admin > Settings > Certificates); without a working certificate the web app stays off.",
+                    "hidden": "!data.pwaEnabled",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "certPublic": {
+                    "type": "certificate",
+                    "certType": "public",
+                    "label": "Public certificate",
+                    "hidden": "!data.pwaEnabled || !data.secure",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "certPrivate": {
+                    "type": "certificate",
+                    "certType": "private",
+                    "label": "Private key",
+                    "hidden": "!data.pwaEnabled || !data.secure",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "certChained": {
+                    "type": "certificate",
+                    "certType": "chained",
+                    "label": "Certificate chain (optional)",
+                    "hidden": "!data.pwaEnabled || !data.secure",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "_tabletsGrid": {
+                    "type": "staticText",
+                    "text": "Screen width x height in pixels (e.g. an iPad: 2048 x 1536 in landscape, 1536 x 2048 upright) gives the tile editor the shape of the tablet; empty: 4:3 landscape. The grid of a page is columns x rows (a 10\" tablet in landscape: 4 x 3). The tile editor and the AI agents place tiles on a tablet like on a satellite.",
+                    "hidden": "!data.pwaEnabled",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "tablets": {
+                    "type": "table",
+                    "label": "Tablets",
+                    "hidden": "!data.pwaEnabled",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "items": [
+                        {
+                            "type": "checkbox",
+                            "attr": "enabled",
+                            "title": "Active",
+                            "width": "6%",
+                            "default": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "name",
+                            "title": "Room or name",
+                            "width": "18%",
+                            "default": ""
+                        },
+                        {
+                            "type": "number",
+                            "attr": "width",
+                            "title": "Screen width (px)",
+                            "min": 100,
+                            "max": 10000,
+                            "default": 1024,
+                            "width": "11%"
+                        },
+                        {
+                            "type": "number",
+                            "attr": "height",
+                            "title": "Screen height (px)",
+                            "min": 100,
+                            "max": 10000,
+                            "default": 768,
+                            "width": "11%"
+                        },
+                        {
+                            "type": "number",
+                            "attr": "cols",
+                            "title": "Columns",
+                            "width": "9%",
+                            "min": 1,
+                            "max": 8,
+                            "default": 4
+                        },
+                        {
+                            "type": "number",
+                            "attr": "rows",
+                            "title": "Rows",
+                            "width": "9%",
+                            "min": 1,
+                            "max": 8,
+                            "default": 3
+                        },
+                        {
+                            "type": "number",
+                            "attr": "pages",
+                            "title": "Pages",
+                            "width": "9%",
+                            "min": 1,
+                            "max": 8,
+                            "default": 4
+                        },
+                        {
+                            "type": "checkbox",
+                            "attr": "lockEnabled",
+                            "title": "Screen lock",
+                            "width": "9%",
+                            "default": false
+                        },
+                        {
+                            "type": "password",
+                            "attr": "pin",
+                            "title": "PIN (4-6 digits)",
+                            "width": "18%",
+                            "visible": true,
+                            "default": ""
+                        }
+                    ]
+                },
+                "_tabletLinks": {
+                    "type": "custom",
+                    "i18n": true,
+                    "url": "custom/customComponents.js?v=0.3.0",
+                    "name": "SatDisplay/Components/TabletLinks",
+                    "guiApi": 2,
+                    "bundlerType": "module",
+                    "hidden": "!data.pwaEnabled",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                }
+            }
+        },
         "_tiles": {
             "type": "panel",
             "label": "Tiles",
@@ -87,7 +295,7 @@
                 "_tileEditor": {
                     "type": "custom",
                     "i18n": true,
-                    "url": "custom/customComponents.js?v=0.2.1",
+                    "url": "custom/customComponents.js?v=0.3.0",
                     "name": "SatDisplay/Components/TileEditor",
                     "guiApi": 2,
                     "bundlerType": "module",
@@ -154,9 +362,18 @@
                     "type": "select",
                     "label": "Lock the screen again",
                     "options": [
-                        { "value": 0, "label": "After some minutes without a touch" },
-                        { "value": 1, "label": "When the display goes back to the clock by itself" },
-                        { "value": 2, "label": "Only by hand (the open lock next to the gear)" }
+                        {
+                            "value": 0,
+                            "label": "After some minutes without a touch"
+                        },
+                        {
+                            "value": 1,
+                            "label": "When the display goes back to the clock by itself"
+                        },
+                        {
+                            "value": 2,
+                            "label": "Only by hand (the open lock next to the gear)"
+                        }
                     ],
                     "xs": 12,
                     "sm": 12,

@@ -30,7 +30,7 @@ function stampVersion() {
     const file = `${root}/admin/jsonConfig.json`;
     const text = fs.readFileSync(file, 'utf8');
     const stamped = text.replace(
-        /"custom\/customComponents\.js(\?v=[^"]*)?"/,
+        /"custom\/customComponents\.js(\?v=[^"]*)?"/g,
         `"custom/customComponents.js?v=${version}"`,
     );
     if (stamped !== text) {

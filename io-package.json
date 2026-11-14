@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "satellite-display",
-        "version": "0.2.1",
+        "version": "0.3.0",
         "news": {
+            "0.3.0": {
+                "en": "Tablets with a web app (off by default): an Android or iOS tablet shows tiles like a satellite, on a grid and screen of its own and with every tile type in every size; the tile editor and the commands for AI agents place tiles on it. Links with QR codes, an own port with HTTPS, the port declared in the used resources registry. A renamed satellite or tablet keeps its tiles. A page of a tablet can have a title, shown next to the name of the tablet.",
+                "de": "Tablets mit Web-App (standardmäßig aus): ein Android- oder iOS-Tablet zeigt Kacheln wie ein Satellit, auf eigenem Raster und Bildschirm und mit jeder Kachelart in jeder Größe; der Kachel-Editor und die Befehle für KI-Agenten setzen Kacheln darauf. Links mit QR-Codes, eigener Port mit HTTPS, der Port im Register belegter Ressourcen. Ein umbenannter Satellit oder ein umbenanntes Tablet behält seine Kacheln. Eine Seite eines Tablets kann einen Titel haben, er steht neben dem Namen des Tablets.",
+                "ru": "Планшеты с веб-приложением (по умолчанию выключено): планшет Android или iOS показывает плитки как сателлит, на своей сетке и экране и с любым типом плитки в любом размере; редактор плиток и команды для ИИ-агентов размещают плитки на нём. Ссылки с QR-кодами, собственный порт с HTTPS, порт объявлен в реестре занятых ресурсов. Переименованный сателлит или планшет сохраняет свои плитки. У страницы планшета может быть название, оно показывается рядом с именем планшета.",
+                "pt": "Tablets com aplicação web (desligado por predefinição): um tablet Android ou iOS mostra mosaicos como um satélite, numa grelha e ecrã próprios e com cada tipo de mosaico em cada tamanho; o editor de mosaicos e os comandos para agentes de IA colocam mosaicos nele. Ligações com códigos QR, porta própria com HTTPS, a porta declarada no registo de recursos usados. Um satélite ou tablet renomeado mantém os seus mosaicos. Uma página de um tablet pode ter um título, mostrado ao lado do nome do tablet.",
+                "nl": "Tablets met een web-app (standaard uit): een Android- of iOS-tablet toont tegels zoals een satelliet, op een eigen raster en scherm en met elk tegeltype in elke grootte; de tegeleditor en de commando's voor AI-agents plaatsen er tegels op. Links met QR-codes, een eigen poort met HTTPS, de poort aangemeld in het register van gebruikte bronnen. Een hernoemde satelliet of tablet houdt zijn tegels. Een pagina van een tablet kan een titel hebben, die naast de naam van de tablet staat.",
+                "fr": "Tablettes avec une application web (désactivée par défaut) : une tablette Android ou iOS affiche des tuiles comme un satellite, sur une grille et un écran propres et avec chaque type de tuile dans chaque taille ; l'éditeur de tuiles et les commandes pour agents IA y placent des tuiles. Liens avec codes QR, port propre avec HTTPS, port déclaré dans le registre des ressources utilisées. Un satellite ou une tablette renommé garde ses tuiles. Une page d'une tablette peut avoir un titre, affiché à côté du nom de la tablette.",
+                "it": "Tablet con app web (disattivata per impostazione predefinita): un tablet Android o iOS mostra i riquadri come un satellite, su una griglia e uno schermo propri e con ogni tipo di riquadro in ogni dimensione; l'editor dei riquadri e i comandi per gli agenti IA vi posizionano riquadri. Link con codici QR, porta propria con HTTPS, porta dichiarata nel registro delle risorse usate. Un satellite o tablet rinominato mantiene i suoi riquadri. Una pagina di un tablet può avere un titolo, mostrato accanto al nome del tablet.",
+                "es": "Tabletas con aplicación web (desactivada por defecto): una tableta Android o iOS muestra mosaicos como un satélite, en una cuadrícula y pantalla propias y con cada tipo de mosaico en cada tamaño; el editor de mosaicos y los comandos para agentes de IA colocan mosaicos en ella. Enlaces con códigos QR, puerto propio con HTTPS, el puerto declarado en el registro de recursos usados. Un satélite o una tableta renombrados conservan sus mosaicos. Una página de una tableta puede tener un título, que aparece junto al nombre de la tableta.",
+                "pl": "Tablety z aplikacją internetową (domyślnie wyłączone): tablet z Androidem lub iOS pokazuje kafelki jak satelita, na własnej siatce i ekranie oraz z każdym typem kafelka w każdym rozmiarze; edytor kafelków i polecenia dla agentów AI umieszczają na nim kafelki. Linki z kodami QR, własny port z HTTPS, port zgłoszony w rejestrze zajętych zasobów. Satelita lub tablet po zmianie nazwy zachowuje swoje kafelki. Strona tabletu może mieć tytuł, wyświetlany obok nazwy tabletu.",
+                "uk": "Планшети з вебзастосунком (типово вимкнено): планшет Android або iOS показує плитки як сателіт, на власній сітці й екрані та з будь-яким типом плитки в будь-якому розмірі; редактор плиток і команди для ШІ-агентів розміщують на ньому плитки. Посилання з QR-кодами, власний порт з HTTPS, порт оголошено в реєстрі зайнятих ресурсів. Перейменований сателіт або планшет зберігає свої плитки. Сторінка планшета може мати назву, вона показується поруч з іменем планшета.",
+                "zh-cn": "带 Web 应用的平板电脑（默认关闭）：Android 或 iOS 平板电脑像卫星设备一样显示磁贴，使用自己的网格和屏幕，每种磁贴类型都支持所有尺寸；磁贴编辑器和 AI 代理命令可在其上放置磁贴。带二维码的链接，自有端口支持 HTTPS，端口已登记在已用资源注册表中。重命名的卫星设备或平板电脑会保留其磁贴。平板电脑的页面可以设置标题，显示在平板电脑名称旁边。"
+            },
             "0.2.1": {
                 "en": "A tile shows a device state only once it is confirmed (states of 0_userdata and scripts at once); media.state has the values play, pause, stop; the satellite state connected has the role indicator.reachable; the tile editor needs admin 8.0.0",
                 "de": "Eine Kachel zeigt einen Gerätezustand erst, wenn er bestätigt ist (States in 0_userdata und von Skripten sofort); media.state hat die Werte play, pause, stop; der State connected des Satelliten hat die Rolle indicator.reachable; der Kachel-Editor braucht Admin 8.0.0",
@@ -80,19 +93,6 @@
                 "pl": "Kolory: domyślny kolor główny, własny kolor główny i tło kafelka, tło z innego stanu; ikony na małych, szerokich i dużych kafelkach (firmware satelity 2.0.4)",
                 "uk": "Кольори: основний колір за замовчуванням, власний основний колір і тло плитки, тло з іншого стану; іконки на малих, широких і великих плитках (прошивка сателіта 2.0.4)",
                 "zh-cn": "颜色：默认主颜色、每个磁贴自己的主颜色和背景、由其他状态控制的背景；小型、宽型和大型磁贴上的图标（卫星固件 2.0.4）"
-            },
-            "0.0.7": {
-                "en": "Thresholds: a tile turns red below or above a value (satellite firmware 2.0.3)",
-                "de": "Schwellwerte: eine Kachel wird unter oder über einem Wert rot (Satelliten-Firmware 2.0.3)",
-                "ru": "Пороги: плитка становится красной ниже или выше значения (прошивка сателлита 2.0.3)",
-                "pt": "Limites: um bloco fica vermelho abaixo ou acima de um valor (firmware do satélite 2.0.3)",
-                "nl": "Drempels: een tegel wordt rood onder of boven een waarde (satellietfirmware 2.0.3)",
-                "fr": "Seuils : une tuile devient rouge en dessous ou au-dessus d'une valeur (firmware du satellite 2.0.3)",
-                "it": "Soglie: un riquadro diventa rosso sotto o sopra un valore (firmware del satellite 2.0.3)",
-                "es": "Umbrales: un mosaico se vuelve rojo por debajo o por encima de un valor (firmware del satélite 2.0.3)",
-                "pl": "Progi: kafelek robi się czerwony poniżej lub powyżej wartości (firmware satelity 2.0.3)",
-                "uk": "Пороги: плитка стає червоною нижче або вище значення (прошивка сателіта 2.0.3)",
-                "zh-cn": "阈值：数值低于或高于设定值时磁贴变为红色（卫星固件 2.0.3）"
             }
         },
         "titleLang": {
@@ -163,10 +163,12 @@
             {
                 "admin": ">=8.0.0"
             }
-        ]
+        ],
+        "declareUsedResources": true
     },
     "protectedNative": [
-        "satellites"
+        "satellites",
+        "tablets"
     ],
     "native": {
         "satellites": [],
@@ -175,7 +177,16 @@
         "chartHours": 24,
         "accentColor": "",
         "relockMode": 0,
-        "relockMinutes": 5
+        "relockMinutes": 5,
+        "pwaEnabled": false,
+        "pwaPort": 8094,
+        "pwaBind": "0.0.0.0",
+        "secure": false,
+        "certPublic": "",
+        "certPrivate": "",
+        "certChained": "",
+        "tablets": [],
+        "pageTitles": {}
     },
     "objects": [],
     "instanceObjects": [

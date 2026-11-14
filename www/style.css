@@ -1,0 +1,622 @@
+/* Tiles on a tablet: the look of the satellite firmware (dark theme, blue accent), drawn on any grid. */
+
+:root {
+    --bg: #101418;
+    --tile: #1d232a;
+    --tile-on: #24303c;
+    --text: #e8edf2;
+    --muted: #8a96a3;
+    --track: #33404c;
+    --accent: #3d8bfd;
+    --alert: #e5484d;
+    --ok: #30a46c;
+    --gap: clamp(6px, 1.2vmin, 14px);
+    --radius: clamp(8px, 1.6vmin, 18px);
+    color-scheme: dark;
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    margin: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family:
+        system-ui,
+        -apple-system,
+        'Segoe UI',
+        Roboto,
+        sans-serif;
+    overflow: hidden;
+    overscroll-behavior: none;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+#bar {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: clamp(32px, 5.5vmin, 52px);
+    padding: 0 calc(var(--gap) * 1.5);
+    font-size: clamp(13px, 2.4vmin, 22px);
+    color: var(--muted);
+}
+
+#name {
+    font-weight: 600;
+    color: var(--text);
+}
+
+/* the title of the page shown, after the name of the tablet */
+#pageTitle {
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+#pageTitle:not(:empty)::before {
+    content: '–';
+    margin-right: 0.6em;
+}
+
+#padName {
+    font-size: clamp(16px, 3vmin, 28px);
+    font-weight: 600;
+}
+
+#clock {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+}
+
+#dots {
+    display: flex;
+    gap: 6px;
+}
+
+#dots i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--track);
+}
+
+#dots i.on {
+    background: var(--text);
+}
+
+#lockButton {
+    border: 0;
+    background: none;
+    padding: 4px;
+    width: 1.8em;
+    height: 1.8em;
+    color: var(--muted);
+}
+
+#lockButton svg,
+.padLock {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+}
+
+#link {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--alert);
+}
+
+#link.ok {
+    background: var(--ok);
+}
+
+#pages {
+    flex: 1;
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+}
+
+#pages::-webkit-scrollbar {
+    display: none;
+}
+
+.page {
+    flex: none;
+    width: 100%;
+    height: 100%;
+    scroll-snap-align: start;
+    display: grid;
+    gap: var(--gap);
+    padding: 0 var(--gap) var(--gap);
+}
+
+.tile {
+    position: relative;
+    container-type: size;
+    background: var(--tile);
+    border-radius: var(--radius);
+    overflow: hidden;
+    --c: var(--accent);
+    transition: background 0.15s;
+}
+
+.body {
+    position: absolute;
+    inset: 0;
+    padding: 7cqmin 8cqmin;
+    display: flex;
+    flex-direction: column;
+    gap: 3cqmin;
+}
+
+.tile.lit {
+    background: var(--tile-on);
+}
+
+.tile.touch {
+    cursor: pointer;
+}
+
+.tile.pressed {
+    filter: brightness(1.35);
+}
+
+.head {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    min-width: 0;
+    font-size: clamp(11px, 11cqmin, 28px);
+    color: var(--muted);
+}
+
+.head .label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.icon {
+    flex: none;
+    width: 1.5em;
+    height: 1.5em;
+    fill: currentColor;
+}
+
+.tile.lit .icon {
+    fill: var(--c);
+}
+
+.value {
+    font-size: clamp(16px, 30cqmin, 120px);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--c);
+    line-height: 1.1;
+}
+
+.value.text {
+    font-size: clamp(14px, 15cqmin, 64px);
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.value .unit {
+    font-size: 0.5em;
+    font-weight: 400;
+    margin-left: 0.15em;
+    color: var(--muted);
+}
+
+.tile.value .value,
+.tile.bar .value {
+    margin-top: auto;
+}
+
+/* a flat tile (wide, or small on a satellite-like grid): name left, value right, in one line */
+@container (min-aspect-ratio: 9 / 5) {
+    .body.rowable {
+        flex-direction: row;
+        align-items: center;
+        gap: 5cqw;
+        padding: 0 5cqw;
+    }
+
+    .body.rowable .head {
+        flex: 1 1 auto;
+        min-width: 35%;
+        font-size: clamp(11px, 24cqh, 30px);
+    }
+
+    .body.rowable .value {
+        margin-top: 0;
+        font-size: clamp(14px, min(36cqh, 13cqw), 90px);
+    }
+
+    .body.rowable .icon {
+        width: 1.6em;
+        height: 1.6em;
+    }
+
+    .body.rowable .meter {
+        position: absolute;
+        left: 5cqw;
+        right: 5cqw;
+        bottom: 9cqh;
+        height: 7cqh;
+        margin: 0;
+    }
+
+    .body.rowable svg.chart {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 50%;
+        opacity: 0.55;
+    }
+
+    /* a flat chart: name and value along the top edge, the line below them (it covered them, 2026-11-14) */
+    .tile.chart .body.rowable {
+        align-items: flex-start;
+        padding-top: 7cqh;
+    }
+
+    .tile.chart .body.rowable .head {
+        font-size: clamp(11px, 18cqh, 26px);
+    }
+
+    .tile.chart .body.rowable .value {
+        font-size: clamp(14px, min(28cqh, 12cqw), 72px);
+    }
+
+    .body.rowable .toggle {
+        margin: 0;
+    }
+}
+
+.meter {
+    margin-top: auto;
+    height: max(6px, 9cqh);
+    border-radius: 99px;
+    background: var(--track);
+    overflow: hidden;
+}
+
+.meter > i {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: var(--c);
+    transition: width 0.3s;
+}
+
+svg.arc,
+svg.chart {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+}
+
+svg.arc .track {
+    stroke: var(--track);
+}
+
+svg.arc .fill {
+    stroke: var(--c);
+    transition: stroke-dasharray 0.3s;
+}
+
+svg.arc text {
+    fill: var(--text);
+    font-weight: 600;
+    text-anchor: middle;
+}
+
+svg.chart polyline {
+    fill: none;
+    stroke: var(--c);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+    stroke-linejoin: round;
+}
+
+.toggle {
+    flex: none;
+    width: clamp(36px, 30cqmin, 76px);
+    aspect-ratio: 1.8;
+    border-radius: 99px;
+    background: var(--track);
+    position: relative;
+    transition: background 0.15s;
+    margin-left: auto;
+}
+
+.toggle::after {
+    content: '';
+    position: absolute;
+    top: 8%;
+    left: 5%;
+    height: 84%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.15s;
+}
+
+.toggle.on {
+    background: var(--c);
+}
+
+.toggle.on::after {
+    transform: translateX(80%);
+}
+
+.tile.switch .toggle {
+    margin-top: auto;
+}
+
+.tile.switch.square .icon {
+    position: absolute;
+    left: 8cqmin;
+    bottom: 8cqmin;
+    width: 22cqmin;
+    height: 22cqmin;
+}
+
+.dimmerRow {
+    display: flex;
+    align-items: center;
+    gap: 5cqmin;
+    margin-top: auto;
+}
+
+/* a narrow dimmer: the percent above the slider, so both have the whole width */
+@container (max-aspect-ratio: 13 / 10) {
+    .dimmerRow {
+        flex-direction: column-reverse;
+        align-items: stretch;
+        gap: 2cqmin;
+    }
+
+    .dimmerRow .percent {
+        text-align: left;
+    }
+
+    .dimmerRow input.level {
+        flex: none;
+        width: 100%;
+    }
+}
+
+.dimmerRow .percent {
+    min-width: 3.2em;
+    text-align: right;
+    font-size: clamp(12px, 14cqmin, 32px);
+    font-variant-numeric: tabular-nums;
+}
+
+/* the slider of a dimmer: input, track and knob sized from the same numbers, so that the knob sits in the middle of
+   the track in every browser (WebKit puts the knob at the top of the track: it needs the margin; 2026-11-14) */
+input.level {
+    --lh: clamp(26px, 22cqh, 60px);
+    --tk: calc(var(--lh) * 0.3);
+    --kn: clamp(22px, 20cqh, 52px);
+    flex: 1;
+    appearance: none;
+    -webkit-appearance: none;
+    height: var(--lh);
+    margin: 0;
+    background: transparent;
+    touch-action: none;
+}
+
+input.level::-webkit-slider-runnable-track {
+    height: var(--tk);
+    border-radius: 99px;
+    background: linear-gradient(to right, var(--c) var(--p, 0%), var(--track) var(--p, 0%));
+}
+
+input.level::-moz-range-track {
+    height: var(--tk);
+    border-radius: 99px;
+    background: linear-gradient(to right, var(--c) var(--p, 0%), var(--track) var(--p, 0%));
+}
+
+input.level::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: var(--kn);
+    height: var(--kn);
+    margin-top: calc((var(--tk) - var(--kn)) / 2);
+    border: 0;
+    border-radius: 50%;
+    background: #fff;
+}
+
+input.level::-moz-range-thumb {
+    width: var(--kn);
+    height: var(--kn);
+    border: 0;
+    border-radius: 50%;
+    background: #fff;
+}
+
+.tile.button .body {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 4cqmin;
+}
+
+.tile.button .icon {
+    width: clamp(24px, 34cqmin, 110px);
+    height: clamp(24px, 34cqmin, 110px);
+    fill: var(--c);
+}
+
+.tile.button .label {
+    font-size: clamp(12px, 13cqmin, 30px);
+}
+
+.setpoint {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4cqmin;
+}
+
+.setpoint button {
+    width: clamp(34px, 24cqmin, 80px);
+    aspect-ratio: 1;
+    border: 0;
+    border-radius: 50%;
+    background: var(--track);
+    color: var(--text);
+    font-size: clamp(18px, 16cqmin, 44px);
+    line-height: 1;
+}
+
+.setpoint button:active {
+    background: var(--c);
+}
+
+.setpoint .target {
+    white-space: nowrap;
+    font-size: clamp(14px, 15cqmin, 40px);
+    font-variant-numeric: tabular-nums;
+}
+
+.tile.thermostat .head {
+    padding-right: max(12px, 10cqmin);
+}
+
+.relay {
+    position: absolute;
+    top: 8cqmin;
+    right: 8cqmin;
+    width: max(8px, 6cqmin);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--track);
+}
+
+.relay.on {
+    background: var(--ok);
+}
+
+.relay.hidden {
+    display: none;
+}
+
+#notice {
+    position: fixed;
+    inset: auto 0 calc(env(safe-area-inset-bottom) + 16px);
+    margin: 0 auto;
+    width: fit-content;
+    max-width: 90vw;
+    padding: 10px 18px;
+    border-radius: 12px;
+    background: #000c;
+    font-size: clamp(14px, 2.4vmin, 22px);
+    text-align: center;
+}
+
+#notice.block {
+    inset: 0;
+    width: auto;
+    max-width: none;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10vmin;
+    background: var(--bg);
+    line-height: 1.5;
+}
+
+#keypad {
+    position: fixed;
+    inset: 0;
+    background: #000e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#keypad[hidden],
+#notice[hidden] {
+    display: none;
+}
+
+.pad {
+    width: min(80vw, 60vh, 420px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2vmin;
+}
+
+.padLock {
+    width: 8vmin;
+    height: 8vmin;
+    color: var(--muted);
+}
+
+#stars {
+    font-size: 6vmin;
+    letter-spacing: 0.4em;
+    min-height: 1.2em;
+}
+
+#padMessage {
+    min-height: 1.4em;
+    color: var(--alert);
+    font-size: clamp(14px, 2.6vmin, 24px);
+}
+
+.keys {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2vmin;
+}
+
+.keys button {
+    aspect-ratio: 1.4;
+    border: 0;
+    border-radius: 14px;
+    background: var(--tile);
+    color: var(--text);
+    font-size: clamp(20px, 5vmin, 44px);
+}
+
+.keys button:active {
+    background: var(--accent);
+}
+
+.keys button.blank {
+    visibility: hidden;
+}

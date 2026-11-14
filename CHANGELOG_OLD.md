@@ -2,6 +2,13 @@
 
 Versions that no longer fit into the changelog of the [README](README.md) (it keeps the last five) are moved here.
 
+### 0.1.0 (2026-11-10)
+
+- Screen lock with a PIN per satellite (tab Satellites): the display shows only the clock and a lock, the wake word is
+  ignored, a touch opens a keypad; the satellite checks the PIN itself (satellite firmware 2.1.0)
+- Tab Authentication: lock again after some minutes without a touch, when the display goes back to the clock, or only
+  by hand; the state `satellites.<name>.locked` locks and unlocks from ioBroker
+
 ### 0.0.8 (2026-11-10)
 
 - Colours: a default main colour of the tiles (tab Appearance), an own main colour and background per tile, and a

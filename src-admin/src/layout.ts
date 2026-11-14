@@ -5,6 +5,81 @@ export const SLOTS = 8;
 export const COLS = 2;
 export const ROWS = 4;
 
+/**
+ * Columns and rows of a page, pages, tiles a page holds (lib/layout.js Grid), and the screen the editor draws (w x h
+ * in units of the satellite screen, 320 x 240)
+ */
+export interface Grid {
+    cols: number;
+    rows: number;
+    pages: number;
+    slots: number;
+    w: number;
+    h: number;
+    /** Gap between the tiles and at the edges */
+    gap: number;
+    /** Where the first row starts: the gap on a satellite, below the bar with the name and the clock on a tablet */
+    top: number;
+}
+
+/** A satellite: 2 x 4 cells, 4 pages, 8 tiles a page (the firmware), its screen 320 x 240 */
+export const SATELLITE_GRID: Grid = {
+    cols: COLS,
+    rows: ROWS,
+    pages: PAGES,
+    slots: SLOTS,
+    w: 320,
+    h: 240,
+    gap: 6,
+    top: 6,
+};
+
+/** The longer side of a tablet in the editor (the satellite: 320) */
+const TABLET_SIDE = 400;
+
+/**
+ * The screen of a tablet in the editor: the shape of its display as the settings give it (width x height in pixels;
+ * landscape or portrait is the user's choice), a 4:3 landscape screen without them.
+ */
+function tabletScreen(width: unknown, height: unknown): { w: number; h: number; gap: number; top: number } {
+    const pw = Number(width);
+    const ph = Number(height);
+    const ratio = pw > 0 && ph > 0 ? ph / pw : 3 / 4;
+    const w = ratio <= 1 ? TABLET_SIDE : Math.round(TABLET_SIDE / ratio);
+    const h = ratio <= 1 ? Math.round(TABLET_SIDE * ratio) : TABLET_SIDE;
+    // as www/style.css: the gap 1.2 % and the bar 5.5 % of the shorter side
+    const short = Math.min(w, h);
+    return { w, h, gap: Math.max(3, Math.round(short * 0.012)), top: Math.round(short * 0.055) };
+}
+
+/** A tablet: what its row says, within these limits (lib/layout.js TABLET_LIMITS, TABLET_DEFAULT) */
+const TABLET_LIMITS = { cols: 8, rows: 8, pages: 8 };
+const TABLET_DEFAULT = { cols: 4, rows: 3, pages: 4 };
+
+function wholeIn(value: unknown, max: number, fallback: number): number {
+    const n = value === '' || value === null || value === undefined ? NaN : Number(value);
+    return Number.isInteger(n) && n >= 1 && n <= max ? n : fallback;
+}
+
+/** The grid of a row of the tablets table */
+export function tabletGrid(row: {
+    cols?: unknown;
+    rows?: unknown;
+    pages?: unknown;
+    width?: unknown;
+    height?: unknown;
+}): Grid {
+    const cols = wholeIn(row.cols, TABLET_LIMITS.cols, TABLET_DEFAULT.cols);
+    const rows = wholeIn(row.rows, TABLET_LIMITS.rows, TABLET_DEFAULT.rows);
+    return {
+        cols,
+        rows,
+        pages: wholeIn(row.pages, TABLET_LIMITS.pages, TABLET_DEFAULT.pages),
+        slots: cols * rows,
+        ...tabletScreen(row.width, row.height),
+    };
+}
+
 export type Size = 's' | 'q' | 'w' | 'l';
 export type Kind = 'value' | 'gauge' | 'bar' | 'chart' | 'switch' | 'dimmer' | 'button' | 'thermostat';
 
@@ -101,15 +176,18 @@ export interface TileRow {
     hideToggle?: boolean;
 }
 
-/** Whether a switch shows its toggle (lib/layout.js showToggleOf) */
-export function showToggle(t: TileRow): boolean {
+/**
+ * Whether a switch shows its toggle (lib/layout.js showToggleOf). A tablet has the room for the icon and the toggle
+ * together, so there it keeps its toggle unless the editor hides it.
+ */
+export function showToggle(t: TileRow, tablet = false): boolean {
     if (t.type !== 'switch') {
         return true;
     }
     if (typeof t.hideToggle === 'boolean') {
         return !t.hideToggle;
     }
-    return !((t.size === 's' || t.size === 'w') && !!t.icon && !t.iconOnly);
+    return tablet || !((t.size === 's' || t.size === 'w') && !!t.icon && !t.iconOnly);
 }
 
 /** "#RRGGBB" (or "#RGB") of a colour field, '' when empty or no colour */
@@ -130,17 +208,27 @@ export function alerted(t: TileRow, value: number): boolean {
     if (!Number.isFinite(value) || !ALERT_KINDS.includes(t.type)) {
         return false;
     }
-    const below = t.alertBelow === '' || t.alertBelow === null || t.alertBelow === undefined ? null : Number(t.alertBelow);
-    const above = t.alertAbove === '' || t.alertAbove === null || t.alertAbove === undefined ? null : Number(t.alertAbove);
+    const below =
+        t.alertBelow === '' || t.alertBelow === null || t.alertBelow === undefined ? null : Number(t.alertBelow);
+    const above =
+        t.alertAbove === '' || t.alertAbove === null || t.alertAbove === undefined ? null : Number(t.alertAbove);
     return (below !== null && value < below) || (above !== null && value > above);
+}
+
+/** The sizes of a kind: a tablet draws every kind in every size, a satellite has those of its firmware (lib/layout.js) */
+export function sizesOf(type: Kind, tablet = false): Size[] {
+    if (!KINDS[type]) {
+        return [];
+    }
+    return tablet ? ['s', 'q', 'w', 'l'] : KINDS[type];
 }
 
 /**
  * Why the adapter would leave this tile out (an i18n key), or '' when it is fine. A tile without a state is not
  * marked: it is being set up.
  */
-export function problemOf(t: TileRow): string {
-    if (!KINDS[t.type] || !KINDS[t.type].includes(t.size)) {
+export function problemOf(t: TileRow, tablet = false): string {
+    if (!sizesOf(t.type, tablet).includes(t.size)) {
         return 'sd_bad_size';
     }
     if (t.type === 'thermostat' && !String(t.state2 || '').trim()) {
@@ -149,20 +237,25 @@ export function problemOf(t: TileRow): string {
     return '';
 }
 
-export function sameSatellite(a: string, b: string): boolean {
-    const id = (s: string): string =>
-        String(s || '')
+/** The object id part of a display name (lib/layout.js idOf) */
+export function displayId(name: string): string {
+    return (
+        String(name || '')
             .trim()
             .toLowerCase()
             .replace(/[^a-z0-9_-]+/g, '_')
-            .replace(/^_+|_+$/g, '') || 'satellite';
-    return id(a) === id(b);
+            .replace(/^_+|_+$/g, '') || 'satellite'
+    );
+}
+
+export function sameSatellite(a: string, b: string): boolean {
+    return displayId(a) === displayId(b);
 }
 
 /** True when the size fits the grid at this cell */
-export function inGrid(size: Size, col: number, row: number): boolean {
+export function inGrid(size: Size, col: number, row: number, grid: Grid): boolean {
     const [cols, rows] = SIZES[size];
-    return col >= 0 && row >= 0 && col + cols <= COLS && row + rows <= ROWS;
+    return col >= 0 && row >= 0 && col + cols <= grid.cols && row + rows <= grid.rows;
 }
 
 function overlaps(a: Pick<TileRow, 'size' | 'col' | 'row'>, b: Pick<TileRow, 'size' | 'col' | 'row'>): boolean {
@@ -181,6 +274,7 @@ function overlaps(a: Pick<TileRow, 'size' | 'col' | 'row'>, b: Pick<TileRow, 'si
  * @param col - Column of the top left cell
  * @param row - Row of the top left cell
  * @param skip - Index (or indexes) of the rows that move (not counted)
+ * @param grid - Grid of the display
  */
 export function fits(
     tiles: TileRow[],
@@ -190,8 +284,9 @@ export function fits(
     col: number,
     row: number,
     skip: number | number[] = -1,
+    grid: Grid,
 ): boolean {
-    if (!inGrid(size, col, row)) {
+    if (!inGrid(size, col, row, grid)) {
         return false;
     }
     const skipped = Array.isArray(skip) ? skip : [skip];
@@ -214,6 +309,7 @@ export function swapPlaces(
     tiles: TileRow[],
     a: number,
     b: number,
+    grid: Grid,
 ): { a: { col: number; row: number }; b: { col: number; row: number } } | null {
     const ta = tiles[a];
     const tb = tiles[b];
@@ -224,8 +320,8 @@ export function swapPlaces(
     const nb = { col: ta.col, row: ta.row };
     const page = Number(ta.page);
     if (
-        !fits(tiles, ta.satellite, page, ta.size, na.col, na.row, [a, b]) ||
-        !fits(tiles, tb.satellite, page, tb.size, nb.col, nb.row, [a, b]) ||
+        !fits(tiles, ta.satellite, page, ta.size, na.col, na.row, [a, b], grid) ||
+        !fits(tiles, tb.satellite, page, tb.size, nb.col, nb.row, [a, b], grid) ||
         overlaps({ size: ta.size, ...na }, { size: tb.size, ...nb })
     ) {
         return null;
@@ -240,10 +336,11 @@ export function freeCell(
     page: number,
     size: Size,
     skip = -1,
+    grid: Grid,
 ): { col: number; row: number } | null {
-    for (let row = 0; row < ROWS; row++) {
-        for (let col = 0; col < COLS; col++) {
-            if (fits(tiles, satellite, page, size, col, row, skip)) {
+    for (let row = 0; row < grid.rows; row++) {
+        for (let col = 0; col < grid.cols; col++) {
+            if (fits(tiles, satellite, page, size, col, row, skip, grid)) {
                 return { col, row };
             }
         }
@@ -263,12 +360,12 @@ export function tileAt(tiles: TileRow[], satellite: string, page: number, col: n
     );
 }
 
-/** Enabled tiles of a page beyond the eight the firmware takes (in the order of the list) */
-export function tooMany(tiles: TileRow[], satellite: string, page: number): number[] {
+/** Enabled tiles of a page beyond those the display takes (in the order of the list) */
+export function tooMany(tiles: TileRow[], satellite: string, page: number, grid: Grid): number[] {
     const mine = tiles
         .map((t, i) => ({ t, i }))
         .filter(x => x.t.enabled !== false && sameSatellite(x.t.satellite, satellite) && Number(x.t.page) === page);
-    return mine.slice(SLOTS).map(x => x.i);
+    return mine.slice(grid.slots).map(x => x.i);
 }
 
 export function newTile(satellite: string, page: number, col: number, row: number): TileRow {

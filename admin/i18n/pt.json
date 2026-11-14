@@ -24,5 +24,22 @@
     "When the display goes back to the clock by itself": "Quando o ecrã volta sozinho ao relógio",
     "Only by hand (the open lock next to the gear)": "Só à mão (o cadeado aberto ao lado da roda dentada)",
     "Minutes without a touch": "Minutos sem toque",
-    "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night.": "O cadeado aberto ao lado da roda dentada bloqueia logo em qualquer modo. O estado satellites.<nome>.locked mostra o bloqueio e bloqueia ou desbloqueia a partir do ioBroker, p. ex. à noite."
+    "The open lock next to the gear locks at once in every mode. The state satellites.<name>.locked shows the lock and locks or unlocks from ioBroker, e.g. at night.": "O cadeado aberto ao lado da roda dentada bloqueia logo em qualquer modo. O estado satellites.<nome>.locked mostra o bloqueio e bloqueia ou desbloqueia a partir do ioBroker, p. ex. à noite.",
+    "Tablets": "Tabletes",
+    "Android and iOS tablets show the tiles in the browser, like a satellite without voice. Only while this is switched on does the adapter start a web server for them.": "Tablets Android e iOS mostram os mosaicos no navegador, como um satélite sem voz. O adaptador só inicia um servidor web para eles enquanto isto estiver ligado.",
+    "Tablets with the web app (PWA)": "Tablets com a aplicação web (PWA)",
+    "Port of the web app": "Porta da aplicação web",
+    "Bind address": "Endereço de ligação",
+    "0.0.0.0 = all interfaces, which the tablets need": "0.0.0.0 = todas as interfaces, de que os tablets precisam",
+    "Use HTTPS": "Usar HTTPS",
+    "Needed to install the web app on a tablet (on iOS always) and to keep its screen on. It uses a certificate of the ioBroker collection (Admin > Settings > Certificates); without a working certificate the web app stays off.": "Necessário para instalar a aplicação web num tablet (no iOS sempre) e manter o ecrã ligado. Usa um certificado da coleção do ioBroker (Admin > Definições > Certificados); sem um certificado funcional, a aplicação web fica desligada.",
+    "Public certificate": "Certificado público",
+    "Private key": "Chave privada",
+    "Certificate chain (optional)": "Cadeia de certificados (opcional)",
+    "Columns": "Colunas",
+    "Rows": "Linhas",
+    "Pages": "Páginas",
+    "Screen width (px)": "Largura do ecrã (px)",
+    "Screen height (px)": "Altura do ecrã (px)",
+    "Screen width x height in pixels (e.g. an iPad: 2048 x 1536 in landscape, 1536 x 2048 upright) gives the tile editor the shape of the tablet; empty: 4:3 landscape. The grid of a page is columns x rows (a 10\" tablet in landscape: 4 x 3). The tile editor and the AI agents place tiles on a tablet like on a satellite.": "Largura x altura do ecrã em píxeis (por exemplo, um iPad: 2048 x 1536 na horizontal, 1536 x 2048 na vertical) dá ao editor de mosaicos a forma do tablet; vazio: 4:3 na horizontal. A grelha de uma página é colunas x linhas (um tablet de 10\" na horizontal: 4 x 3). O editor de mosaicos e os agentes de IA colocam mosaicos num tablet como num satélite."
 }
