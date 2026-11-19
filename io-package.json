@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "satellite-display",
-        "version": "0.4.1",
+        "version": "0.4.2",
         "news": {
+            "0.4.2": {
+                "en": "Declares that it answers \"help\" (js-controller PR #3638); the answer lists the commands and whether they change the tiles, so AI agents such as ioBroker.pi-agent find and use them",
+                "de": "Meldet, dass er \"help\" beantwortet (js-controller PR #3638); die Antwort listet die Befehle und ob sie die Kacheln ändern, damit KI-Agenten wie ioBroker.pi-agent sie finden und nutzen",
+                "ru": "Объявляет, что отвечает на \"help\" (js-controller PR #3638); ответ перечисляет команды и то, меняют ли они плитки, чтобы ИИ-агенты вроде ioBroker.pi-agent находили и использовали их",
+                "pt": "Declara que responde a \"help\" (js-controller PR #3638); a resposta lista os comandos e se alteram os mosaicos, para que agentes de IA como o ioBroker.pi-agent os encontrem e usem",
+                "nl": "Geeft aan dat hij \"help\" beantwoordt (js-controller PR #3638); het antwoord noemt de commando's en of ze de tegels wijzigen, zodat AI-agents zoals ioBroker.pi-agent ze vinden en gebruiken",
+                "fr": "Déclare qu'il répond à « help » (js-controller PR #3638) ; la réponse liste les commandes et indique si elles modifient les tuiles, afin que des agents IA comme ioBroker.pi-agent les trouvent et les utilisent",
+                "it": "Dichiara di rispondere a \"help\" (js-controller PR #3638); la risposta elenca i comandi e se modificano i riquadri, così agenti IA come ioBroker.pi-agent li trovano e li usano",
+                "es": "Declara que responde a \"help\" (js-controller PR #3638); la respuesta enumera los comandos y si cambian los mosaicos, para que agentes de IA como ioBroker.pi-agent los encuentren y usen",
+                "pl": "Deklaruje, że odpowiada na \"help\" (js-controller PR #3638); odpowiedź wymienia polecenia i czy zmieniają kafelki, aby agenci AI, tacy jak ioBroker.pi-agent, je znajdowali i używali",
+                "uk": "Оголошує, що відповідає на \"help\" (js-controller PR #3638); відповідь перелічує команди та чи змінюють вони плитки, щоб ШІ-агенти на кшталт ioBroker.pi-agent знаходили й використовували їх",
+                "zh-cn": "声明其响应 \"help\"（js-controller PR #3638）；回复列出各命令及其是否修改磁贴，便于 ioBroker.pi-agent 等 AI 代理找到并使用它们"
+            },
             "0.4.1": {
                 "en": "Pair a tablet by QR code with the ioBroker Visu app; new tiles group, tank, battery and status (satellite firmware 2.4.0); map, energy flow, history chart and camera tiles for tablets; tablet links name the LAN address of the host (by GermanBluefox)",
                 "de": "Tablet per QR-Code mit der ioBroker-Visu-App koppeln; neue Kacheln Gruppe, Tank, Batterie und Status (Satelliten-Firmware 2.4.0); Karte, Energiefluss, Verlaufsdiagramm und Kamera für Tablets; Tablet-Links nennen die LAN-Adresse des Hosts (von GermanBluefox)",
@@ -80,19 +93,6 @@
                 "pl": "Kafelek pokazuje stan urządzenia dopiero po potwierdzeniu (stany 0_userdata i skryptów od razu); media.state ma wartości play, pause, stop; stan connected satelity ma rolę indicator.reachable; edytor kafelków wymaga admin 8.0.0",
                 "uk": "Плитка показує стан пристрою лише після підтвердження (стани 0_userdata і скриптів одразу); media.state має значення play, pause, stop; стан connected сателіта отримав роль indicator.reachable; редактору плиток потрібен admin 8.0.0",
                 "zh-cn": "磁贴仅在设备状态被确认后才显示（0_userdata 和脚本的状态立即显示）；media.state 的取值为 play、pause、stop；卫星的 connected 状态改用 indicator.reachable 角色；磁贴编辑器需要 admin 8.0.0"
-            },
-            "0.2.0": {
-                "en": "Commands for AI agents (e.g. ioBroker.pi-agent): help, getTiles, addTile, updateTile, moveTile, removeTile",
-                "de": "Befehle für KI-Agenten (z. B. ioBroker.pi-agent): help, getTiles, addTile, updateTile, moveTile, removeTile",
-                "ru": "Команды для ИИ-агентов (например, ioBroker.pi-agent): help, getTiles, addTile, updateTile, moveTile, removeTile",
-                "pt": "Comandos para agentes de IA (p. ex. ioBroker.pi-agent): help, getTiles, addTile, updateTile, moveTile, removeTile",
-                "nl": "Opdrachten voor AI-agenten (bijv. ioBroker.pi-agent): help, getTiles, addTile, updateTile, moveTile, removeTile",
-                "fr": "Commandes pour les agents d'IA (p. ex. ioBroker.pi-agent) : help, getTiles, addTile, updateTile, moveTile, removeTile",
-                "it": "Comandi per agenti IA (ad es. ioBroker.pi-agent): help, getTiles, addTile, updateTile, moveTile, removeTile",
-                "es": "Comandos para agentes de IA (p. ej. ioBroker.pi-agent): help, getTiles, addTile, updateTile, moveTile, removeTile",
-                "pl": "Polecenia dla agentów AI (np. ioBroker.pi-agent): help, getTiles, addTile, updateTile, moveTile, removeTile",
-                "uk": "Команди для ШІ-агентів (наприклад, ioBroker.pi-agent): help, getTiles, addTile, updateTile, moveTile, removeTile",
-                "zh-cn": "供 AI 代理使用的命令（例如 ioBroker.pi-agent）：help、getTiles、addTile、updateTile、moveTile、removeTile"
             }
         },
         "titleLang": {
@@ -150,7 +150,8 @@
         "compact": true,
         "supportedMessages": {
             "custom": true,
-            "deviceManager": true
+            "deviceManager": true,
+            "help": true
         },
         "connectionType": "local",
         "dataSource": "push",

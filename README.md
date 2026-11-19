@@ -244,7 +244,7 @@ names what to ask the user (which satellite, which page when all are full).
 
 | Command        | Message                                                                                      | Does                                                                                                                                                  |
 | -------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `help`         | –                                                                                            | describes the commands, kinds, sizes, icons and the grid                                                                                              |
+| `help`         | –                                                                                            | describes the commands, kinds, sizes, icons and the grid: `{help, commands: [{command, write}]}`, `write` = changes the tiles                          |
 | `getTiles`     | `{satellite?}`                                                                               | lists the satellites and tablets, their grids, their tiles (with an `id`) and the free cells                                                          |
 | `addTile`      | `{satellite, type, state, size?, icon?, label?, unit?, state2?, state3?, page?, col?, row?}` | adds a tile, without a place in the first free cell; answers where it went (a group also takes `state4`, `title`, `label2`-`label4`, `unit2`-`unit4`) |
 | `updateTile`   | `{id, ...fields}`                                                                            | changes a tile                                                                                                                                        |
@@ -303,6 +303,10 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
     ### **WORK IN PROGRESS**
 -->
 
+### 0.4.2 (2026-11-19)
+
+- (sadam6752-tech) The adapter declares that it answers `help` (`common.supportedMessages.help`, js-controller PR #3638), and the answer lists the commands with whether they change something (`commands: [{command, write}]`), so agents such as ioBroker.pi-agent find and use them
+
 ### 0.4.1 (2026-11-17)
 
 - (GermanBluefox) "Pair a tablet" (tab Tablets and Device Manager): a one-time QR code that the ioBroker Visu app scans;
@@ -343,17 +347,6 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 - (sadam6752-tech) Tab Authentication and the README describe the screen lock of the tablets
 - (sadam6752-tech) The tile editor draws a tablet as the tablet shows it: the sizes in CSS pixels of its screen with
   the limits of the web app, the decimals of the adapter, a boolean as 1/0 on tiles that show numbers
-
-### 0.3.0 (2026-11-14)
-
-- (sadam6752-tech) Tablets with a web app (PWA), off by default: an Android or iOS tablet shows tiles like a satellite
-  on a grid of its own size; the AI agent commands place tiles on it too. The adapter serves the app on its own port
-  (HTTPS with a certificate of ioBroker) and declares the port in the used resources registry of js-controller 8
-- (sadam6752-tech) A satellite or tablet renamed in the settings keeps its tiles, and a tablet its link; the tile
-  editor offers to move or delete the tiles of a name that is gone
-- (sadam6752-tech) Links of the tablets with QR codes and a "New link" button; a tablet keeps the icon and the toggle of
-  a switch together, and takes every tile type in every size
-- (sadam6752-tech) Page titles on tablets (e.g. "Heizung"), set in the tile editor or with the command `setPageTitle`
 
 ## License
 

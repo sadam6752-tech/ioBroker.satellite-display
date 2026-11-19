@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const { runCommand, HELP, EDIT_COMMANDS } = require('../../lib/commands');
+const { runCommand, HELP, EDIT_COMMANDS, COMMANDS } = require('../../lib/commands');
 
 const SATS = [
     { enabled: true, name: 'Gast', host: '192.168.1.246' },
@@ -50,7 +50,9 @@ const fullPage = () => {
 describe('commands on the tiles', () => {
     it('explains itself for an agent: commands, sizes, icons and when to ask the user', async () => {
         const { answer } = await runCommand('help', {}, ctx());
-        assert.equal(answer, HELP);
+        // the shape of js-controller PR #3638: the text and the commands with whether they change something
+        assert.equal(answer.help, HELP);
+        assert.deepEqual(answer.commands, COMMANDS);
         for (const word of [
             'addTile',
             'moveTile',
@@ -61,8 +63,17 @@ describe('commands on the tiles', () => {
             'ask which one',
             'never reuse',
         ]) {
-            assert.ok(String(answer).includes(word), word);
+            assert.ok(answer.help.includes(word), word);
         }
+        // every command an agent may use is listed, and only getTiles and help only read
+        assert.deepEqual(
+            COMMANDS.map(c => c.command),
+            EDIT_COMMANDS,
+        );
+        assert.deepEqual(
+            COMMANDS.filter(c => !c.write).map(c => c.command),
+            ['help', 'getTiles'],
+        );
         assert.deepEqual(EDIT_COMMANDS, [
             'help',
             'getTiles',

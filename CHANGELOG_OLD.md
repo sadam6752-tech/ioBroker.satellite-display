@@ -2,6 +2,17 @@
 
 Versions that no longer fit into the changelog of the [README](README.md) (it keeps the last five) are moved here.
 
+### 0.3.0 (2026-11-14)
+
+- (sadam6752-tech) Tablets with a web app (PWA), off by default: an Android or iOS tablet shows tiles like a satellite
+  on a grid of its own size; the AI agent commands place tiles on it too. The adapter serves the app on its own port
+  (HTTPS with a certificate of ioBroker) and declares the port in the used resources registry of js-controller 8
+- (sadam6752-tech) A satellite or tablet renamed in the settings keeps its tiles, and a tablet its link; the tile
+  editor offers to move or delete the tiles of a name that is gone
+- (sadam6752-tech) Links of the tablets with QR codes and a "New link" button; a tablet keeps the icon and the toggle of
+  a switch together, and takes every tile type in every size
+- (sadam6752-tech) Page titles on tablets (e.g. "Heizung"), set in the tile editor or with the command `setPageTitle`
+
 ### 0.2.1 (2026-11-13)
 
 - (sadam6752-tech) A tile shows a state of a device only once it is confirmed (`ack`), never a command the device did
