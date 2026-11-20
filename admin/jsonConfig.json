@@ -299,7 +299,7 @@
                 "_tabletLinks": {
                     "type": "custom",
                     "i18n": true,
-                    "url": "custom/customComponents.js?v=0.4.2",
+                    "url": "custom/customComponents.js?v=0.4.3",
                     "name": "SatDisplay/Components/TabletLinks",
                     "guiApi": 2,
                     "bundlerType": "module",
@@ -320,7 +320,11 @@
                 "_devicesIntro": {
                     "type": "staticText",
                     "text": "The satellites and tablets of this instance: connection, screen lock, brightness and volume, send the tiles again, and the link with the QR code of a tablet. Add, remove or rename them in the tabs Satellites and Tablets. The instance must run.",
-                    "sm": 12
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
                 },
                 "_deviceManager": {
                     "type": "deviceManager",
@@ -340,7 +344,7 @@
                 "_tileEditor": {
                     "type": "custom",
                     "i18n": true,
-                    "url": "custom/customComponents.js?v=0.4.2",
+                    "url": "custom/customComponents.js?v=0.4.3",
                     "name": "SatDisplay/Components/TileEditor",
                     "guiApi": 2,
                     "bundlerType": "module",

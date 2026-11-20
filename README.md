@@ -303,6 +303,10 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
     ### **WORK IN PROGRESS**
 -->
 
+### 0.4.3 (2026-11-20)
+
+- (sadam6752-tech) The text above the Devices tab has all size attributes (checker W5507)
+
 ### 0.4.2 (2026-11-19)
 
 - (sadam6752-tech) The adapter declares that it answers `help` (`common.supportedMessages.help`, js-controller PR #3638), and the answer lists the commands with whether they change something (`commands: [{command, write}]`), so agents such as ioBroker.pi-agent find and use them
@@ -339,14 +343,6 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
   SQL): they stay with a warning in the log (review of the repository PR)
 - (sadam6752-tech) The API encryption key of a satellite is hidden in the settings (with a button to show it)
 - (sadam6752-tech) `@iobroker/testing` 6.3.2
-
-### 0.3.1 (2026-11-14)
-
-- (sadam6752-tech) Tablets can show a clock with the date when idle (tab Tablets: on/off and the minutes); a touch
-  shows the keypad of the screen lock or the tiles
-- (sadam6752-tech) Tab Authentication and the README describe the screen lock of the tablets
-- (sadam6752-tech) The tile editor draws a tablet as the tablet shows it: the sizes in CSS pixels of its screen with
-  the limits of the web app, the decimals of the adapter, a boolean as 1/0 on tiles that show numbers
 
 ## License
 

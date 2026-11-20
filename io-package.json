@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "satellite-display",
-        "version": "0.4.2",
+        "version": "0.4.3",
         "news": {
+            "0.4.3": {
+                "en": "The text above the Devices tab has all size attributes (repository checker W5507)",
+                "de": "Der Text über dem Reiter Geräte hat alle Größenangaben (Repository-Checker W5507)",
+                "ru": "У текста над вкладкой «Устройства» заданы все размеры (repository checker W5507)",
+                "pt": "O texto acima do separador Dispositivos tem todos os atributos de tamanho (repository checker W5507)",
+                "nl": "De tekst boven het tabblad Apparaten heeft alle grootte-attributen (repository checker W5507)",
+                "fr": "Le texte au-dessus de l’onglet Appareils a tous les attributs de taille (repository checker W5507)",
+                "it": "Il testo sopra la scheda Dispositivi ha tutti gli attributi di dimensione (repository checker W5507)",
+                "es": "El texto sobre la pestaña Dispositivos tiene todos los atributos de tamaño (repository checker W5507)",
+                "pl": "Tekst nad kartą Urządzenia ma wszystkie atrybuty rozmiaru (repository checker W5507)",
+                "uk": "У тексту над вкладкою «Пристрої» задано всі розміри (repository checker W5507)",
+                "zh-cn": "“设备”选项卡上方的文字设置了所有尺寸属性（repository checker W5507）"
+            },
             "0.4.2": {
                 "en": "Declares that it answers \"help\" (js-controller PR #3638); the answer lists the commands and whether they change the tiles, so AI agents such as ioBroker.pi-agent find and use them",
                 "de": "Meldet, dass er \"help\" beantwortet (js-controller PR #3638); die Antwort listet die Befehle und ob sie die Kacheln ändern, damit KI-Agenten wie ioBroker.pi-agent sie finden und nutzen",
@@ -80,19 +93,6 @@
                 "pl": "Tablety z aplikacją internetową (domyślnie wyłączone): tablet z Androidem lub iOS pokazuje kafelki jak satelita, na własnej siatce i ekranie oraz z każdym typem kafelka w każdym rozmiarze; edytor kafelków i polecenia dla agentów AI umieszczają na nim kafelki. Linki z kodami QR, własny port z HTTPS, port zgłoszony w rejestrze zajętych zasobów. Satelita lub tablet po zmianie nazwy zachowuje swoje kafelki. Strona tabletu może mieć tytuł, wyświetlany obok nazwy tabletu.",
                 "uk": "Планшети з вебзастосунком (типово вимкнено): планшет Android або iOS показує плитки як сателіт, на власній сітці й екрані та з будь-яким типом плитки в будь-якому розмірі; редактор плиток і команди для ШІ-агентів розміщують на ньому плитки. Посилання з QR-кодами, власний порт з HTTPS, порт оголошено в реєстрі зайнятих ресурсів. Перейменований сателіт або планшет зберігає свої плитки. Сторінка планшета може мати назву, вона показується поруч з іменем планшета.",
                 "zh-cn": "带 Web 应用的平板电脑（默认关闭）：Android 或 iOS 平板电脑像卫星设备一样显示磁贴，使用自己的网格和屏幕，每种磁贴类型都支持所有尺寸；磁贴编辑器和 AI 代理命令可在其上放置磁贴。带二维码的链接，自有端口支持 HTTPS，端口已登记在已用资源注册表中。重命名的卫星设备或平板电脑会保留其磁贴。平板电脑的页面可以设置标题，显示在平板电脑名称旁边。"
-            },
-            "0.2.1": {
-                "en": "A tile shows a device state only once it is confirmed (states of 0_userdata and scripts at once); media.state has the values play, pause, stop; the satellite state connected has the role indicator.reachable; the tile editor needs admin 8.0.0",
-                "de": "Eine Kachel zeigt einen Gerätezustand erst, wenn er bestätigt ist (States in 0_userdata und von Skripten sofort); media.state hat die Werte play, pause, stop; der State connected des Satelliten hat die Rolle indicator.reachable; der Kachel-Editor braucht Admin 8.0.0",
-                "ru": "Плитка показывает состояние устройства только после подтверждения (состояния 0_userdata и скриптов сразу); media.state принимает значения play, pause, stop; состояние connected сателлита получило роль indicator.reachable; редактору плиток нужен admin 8.0.0",
-                "pt": "Um bloco mostra o estado de um dispositivo só depois de confirmado (estados de 0_userdata e de scripts de imediato); media.state tem os valores play, pause, stop; o estado connected do satélite tem a função indicator.reachable; o editor de blocos precisa do admin 8.0.0",
-                "nl": "Een tegel toont een apparaatstatus pas als die bevestigd is (states in 0_userdata en van scripts meteen); media.state heeft de waarden play, pause, stop; de state connected van de satelliet heeft de rol indicator.reachable; de tegeleditor heeft admin 8.0.0 nodig",
-                "fr": "Une tuile n'affiche l'état d'un appareil qu'une fois confirmé (états de 0_userdata et des scripts tout de suite) ; media.state a les valeurs play, pause, stop ; l'état connected du satellite a le rôle indicator.reachable ; l'éditeur de tuiles nécessite admin 8.0.0",
-                "it": "Un riquadro mostra lo stato di un dispositivo solo quando è confermato (stati di 0_userdata e degli script subito); media.state ha i valori play, pause, stop; lo stato connected del satellite ha il ruolo indicator.reachable; l'editor dei riquadri richiede admin 8.0.0",
-                "es": "Un mosaico muestra el estado de un dispositivo solo cuando está confirmado (estados de 0_userdata y de scripts al momento); media.state tiene los valores play, pause, stop; el estado connected del satélite tiene el rol indicator.reachable; el editor de mosaicos necesita admin 8.0.0",
-                "pl": "Kafelek pokazuje stan urządzenia dopiero po potwierdzeniu (stany 0_userdata i skryptów od razu); media.state ma wartości play, pause, stop; stan connected satelity ma rolę indicator.reachable; edytor kafelków wymaga admin 8.0.0",
-                "uk": "Плитка показує стан пристрою лише після підтвердження (стани 0_userdata і скриптів одразу); media.state має значення play, pause, stop; стан connected сателіта отримав роль indicator.reachable; редактору плиток потрібен admin 8.0.0",
-                "zh-cn": "磁贴仅在设备状态被确认后才显示（0_userdata 和脚本的状态立即显示）；media.state 的取值为 play、pause、stop；卫星的 connected 状态改用 indicator.reachable 角色；磁贴编辑器需要 admin 8.0.0"
             }
         },
         "titleLang": {

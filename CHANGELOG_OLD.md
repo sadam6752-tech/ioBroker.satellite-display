@@ -2,6 +2,14 @@
 
 Versions that no longer fit into the changelog of the [README](README.md) (it keeps the last five) are moved here.
 
+### 0.3.1 (2026-11-14)
+
+- (sadam6752-tech) Tablets can show a clock with the date when idle (tab Tablets: on/off and the minutes); a touch
+  shows the keypad of the screen lock or the tiles
+- (sadam6752-tech) Tab Authentication and the README describe the screen lock of the tablets
+- (sadam6752-tech) The tile editor draws a tablet as the tablet shows it: the sizes in CSS pixels of its screen with
+  the limits of the web app, the decimals of the adapter, a boolean as 1/0 on tiles that show numbers
+
 ### 0.3.0 (2026-11-14)
 
 - (sadam6752-tech) Tablets with a web app (PWA), off by default: an Android or iOS tablet shows tiles like a satellite
