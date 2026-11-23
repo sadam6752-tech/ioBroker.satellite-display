@@ -120,6 +120,12 @@ class SatelliteDisplay extends utils.Adapter {
         this.readOnlyWarned = new Set();
         /** @type {Set<string>} satellites already told that their firmware is too old for a tile */
         this.oldFirmwareWarned = new Set();
+        /** @type {Map<string, Promise<void>>} satellite id → its states firmware.* created */
+        this.firmwareObjects = new Map();
+        /** @type {Map<string, import('./lib/satellite').FirmwareState>} satellite id → the last state of its firmware update */
+        this.firmwareSeen = new Map();
+        /** @type {Map<string, string>} satellite id → the last error its log wrote during a firmware update */
+        this.firmwareErrors = new Map();
         /** @type {Map<string, {bound: Bound[], timer: ioBroker.Timeout | undefined, pageTitles?: unknown}>} satellite id → tiles (and page titles) of the editor */
         this.previews = new Map();
         /** @type {Record<string, unknown>[] | undefined} tiles changed by commands, saved a moment later */
@@ -181,6 +187,8 @@ class SatelliteDisplay extends utils.Adapter {
         }
         await this.subscribeStatesAsync('satellites.*.brightness');
         await this.subscribeStatesAsync('satellites.*.media.*');
+        await this.subscribeStatesAsync('satellites.*.firmware.check');
+        await this.subscribeStatesAsync('satellites.*.firmware.install');
 
         for (const sat of displays) {
             this.satellites.set(sat.id, sat);
@@ -222,6 +230,16 @@ class SatelliteDisplay extends utils.Adapter {
         );
         link.on('problem', message => this.log.info(`${this.labelOf(sat)}: ${message}`));
         link.on('media', media => void this.onMediaState(sat, media));
+        link.on('firmware', firmware => void this.onFirmwareState(sat, firmware));
+        link.on('firmwareLog', line => {
+            // what the satellite writes while it installs an update; an error is the reason for the dialog
+            if (line.level === 'info') {
+                this.log.info(`${sat.name}: ${line.text}`);
+            } else {
+                this.log.warn(`${sat.name}: ${line.text}`);
+                this.firmwareErrors.set(sat.id, line.text);
+            }
+        });
         return link;
     }
 
@@ -946,6 +964,156 @@ class SatelliteDisplay extends utils.Adapter {
         if (this.links.get(sat.id)?.ready && !this.stopping) {
             await this.sendLayout(sat);
         }
+    }
+
+    /**
+     * A satellite whose firmware has the update entity "Firmware" (the release builds) gets satellites.<name>.firmware.*:
+     * the installed and the offered version, whether an update is there, its progress, and the buttons check and
+     * install. The objects are created once per run, when the first state of the entity comes.
+     *
+     * @param {SatelliteConfig} sat - Satellite
+     * @returns {Promise<void>} The objects are there
+     */
+    setupFirmware(sat) {
+        let done = this.firmwareObjects.get(sat.id);
+        if (!done) {
+            done = (async () => {
+                const base = `${this.baseOf(sat)}.firmware`;
+                await this.extendObject(base, { type: 'channel', common: { name: NAMES.firmware }, native: {} });
+                /** @type {Record<string, Partial<ioBroker.StateCommon>>} */
+                const states = {
+                    version: {
+                        name: NAMES.firmwareVersion,
+                        type: 'string',
+                        role: 'info.firmware',
+                        read: true,
+                        write: false,
+                        def: '',
+                    },
+                    latest: {
+                        name: NAMES.firmwareLatest,
+                        type: 'string',
+                        role: 'text',
+                        read: true,
+                        write: false,
+                        def: '',
+                    },
+                    available: {
+                        name: NAMES.firmwareAvailable,
+                        type: 'boolean',
+                        role: 'indicator',
+                        read: true,
+                        write: false,
+                        def: false,
+                    },
+                    updating: {
+                        name: NAMES.firmwareUpdating,
+                        type: 'boolean',
+                        role: 'indicator.working',
+                        read: true,
+                        write: false,
+                        def: false,
+                    },
+                    progress: {
+                        name: NAMES.firmwareProgress,
+                        type: 'number',
+                        role: 'value',
+                        unit: '%',
+                        min: 0,
+                        max: 100,
+                        read: true,
+                        write: false,
+                        def: 0,
+                    },
+                    check: {
+                        name: NAMES.firmwareCheck,
+                        type: 'boolean',
+                        role: 'button',
+                        read: false,
+                        write: true,
+                        def: false,
+                    },
+                    install: {
+                        name: NAMES.firmwareInstall,
+                        type: 'boolean',
+                        role: 'button',
+                        read: false,
+                        write: true,
+                        def: false,
+                    },
+                };
+                for (const [key, common] of Object.entries(states)) {
+                    await this.extendObject(`${base}.${key}`, {
+                        type: 'state',
+                        common: /** @type {ioBroker.StateCommon} */ (common),
+                        native: {},
+                    });
+                }
+            })();
+            this.firmwareObjects.set(sat.id, done);
+        }
+        return done;
+    }
+
+    /**
+     * The firmware update entity of a satellite reported its state (after a connect, a check, during an update).
+     *
+     * @param {SatelliteConfig} sat - Satellite
+     * @param {import('./lib/satellite').FirmwareState} firmware - Its state
+     */
+    async onFirmwareState(sat, firmware) {
+        await this.setupFirmware(sat);
+        const old = this.firmwareSeen.get(sat.id);
+        this.firmwareSeen.set(sat.id, firmware);
+        if (old && old.version && old.version !== firmware.version) {
+            this.log.info(`${sat.name}: firmware ${old.version} → ${firmware.version}`);
+        }
+        if (firmware.available && (!old || old.latest !== firmware.latest || !old.available)) {
+            this.log.info(`${sat.name}: firmware ${firmware.latest} is available (installed: ${firmware.version})`);
+        }
+        const base = `${this.baseOf(sat)}.firmware`;
+        await this.setState(`${base}.version`, { val: firmware.version, ack: true });
+        await this.setState(`${base}.latest`, { val: firmware.latest, ack: true });
+        await this.setState(`${base}.available`, { val: firmware.available, ack: true });
+        await this.setState(`${base}.updating`, { val: firmware.inProgress, ack: true });
+        if (firmware.progress !== null || !firmware.inProgress) {
+            await this.setState(`${base}.progress`, { val: firmware.progress ?? 0, ack: true });
+        }
+    }
+
+    /**
+     * @param {SatelliteConfig} sat - Satellite
+     * @returns {(import('./lib/satellite').FirmwareState & {connected: boolean, lastError: string}) | null} The
+     *   firmware update of a satellite whose firmware has the entity (with the last error of its log during the
+     *   update), null otherwise
+     */
+    firmwareOf(sat) {
+        const link = this.links.get(sat.id);
+        const firmware = link instanceof SatelliteLink ? link.firmware || this.firmwareSeen.get(sat.id) : undefined;
+        return firmware
+            ? { ...firmware, connected: !!link?.ready, lastError: this.firmwareErrors.get(sat.id) ?? '' }
+            : null;
+    }
+
+    /**
+     * Starts the installation of the offered firmware: the satellite loads it from its release pages, writes it and
+     * restarts; the adapter connects again by itself.
+     *
+     * @param {SatelliteConfig} sat - Satellite
+     * @returns {boolean} False when it is not connected, has no update entity or no newer version is offered
+     */
+    installFirmware(sat) {
+        const link = this.links.get(sat.id);
+        const firmware = link instanceof SatelliteLink ? link.firmware : null;
+        if (!link?.ready || !firmware?.available || firmware.inProgress) {
+            return false;
+        }
+        this.firmwareErrors.delete(sat.id);
+        if (!(/** @type {SatelliteLink} */ (link).firmwareCommand('update'))) {
+            return false;
+        }
+        this.log.info(`${this.labelOf(sat)}: firmware update ${firmware.version} → ${firmware.latest} started`);
+        return true;
     }
 
     /** @param {SatelliteConfig} sat - The satellite that connected */
@@ -1673,6 +1841,26 @@ class SatelliteDisplay extends utils.Adapter {
         if (id.startsWith(`${this.namespace}.satellites.`) && id.split('.')[4] === 'media') {
             if (!state.ack) {
                 await this.onMediaCommand(id, state);
+            }
+            return;
+        }
+        if (id.startsWith(`${this.namespace}.satellites.`) && id.split('.')[4] === 'firmware') {
+            if (!state.ack && state.val) {
+                const sat = this.satellites.get(id.split('.')[3]);
+                const link = sat ? this.links.get(sat.id) : undefined;
+                const install = id.endsWith('.install');
+                const ok =
+                    sat && link instanceof SatelliteLink
+                        ? install
+                            ? this.installFirmware(sat)
+                            : link.firmwareCommand('check')
+                        : false;
+                if (!ok) {
+                    this.log.info(
+                        `${sat?.name ?? id}: ${install ? 'no firmware update to install now (none offered, running or not connected)' : 'cannot look for a firmware update now (not connected)'}`,
+                    );
+                }
+                await this.setState(id, { val: false, ack: true });
             }
             return;
         }

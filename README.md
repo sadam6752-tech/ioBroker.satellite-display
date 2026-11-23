@@ -237,7 +237,15 @@ Satellites and Tablets: add, remove and rename displays there. The tab works whi
   brightness of the display and the volume of the player.
 - **Actions**: "Send the tiles again" on every card; on a tablet, while the web app runs, "Link and QR code" and "New
   link" (asks first; the old link stops working at once, also on the home screen of the tablet).
-- **Details** (menu of the card): grid and pages, the number of tiles, and the link with the QR code of a tablet.
+- **Firmware update** (satellites with a release build of the firmware, which has the update entity "Firmware"): the
+  card shows the installed version and, when the release pages offer a newer one, the update sign with that version.
+  "Update the firmware" (or a click on the sign) asks first, then the satellite loads the firmware from the release
+  pages itself, writes it and restarts; a dialog follows the progress until the satellite is back with the new
+  version. The satellite looks for a new version every 6 hours; `firmware.check` looks at once. While it installs,
+  the adapter reads the log of the satellite: its lines about the download and the flashing go to the ioBroker log,
+  and when the update fails, the dialog names the error the satellite wrote.
+- **Details** (menu of the card): grid and pages, the number of tiles, the firmware and the offered version of a
+  satellite, and the link with the QR code of a tablet.
 - **Links of the tablets** in the bar above the cards: the QR codes of all tablets in one dialog.
 - **Pair a tablet** in the bar above the cards, while the web app runs: the one-time QR code of the pairing (see
   Tablets).
@@ -277,6 +285,11 @@ ioBroker.pi-agent the instance needs "Write allowed" in the write permissions.
 | `satellites.<name>.media.stop`                                  | button: stop playing                                                                                        |
 | `satellites.<name>.media.state`                                 | `play` (also while it announces), `pause` or `stop`                                                         |
 | `satellites.<name>.brightness`                                  | brightness of the display 0-100 %, 0 = dark (only displays that take it from ioBroker, e.g. the tile panel) |
+| `satellites.<name>.firmware.version`, `.latest`                 | installed firmware and the newest one on the release pages (only firmware with the update entity)           |
+| `satellites.<name>.firmware.available`                          | a newer firmware is offered                                                                                 |
+| `satellites.<name>.firmware.updating`, `.progress`              | the satellite installs an update now, and how far (0-100 %, when the firmware reports it)                   |
+| `satellites.<name>.firmware.check`                              | button: look for a new firmware now                                                                         |
+| `satellites.<name>.firmware.install`                            | button: install the offered firmware (the satellite restarts)                                               |
 | `tablets.<name>.connected`                                      | this tablet is connected and has its tiles (a sleeping tablet is not)                                       |
 | `tablets.<name>.lastTouch`, `.resend`, `.locked`, `.failedPins` | as for a satellite                                                                                          |
 
@@ -316,6 +329,9 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
   it, the commands `addTile`/`updateTile` take it. On a tablet `f` stays 4 × 3 cells for every kind
 - (sadam6752-tech) A thermostat also comes tall (size `t`, 1 × 4 cells: one column over the whole page, satellite
   firmware 2.6.2): the arc with the temperature at the top, the target under it, − and + below
+- (sadam6752-tech) Firmware update from the tab Devices: the card of a satellite shows its firmware version and a newer
+  one from the release pages; "Update the firmware" starts the installation on the satellite and follows it until the
+  satellite is back. New states `satellites.<name>.firmware.*` (version, offered version, progress, check, install)
 
 ### 0.4.3 (2026-11-20)
 

@@ -54,6 +54,8 @@ function fakeAdapter(over = {}) {
         setStateAsync: async (/** @type {string} */ id, /** @type {any} */ st) => written.push([id, st]),
         setForeignStateAsync: async (/** @type {string} */ id, /** @type {any} */ st) => written.push([id, st]),
         getForeignStateAsync: async () => ({ val: true, ack: true }),
+        firmwareOf: () => null,
+        installFirmware: () => false,
         ...over,
     };
     return app;
