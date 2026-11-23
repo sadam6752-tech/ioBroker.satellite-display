@@ -1,7 +1,15 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const { normalizeSatellites, normalizeTiles, idOf, numberOrNull, ICONS, colorOf } = require('../../lib/layout');
+const {
+    normalizeSatellites,
+    normalizeTiles,
+    idOf,
+    numberOrNull,
+    ICONS,
+    colorOf,
+    cellsOf,
+} = require('../../lib/layout');
 
 const SATS = [
     { enabled: true, name: 'Gast', host: '192.168.1.246', port: 6053 },
@@ -120,6 +128,42 @@ describe('layout', () => {
         assert.match(problems[5], /page must be 1 to 4/);
         assert.match(problems[6], /no enabled satellite or tablet "Keller"/);
         assert.match(problems[7], /no state chosen/);
+    });
+
+    it('takes a thermostat over the whole page of a satellite (size f, 2 x 4), no other type', () => {
+        const problems = [];
+        const sats = normalizeSatellites(SATS, problems);
+        const thermostat = { type: 'thermostat', size: 'f', state: 'a.0.t', state2: 'a.0.set' };
+        const tiles = normalizeTiles(
+            [
+                row(thermostat),
+                row({ size: 's', col: 1, row: 3 }), // under the thermostat
+                row({ ...thermostat, page: 2, row: 1 }), // 2 x 4 from row 1 leaves the grid
+                row({ type: 'value', size: 'f', page: 3 }), // only a thermostat comes in f
+                row({ ...thermostat, satellite: 'Arbeit Zimmer', page: 4 }),
+            ],
+            sats,
+            problems,
+        );
+        assert.deepEqual(
+            tiles.map(t => [t.satellite, t.page, t.size, t.gridCol, t.gridRow]),
+            [
+                ['gast', 1, 'f', 0, 0],
+                ['arbeit_zimmer', 4, 'f', 0, 0],
+            ],
+        );
+        assert.equal(problems.length, 3);
+        assert.match(problems[0], /^Tile 2: covers tile 1/);
+        assert.match(problems[1], /^Tile 3: does not fit/);
+        assert.match(problems[2], /^Tile 4: a value tile comes in the sizes s, q, w, l, not "f"/);
+    });
+
+    it('gives f the cells of the display: 2 x 4 on a satellite, 4 x 3 on a tablet', () => {
+        assert.deepEqual(cellsOf('f', 'satellite'), [2, 4]);
+        assert.deepEqual(cellsOf('f', 'tablet'), [4, 3]);
+        assert.deepEqual(cellsOf('l', 'satellite'), [2, 2]);
+        assert.deepEqual(cellsOf('x', 'tablet'), [3, 2]);
+        assert.equal(cellsOf('z', 'satellite'), null);
     });
 
     it('keeps the states, names and units a group, a level and a battery take, and drops the others', () => {
@@ -335,6 +379,10 @@ describe('layout', () => {
         }
         for (const [size, [c, r]] of Object.entries(SIZES)) {
             assert.ok(block('SIZES').includes(`${size}: [${c}, ${r}]`), size);
+        }
+        const { SATELLITE_SIZES } = require('../../lib/layout');
+        for (const [size, [c, r]] of Object.entries(SATELLITE_SIZES)) {
+            assert.ok(block('SATELLITE_SIZES').includes(`${size}: [${c}, ${r}]`), `satellite ${size}`);
         }
         const { ITEM_TYPES, EXTRA_STATES, ALERT_TYPES } = require('../../lib/layout');
         const quoted = list => list.map(k => `'${k}'`).join(', ');

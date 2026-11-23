@@ -45,7 +45,7 @@ import {
     alerted,
     cssColor,
     showToggle,
-    SIZES,
+    cellsOf,
     fits,
     freeCell,
     newTile,
@@ -138,7 +138,11 @@ const KIND_KEYS: Record<Kind, string> = {
     trend: 'sd_kind_trend',
     camera: 'sd_kind_camera',
 };
-const SIZE_LABELS: Record<Size, string> = { s: '1 × 1', q: '1 × 2', w: '2 × 1', l: '2 × 2', x: '3 × 2', f: '4 × 3' };
+/** Columns × rows of a size on a display with this grid (f: 2 × 4 on a satellite, 4 × 3 on a tablet) */
+function sizeLabel(size: Size, grid: Grid): string {
+    const [cols, rows] = cellsOf(size, grid) ?? [0, 0];
+    return `${cols} × ${rows}`;
+}
 
 type StateAttr = 'state' | 'state2' | 'state3' | 'state4' | 'state5' | 'bgState';
 
@@ -846,7 +850,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                     x.tile.enabled !== false &&
                     sameSatellite(x.tile.satellite, this.state.satellite) &&
                     Number(x.tile.page) === this.shownPage() &&
-                    !!SIZES[x.tile.size],
+                    !!cellsOf(x.tile.size, this.grid()),
             );
     }
 
@@ -872,7 +876,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             return -1;
         }
         const { col, row } = this.cellAt(e);
-        const target = tileAt(this.tiles(), this.state.satellite, this.shownPage(), col, row);
+        const target = tileAt(this.tiles(), this.state.satellite, this.shownPage(), col, row, this.grid());
         return target === from ? -1 : target;
     }
 
@@ -1238,8 +1242,8 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                 />
             </div>
         );
-        const arc = (d: number, style: React.CSSProperties): React.JSX.Element => {
-            const r = d / 2 - px(4);
+        const arc = (d: number, style: React.CSSProperties, stroke = 5, font = 11): React.JSX.Element => {
+            const r = d / 2 - px(stroke - 1);
             const len = Math.PI * 2 * r * 0.75;
             return (
                 <svg
@@ -1253,7 +1257,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                         r={r}
                         fill="none"
                         stroke={COLOR.track}
-                        strokeWidth={px(5)}
+                        strokeWidth={px(stroke)}
                         strokeDasharray={`${len} ${len * 2}`}
                         transform={`rotate(135 ${d / 2} ${d / 2})`}
                         strokeLinecap="round"
@@ -1264,17 +1268,17 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                         r={r}
                         fill="none"
                         stroke={accent}
-                        strokeWidth={px(5)}
+                        strokeWidth={px(stroke)}
                         strokeDasharray={`${len * frac} ${len * 3}`}
                         transform={`rotate(135 ${d / 2} ${d / 2})`}
                         strokeLinecap="round"
                     />
                     <text
                         x={d / 2}
-                        y={d / 2 + px(4)}
+                        y={d / 2 + px(font * 0.36)}
                         textAnchor="middle"
                         fill="#fff"
-                        fontSize={px(11)}
+                        fontSize={px(font)}
                     >
                         {shown}
                     </text>
@@ -1326,6 +1330,47 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                         <span style={{ fontSize: px(18), fontWeight: 700 }}>+</span>
                     </div>
                 );
+                if (t.size === 'f') {
+                    // the whole page (firmware 2.6.0): a big arc with the temperature, - target + along the bottom
+                    const d = Math.max(px(40), Math.min(w - px(40), h - px(86)));
+                    const stepButton = (sign: string): React.JSX.Element => (
+                        <span
+                            style={{
+                                width: px(56),
+                                height: px(44),
+                                borderRadius: px(8),
+                                background: COLOR.track,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: px(26),
+                                fontWeight: 700,
+                            }}
+                        >
+                            {sign}
+                        </span>
+                    );
+                    return (
+                        <>
+                            {dot}
+                            {label}
+                            {arc(d, { display: 'block', margin: `${px(8)}px auto 0`, flex: 'none' }, 12, 22)}
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    marginTop: 'auto',
+                                    paddingBottom: px(4),
+                                }}
+                            >
+                                {stepButton('−')}
+                                <span style={{ fontSize: px(22) }}>{targetText}</span>
+                                {stepButton('+')}
+                            </div>
+                        </>
+                    );
+                }
                 return t.size === 'l' ? (
                     <>
                         {dot}
@@ -3004,7 +3049,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         const cells: React.JSX.Element[] = [];
         for (let row = 0; row < g.rows; row++) {
             for (let col = 0; col < g.cols; col++) {
-                if (tileAt(tiles, this.state.satellite, this.shownPage(), col, row) !== -1) {
+                if (tileAt(tiles, this.state.satellite, this.shownPage(), col, row, g) !== -1) {
                     continue;
                 }
                 cells.push(
@@ -3085,7 +3130,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                 ) : null}
                 {cells}
                 {this.pageTiles().map(({ tile, index }) => {
-                    const [cols, rows] = SIZES[tile.size];
+                    const [cols, rows] = cellsOf(tile.size, g) ?? [1, 1];
                     const w = px(colX(tile.col + cols, g) - g.gap - colX(tile.col, g));
                     const h = px(rowY(tile.row + rows, g) - g.gap - rowY(tile.row, g));
                     const selected = index === this.state.selected;
@@ -3552,7 +3597,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                     )
                                 }
                             >
-                                {SIZE_LABELS[s]}
+                                {sizeLabel(s, this.gridOf(t.satellite))}
                             </ToggleButton>
                         ))}
                     </ToggleButtonGroup>

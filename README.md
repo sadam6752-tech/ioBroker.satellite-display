@@ -34,12 +34,16 @@ ioBroker states  ──▶  satellite-display  ──▶  satellite (tile pages)
 Each satellite has up to **4 pages**. A page is a grid of 2 columns × 4 rows on the 320 × 240 screen and holds up
 to 8 tiles. Swipe left from the clock to reach them; a page without tiles is skipped.
 
-| Size   | Cells | Pixels    |
-| ------ | ----- | --------- |
-| small  | 1 × 1 | 151 × 52  |
-| square | 1 × 2 | 151 × 111 |
-| wide   | 2 × 1 | 308 × 52  |
-| large  | 2 × 2 | 308 × 111 |
+| Size       | Cells | Pixels    |
+| ---------- | ----- | --------- |
+| small      | 1 × 1 | 151 × 52  |
+| square     | 1 × 2 | 151 × 111 |
+| wide       | 2 × 1 | 308 × 52  |
+| large      | 2 × 2 | 308 × 111 |
+| whole page | 2 × 4 | 308 × 228 |
+
+The whole page is for a thermostat only and needs the satellite firmware 2.6.0 (an older one refuses the tile). On the
+1.54" panel (240 × 240) the cells are 111 px wide, so the whole page is 228 × 228.
 
 | Kind             | Shows                                                                             | Sizes               | A touch                            |
 | ---------------- | --------------------------------------------------------------------------------- | ------------------- | ---------------------------------- |
@@ -50,7 +54,7 @@ to 8 tiles. Swipe left from the clock to reach them; a page without tiles is ski
 | Switch           | name, toggle; the tile lights up when on                                          | small, square, wide | toggles the state                  |
 | Dimmer           | name, toggle, slider, percent                                                     | wide, large         | toggle and slider write the states |
 | Button           | icon, name                                                                        | small, square, wide | writes `true` to the state         |
-| Thermostat       | name, arc with the current temperature, − target +, a dot for the heating relay   | square, large       | − and + write the target           |
+| Thermostat       | name, arc with the current temperature, − target +, a dot for the heating relay   | square, large, page | − and + write the target           |
 | Group            | up to 4 values in one tile, each with its name: rows when tall, columns when flat | all                 | –                                  |
 | Tank             | name, a tank filled along the scale, the value, optional a second amount (litres) | square, large       | –                                  |
 | Battery          | name, a battery filled along the scale, a bolt while charging, optional the power | all                 | –                                  |
@@ -302,6 +306,12 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+- (sadam6752-tech) A thermostat can take the whole page of a satellite (size `f`, 2 × 4 cells, satellite firmware 2.6.0):
+  a big arc with the temperature and − target + along the bottom; the tile editor offers it for a thermostat and draws
+  it, the commands `addTile`/`updateTile` take it. On a tablet `f` stays 4 × 3 cells for every kind
 
 ### 0.4.3 (2026-11-20)
 

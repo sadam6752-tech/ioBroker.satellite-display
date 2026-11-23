@@ -184,6 +184,32 @@ describe('commands on the tiles', () => {
         assert.match(String(taken.answer.error), /no room for a s tile at col 0, row 0/);
     });
 
+    it('puts a thermostat over the whole page (f) on the first empty page, and refuses f for other kinds', async () => {
+        const thermostat = { satellite: 'Gast', type: 'thermostat', size: 'f', state: 'a.0.t', state2: 'a.0.set' };
+        const added = await runCommand('addTile', thermostat, ctx([tile({ col: 1, row: 3 })]));
+        assert.equal(added.answer.ok, true);
+        assert.deepEqual(
+            [added.answer.added.page, added.answer.added.col, added.answer.added.row, added.answer.added.size],
+            [2, 0, 0, 'f'],
+        );
+        const value = await runCommand(
+            'addTile',
+            { satellite: 'Gast', type: 'value', size: 'f', state: 'a.0.x' },
+            ctx(),
+        );
+        assert.match(String(value.answer.error), /comes in the sizes s, q, w, l, not f/);
+        // a page with a whole-page thermostat has no free cell
+        const listed = await runCommand('getTiles', { satellite: 'Gast' }, ctx(added.tiles));
+        assert.equal(listed.answer.freeCells.Gast[2].length, 0);
+        // a square thermostat in row 0 grows to the whole page; one in row 2 cannot
+        const rows = [tile({ type: 'thermostat', size: 'q', state2: 'a.0.set' })];
+        const grown = await runCommand('updateTile', { id: 1, size: 'f' }, ctx(rows));
+        assert.equal(grown.answer.tile.size, 'f');
+        const low = [tile({ type: 'thermostat', size: 'q', row: 2, state2: 'a.0.set' })];
+        const blocked = await runCommand('updateTile', { id: 1, size: 'f' }, ctx(low));
+        assert.ok(blocked.answer.error, 'refused');
+    });
+
     it('lists the tiles and the free cells of a satellite', async () => {
         const { answer } = await runCommand(
             'getTiles',

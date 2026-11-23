@@ -22,6 +22,8 @@ export interface Grid {
     top: number;
     /** A tablet: CSS pixels of its real screen per unit of the editor (the web app sizes by CSS pixels) */
     css?: number;
+    /** A tablet (its sizes have other cells: f is 4 x 3 there, 2 x 4 on a satellite) */
+    tablet?: boolean;
 }
 
 /** A satellite: 2 x 4 cells, 4 pages, 8 tiles a page (the firmware), its screen 320 x 240 */
@@ -91,6 +93,7 @@ export function tabletGrid(row: {
         pages: wholeIn(row.pages, TABLET_LIMITS.pages, TABLET_DEFAULT.pages),
         slots: cols * rows,
         ...tabletScreen(row.width, row.height),
+        tablet: true,
     };
 }
 
@@ -113,7 +116,10 @@ export type Kind =
     | 'trend'
     | 'camera';
 
-/** Cells (columns, rows) of each size; x and f only on a tablet */
+/**
+ * Cells (columns, rows) of each size on a tablet; x only on a tablet. f is the whole page: 4 x 3 on a tablet, 2 x 4 on
+ * a satellite (SATELLITE_SIZES, lib/layout.js cellsOf)
+ */
 export const SIZES: Record<Size, [number, number]> = {
     s: [1, 1],
     q: [1, 2],
@@ -122,6 +128,23 @@ export const SIZES: Record<Size, [number, number]> = {
     x: [3, 2],
     f: [4, 3],
 };
+
+/** Cells of each size on a satellite (the firmware, f since 2.6.0: the whole page, a thermostat only) */
+export const SATELLITE_SIZES: Partial<Record<Size, [number, number]>> = {
+    s: [1, 1],
+    q: [1, 2],
+    w: [2, 1],
+    l: [2, 2],
+    f: [2, 4],
+};
+
+/**
+ * The cells (columns, rows) of a size on a display with this grid, null for an unknown size. A size the satellite
+ * does not have (x) keeps its tablet cells, so that a wrong tile still shows where it is.
+ */
+export function cellsOf(size: Size, grid: Pick<Grid, 'tablet'>): [number, number] | null {
+    return (grid.tablet ? null : SATELLITE_SIZES[size]) ?? SIZES[size] ?? null;
+}
 
 /** The sizes each kind comes in */
 export const KINDS: Record<Kind, Size[]> = {
@@ -132,7 +155,7 @@ export const KINDS: Record<Kind, Size[]> = {
     switch: ['s', 'q', 'w'],
     dimmer: ['w', 'l'],
     button: ['s', 'q', 'w'],
-    thermostat: ['q', 'l'],
+    thermostat: ['q', 'l', 'f'],
     group: ['s', 'q', 'w', 'l'],
     level: ['q', 'l'],
     battery: ['s', 'q', 'w', 'l'],
@@ -345,13 +368,26 @@ export function sameSatellite(a: string, b: string): boolean {
 
 /** True when the size fits the grid at this cell */
 export function inGrid(size: Size, col: number, row: number, grid: Grid): boolean {
-    const [cols, rows] = SIZES[size];
+    const cells = cellsOf(size, grid);
+    if (!cells) {
+        return false;
+    }
+    const [cols, rows] = cells;
     return col >= 0 && row >= 0 && col + cols <= grid.cols && row + rows <= grid.rows;
 }
 
-function overlaps(a: Pick<TileRow, 'size' | 'col' | 'row'>, b: Pick<TileRow, 'size' | 'col' | 'row'>): boolean {
-    const [ac, ar] = SIZES[a.size];
-    const [bc, br] = SIZES[b.size];
+function overlaps(
+    a: Pick<TileRow, 'size' | 'col' | 'row'>,
+    b: Pick<TileRow, 'size' | 'col' | 'row'>,
+    grid: Pick<Grid, 'tablet'>,
+): boolean {
+    const ca = cellsOf(a.size, grid);
+    const cb = cellsOf(b.size, grid);
+    if (!ca || !cb) {
+        return false;
+    }
+    const [ac, ar] = ca;
+    const [bc, br] = cb;
     return a.col < b.col + bc && b.col < a.col + ac && a.row < b.row + br && b.row < a.row + ar;
 }
 
@@ -387,8 +423,7 @@ export function fits(
             t.enabled !== false &&
             sameSatellite(t.satellite, satellite) &&
             Number(t.page) === page &&
-            SIZES[t.size] &&
-            overlaps(t, { size, col, row }),
+            overlaps(t, { size, col, row }, grid),
     );
 }
 
@@ -404,7 +439,7 @@ export function swapPlaces(
 ): { a: { col: number; row: number }; b: { col: number; row: number } } | null {
     const ta = tiles[a];
     const tb = tiles[b];
-    if (!ta || !tb || a === b || !SIZES[ta.size] || !SIZES[tb.size]) {
+    if (!ta || !tb || a === b || !cellsOf(ta.size, grid) || !cellsOf(tb.size, grid)) {
         return null;
     }
     const na = { col: tb.col, row: tb.row };
@@ -413,7 +448,7 @@ export function swapPlaces(
     if (
         !fits(tiles, ta.satellite, page, ta.size, na.col, na.row, [a, b], grid) ||
         !fits(tiles, tb.satellite, page, tb.size, nb.col, nb.row, [a, b], grid) ||
-        overlaps({ size: ta.size, ...na }, { size: tb.size, ...nb })
+        overlaps({ size: ta.size, ...na }, { size: tb.size, ...nb }, grid)
     ) {
         return null;
     }
@@ -440,14 +475,20 @@ export function freeCell(
 }
 
 /** The index of the enabled tile that covers this cell, or -1 */
-export function tileAt(tiles: TileRow[], satellite: string, page: number, col: number, row: number): number {
+export function tileAt(
+    tiles: TileRow[],
+    satellite: string,
+    page: number,
+    col: number,
+    row: number,
+    grid: Pick<Grid, 'tablet'>,
+): number {
     return tiles.findIndex(
         t =>
             t.enabled !== false &&
             sameSatellite(t.satellite, satellite) &&
             Number(t.page) === page &&
-            SIZES[t.size] &&
-            overlaps(t, { size: 's', col, row }),
+            overlaps(t, { size: 's', col, row }, grid),
     );
 }
 
