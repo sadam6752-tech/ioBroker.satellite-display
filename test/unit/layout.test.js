@@ -130,7 +130,7 @@ describe('layout', () => {
         assert.match(problems[7], /no state chosen/);
     });
 
-    it('takes a thermostat over the whole page of a satellite (size f, 2 x 4), no other type', () => {
+    it('takes a thermostat over the whole page of a satellite (f, 2 x 4) or one column of it (t, 1 x 4), no other type', () => {
         const problems = [];
         const sats = normalizeSatellites(SATS, problems);
         const thermostat = { type: 'thermostat', size: 'f', state: 'a.0.t', state2: 'a.0.set' };
@@ -141,6 +141,11 @@ describe('layout', () => {
                 row({ ...thermostat, page: 2, row: 1 }), // 2 x 4 from row 1 leaves the grid
                 row({ type: 'value', size: 'f', page: 3 }), // only a thermostat comes in f
                 row({ ...thermostat, satellite: 'Arbeit Zimmer', page: 4 }),
+                row({ ...thermostat, satellite: 'Arbeit Zimmer', page: 3, size: 't' }), // one column (2.6.2)
+                row({ ...thermostat, satellite: 'Arbeit Zimmer', page: 3, col: 1, size: 't' }), // and the other one
+                row({ ...thermostat, satellite: 'Arbeit Zimmer', page: 2, row: 1, size: 't' }), // 1 x 4 from row 1
+                row({ ...thermostat, satellite: 'Arbeit Zimmer', page: 2, size: 'w' }), // no wide thermostat
+                row({ type: 'value', satellite: 'Arbeit Zimmer', page: 1, size: 't' }), // only a thermostat is tall
             ],
             sats,
             problems,
@@ -150,17 +155,23 @@ describe('layout', () => {
             [
                 ['gast', 1, 'f', 0, 0],
                 ['arbeit_zimmer', 4, 'f', 0, 0],
+                ['arbeit_zimmer', 3, 't', 0, 0],
+                ['arbeit_zimmer', 3, 't', 1, 0],
             ],
         );
-        assert.equal(problems.length, 3);
+        assert.equal(problems.length, 6);
         assert.match(problems[0], /^Tile 2: covers tile 1/);
         assert.match(problems[1], /^Tile 3: does not fit/);
         assert.match(problems[2], /^Tile 4: a value tile comes in the sizes s, q, w, l, not "f"/);
+        assert.match(problems[3], /^Tile 8: does not fit/);
+        assert.match(problems[4], /^Tile 9: a thermostat tile comes in the sizes q, t, l, f, not "w"/);
+        assert.match(problems[5], /^Tile 10: a value tile comes in the sizes s, q, w, l, not "t"/);
     });
 
     it('gives f the cells of the display: 2 x 4 on a satellite, 4 x 3 on a tablet', () => {
         assert.deepEqual(cellsOf('f', 'satellite'), [2, 4]);
         assert.deepEqual(cellsOf('f', 'tablet'), [4, 3]);
+        assert.deepEqual(cellsOf('t', 'satellite'), [1, 4]);
         assert.deepEqual(cellsOf('l', 'satellite'), [2, 2]);
         assert.deepEqual(cellsOf('x', 'tablet'), [3, 2]);
         assert.equal(cellsOf('z', 'satellite'), null);
@@ -221,7 +232,7 @@ describe('layout', () => {
         );
         assert.equal(problems.length, 2);
         assert.match(problems[0], /^Tile 3: a thermostat needs the state of its target temperature/);
-        assert.match(problems[1], /^Tile 4: a thermostat tile comes in the sizes q, l/);
+        assert.match(problems[1], /^Tile 4: a thermostat tile comes in the sizes q, t, l, f, not "s"/);
         assert.deepEqual(
             tiles.map(t => [t.state2, t.state3, t.step]),
             [

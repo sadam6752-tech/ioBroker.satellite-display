@@ -146,7 +146,7 @@ describe('tablets: settings', () => {
         assert.match(problems[0], /Tile 4: a chart tile comes in the sizes s, w, l/);
     });
 
-    it('keep f at 4 x 3 for every type, while f on a satellite is a 2 x 4 thermostat', () => {
+    it('keep f at 4 x 3 for every type and have no t, while f on a satellite is a 2 x 4 thermostat', () => {
         const displays = normalizeDisplays({ satellites: SATS, tablets: TABLETS, pwaEnabled: true }, []);
         const problems = [];
         const tiles = normalizeTiles(
@@ -154,6 +154,7 @@ describe('tablets: settings', () => {
                 { satellite: 'Flur', page: 1, col: 0, row: 0, size: 'f', type: 'value', state: 'a.0.x' },
                 { satellite: 'Flur', page: 2, col: 0, row: 1, size: 'f', type: 'value', state: 'a.0.x' },
                 { satellite: 'Gast', page: 1, col: 0, row: 0, size: 'f', type: 'thermostat', state: 'a', state2: 'b' },
+                { satellite: 'Flur', page: 2, col: 0, row: 0, size: 't', type: 'thermostat', state: 'a', state2: 'b' },
             ],
             displays,
             problems,
@@ -165,8 +166,10 @@ describe('tablets: settings', () => {
                 ['gast', 1, 'f'],
             ],
         );
-        assert.equal(problems.length, 1);
+        assert.equal(problems.length, 2);
         assert.match(problems[0], /^Tile 2: does not fit/);
+        // t is a size of the satellite firmware only
+        assert.match(problems[1], /^Tile 4: a thermostat tile comes in the sizes s, q, w, l, x, f, not "t"/);
     });
 
     it('hold as many tiles a page as they have cells', () => {

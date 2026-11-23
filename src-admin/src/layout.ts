@@ -97,7 +97,7 @@ export function tabletGrid(row: {
     };
 }
 
-export type Size = 's' | 'q' | 'w' | 'l' | 'x' | 'f';
+export type Size = 's' | 'q' | 'w' | 'l' | 'x' | 't' | 'f';
 export type Kind =
     | 'value'
     | 'gauge'
@@ -117,8 +117,8 @@ export type Kind =
     | 'camera';
 
 /**
- * Cells (columns, rows) of each size on a tablet; x only on a tablet. f is the whole page: 4 x 3 on a tablet, 2 x 4 on
- * a satellite (SATELLITE_SIZES, lib/layout.js cellsOf)
+ * Cells (columns, rows) of each size on a tablet; x only on a tablet, t only on a satellite. f is the whole page: 4 x 3
+ * on a tablet, 2 x 4 on a satellite (SATELLITE_SIZES, lib/layout.js cellsOf)
  */
 export const SIZES: Record<Size, [number, number]> = {
     s: [1, 1],
@@ -126,15 +126,17 @@ export const SIZES: Record<Size, [number, number]> = {
     w: [2, 1],
     l: [2, 2],
     x: [3, 2],
+    t: [1, 4],
     f: [4, 3],
 };
 
-/** Cells of each size on a satellite (the firmware, f since 2.6.0: the whole page, a thermostat only) */
+/** Cells of each size on a satellite (the firmware): f (2.6.0) the whole page, t (2.6.2) one column of it, thermostats */
 export const SATELLITE_SIZES: Partial<Record<Size, [number, number]>> = {
     s: [1, 1],
     q: [1, 2],
     w: [2, 1],
     l: [2, 2],
+    t: [1, 4],
     f: [2, 4],
 };
 
@@ -155,7 +157,7 @@ export const KINDS: Record<Kind, Size[]> = {
     switch: ['s', 'q', 'w'],
     dimmer: ['w', 'l'],
     button: ['s', 'q', 'w'],
-    thermostat: ['q', 'l', 'f'],
+    thermostat: ['q', 't', 'l', 'f'],
     group: ['s', 'q', 'w', 'l'],
     level: ['q', 'l'],
     battery: ['s', 'q', 'w', 'l'],

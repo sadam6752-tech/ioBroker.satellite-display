@@ -40,25 +40,27 @@ to 8 tiles. Swipe left from the clock to reach them; a page without tiles is ski
 | square     | 1 × 2 | 151 × 111 |
 | wide       | 2 × 1 | 308 × 52  |
 | large      | 2 × 2 | 308 × 111 |
+| tall       | 1 × 4 | 151 × 228 |
 | whole page | 2 × 4 | 308 × 228 |
 
-The whole page is for a thermostat only and needs the satellite firmware 2.6.0 (an older one refuses the tile). On the
-1.54" panel (240 × 240) the cells are 111 px wide, so the whole page is 228 × 228.
+Tall and whole page are for a thermostat only and need the satellite firmware 2.6.2 (tall) and 2.6.0 (whole page); an
+older one refuses the tile. On the 1.54" panel (240 × 240) the cells are 111 px wide, so a tall tile is 111 × 228 and
+the whole page 228 × 228.
 
-| Kind             | Shows                                                                             | Sizes               | A touch                            |
-| ---------------- | --------------------------------------------------------------------------------- | ------------------- | ---------------------------------- |
-| Value            | name, number with unit, or a text                                                 | all                 | –                                  |
-| Gauge            | name, arc from the scale start to its end, number                                 | square, large       | –                                  |
-| Value with bar   | name, number, bar along the scale                                                 | all                 | –                                  |
-| Value with chart | name, number, line of the last 60 values                                          | small, wide, large  | –                                  |
-| Switch           | name, toggle; the tile lights up when on                                          | small, square, wide | toggles the state                  |
-| Dimmer           | name, toggle, slider, percent                                                     | wide, large         | toggle and slider write the states |
-| Button           | icon, name                                                                        | small, square, wide | writes `true` to the state         |
-| Thermostat       | name, arc with the current temperature, − target +, a dot for the heating relay   | square, large, page | − and + write the target           |
-| Group            | up to 4 values in one tile, each with its name: rows when tall, columns when flat | all                 | –                                  |
-| Tank             | name, a tank filled along the scale, the value, optional a second amount (litres) | square, large       | –                                  |
-| Battery          | name, a battery filled along the scale, a bolt while charging, optional the power | all                 | –                                  |
-| Status           | icon, name, a value or a text; the icon and the tile light up while on            | small, square, wide | –                                  |
+| Kind             | Shows                                                                             | Sizes                     | A touch                            |
+| ---------------- | --------------------------------------------------------------------------------- | ------------------------- | ---------------------------------- |
+| Value            | name, number with unit, or a text                                                 | all                       | –                                  |
+| Gauge            | name, arc from the scale start to its end, number                                 | square, large             | –                                  |
+| Value with bar   | name, number, bar along the scale                                                 | all                       | –                                  |
+| Value with chart | name, number, line of the last 60 values                                          | small, wide, large        | –                                  |
+| Switch           | name, toggle; the tile lights up when on                                          | small, square, wide       | toggles the state                  |
+| Dimmer           | name, toggle, slider, percent                                                     | wide, large               | toggle and slider write the states |
+| Button           | icon, name                                                                        | small, square, wide       | writes `true` to the state         |
+| Thermostat       | name, arc with the current temperature, − target +, a dot for the heating relay   | square, tall, large, page | − and + write the target           |
+| Group            | up to 4 values in one tile, each with its name: rows when tall, columns when flat | all                       | –                                  |
+| Tank             | name, a tank filled along the scale, the value, optional a second amount (litres) | square, large             | –                                  |
+| Battery          | name, a battery filled along the scale, a bolt while charging, optional the power | all                       | –                                  |
+| Status           | icon, name, a value or a text; the icon and the tile light up while on            | small, square, wide       | –                                  |
 
 Four more kinds are drawn by **tablets only** (the web app and the ioBroker Visu app; a satellite leaves them out
 with a warning). A tablet has two more sizes for them: 3 × 2 and 4 × 3 cells.
@@ -248,7 +250,7 @@ names what to ask the user (which satellite, which page when all are full).
 
 | Command        | Message                                                                                      | Does                                                                                                                                                  |
 | -------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `help`         | –                                                                                            | describes the commands, kinds, sizes, icons and the grid: `{help, commands: [{command, write}]}`, `write` = changes the tiles                          |
+| `help`         | –                                                                                            | describes the commands, kinds, sizes, icons and the grid: `{help, commands: [{command, write}]}`, `write` = changes the tiles                         |
 | `getTiles`     | `{satellite?}`                                                                               | lists the satellites and tablets, their grids, their tiles (with an `id`) and the free cells                                                          |
 | `addTile`      | `{satellite, type, state, size?, icon?, label?, unit?, state2?, state3?, page?, col?, row?}` | adds a tile, without a place in the first free cell; answers where it went (a group also takes `state4`, `title`, `label2`-`label4`, `unit2`-`unit4`) |
 | `updateTile`   | `{id, ...fields}`                                                                            | changes a tile                                                                                                                                        |
@@ -312,6 +314,8 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 - (sadam6752-tech) A thermostat can take the whole page of a satellite (size `f`, 2 × 4 cells, satellite firmware 2.6.0):
   a big arc with the temperature and − target + along the bottom; the tile editor offers it for a thermostat and draws
   it, the commands `addTile`/`updateTile` take it. On a tablet `f` stays 4 × 3 cells for every kind
+- (sadam6752-tech) A thermostat also comes tall (size `t`, 1 × 4 cells: one column over the whole page, satellite
+  firmware 2.6.2): the arc with the temperature at the top, the target under it, − and + below
 
 ### 0.4.3 (2026-11-20)
 

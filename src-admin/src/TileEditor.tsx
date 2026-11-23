@@ -1330,6 +1330,40 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                         <span style={{ fontSize: px(18), fontWeight: 700 }}>+</span>
                     </div>
                 );
+                if (t.size === 't') {
+                    // one column over the whole page (firmware 2.6.2): the arc at the top, the target under it, - and +
+                    // side by side below
+                    const d = Math.min(w - px(16), px(100));
+                    const stepButton = (sign: string): React.JSX.Element => (
+                        <span
+                            style={{
+                                flex: 1,
+                                height: px(44),
+                                borderRadius: px(8),
+                                background: COLOR.track,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: px(24),
+                                fontWeight: 700,
+                            }}
+                        >
+                            {sign}
+                        </span>
+                    );
+                    return (
+                        <>
+                            {dot}
+                            {label}
+                            {arc(d, { display: 'block', margin: `${px(8)}px auto 0`, flex: 'none' }, 10, 16)}
+                            <div style={{ textAlign: 'center', fontSize: px(16), marginTop: px(6) }}>{targetText}</div>
+                            <div style={{ display: 'flex', gap: px(6), marginTop: 'auto', paddingBottom: px(2) }}>
+                                {stepButton('−')}
+                                {stepButton('+')}
+                            </div>
+                        </>
+                    );
+                }
                 if (t.size === 'f') {
                     // the whole page (firmware 2.6.0): a big arc with the temperature, - target + along the bottom
                     const d = Math.max(px(40), Math.min(w - px(40), h - px(86)));

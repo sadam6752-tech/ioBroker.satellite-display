@@ -208,6 +208,14 @@ describe('commands on the tiles', () => {
         const low = [tile({ type: 'thermostat', size: 'q', row: 2, state2: 'a.0.set' })];
         const blocked = await runCommand('updateTile', { id: 1, size: 'f' }, ctx(low));
         assert.ok(blocked.answer.error, 'refused');
+        // a tall thermostat (t, 1 x 4) takes a free column; a wide one does not exist
+        const tall = await runCommand('addTile', { ...thermostat, size: 't' }, ctx([tile({ col: 0, row: 2 })]));
+        assert.deepEqual(
+            [tall.answer.added.page, tall.answer.added.col, tall.answer.added.row, tall.answer.added.size],
+            [1, 1, 0, 't'],
+        );
+        const wide = await runCommand('addTile', { ...thermostat, size: 'w' }, ctx());
+        assert.match(String(wide.answer.error), /comes in the sizes q, t, l, f, not w/);
     });
 
     it('lists the tiles and the free cells of a satellite', async () => {
