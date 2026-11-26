@@ -56,6 +56,7 @@ function fakeAdapter(over = {}) {
         getForeignStateAsync: async () => ({ val: true, ack: true }),
         firmwareOf: () => null,
         installFirmware: () => false,
+        assistantVolumeOf: async () => undefined,
         ...over,
     };
     return app;
@@ -144,6 +145,47 @@ describe('device manager', () => {
         const resend = list[0].actions.find((/** @type {any} */ a) => a.id === 'resend');
         assert.deepEqual(await resend.handler('satellites.kitchen', {}), { refresh: 'none' });
         assert.deepEqual(app.written.at(-1), ['satellites.kitchen.resend', { val: true, ack: false }]);
+    });
+
+    it('a voice satellite: the volume slider writes the player of ioBroker.assistant, 0…100 % as 0…1', async () => {
+        const player = 'assistant.0.satellites.Kitchen.controls.media_player.volume';
+        const app = fakeAdapter({
+            assistantVolumeOf: async (/** @type {any} */ s) => (s.kind === 'satellite' ? player : undefined),
+            getForeignStateAsync: async () => ({ val: 0.45, ack: true, ts: 1 }),
+        });
+        const dm = new SatelliteDeviceManagement(app);
+        const list = await cards(dm);
+        const volume = list[0].controls.find((/** @type {any} */ c) => c.id === 'volume');
+        assert.equal(volume.stateId, player);
+        assert.equal(volume.max, 100);
+        assert.equal((await volume.getStateHandler()).val, 45);
+        const shown = await volume.handler('satellites.kitchen', 'volume', 60, {});
+        assert.deepEqual(app.written.at(-1), [player, { val: 0.6, ack: false }]);
+        assert.equal(shown.val, 45); // what the state says afterwards (the fake does not change)
+        // the brightness of the same card is not scaled
+        const brightness = list[0].controls.find((/** @type {any} */ c) => c.id === 'brightness');
+        await brightness.handler('satellites.kitchen', 'brightness', 40, {});
+        assert.deepEqual(app.written.at(-1), [
+            'satellite-display.0.satellites.kitchen.brightness',
+            { val: 40, ack: false },
+        ]);
+        // a tablet has no player of the assistant
+        assert.ok(!list[1].controls.some((/** @type {any} */ c) => c.id === 'volume'));
+    });
+
+    it('a display with its own player keeps its volume state, the assistant is not asked', async () => {
+        let asked = 0;
+        const app = fakeAdapter({
+            getObjectAsync: async (/** @type {string} */ id) => (id === 'satellites.kitchen.media.volume' ? {} : null),
+            assistantVolumeOf: async () => {
+                asked++;
+                return 'assistant.0.x.volume';
+            },
+        });
+        const list = await cards(new SatelliteDeviceManagement(app));
+        const volume = list[0].controls.find((/** @type {any} */ c) => c.id === 'volume');
+        assert.equal(volume.stateId, 'satellite-display.0.satellites.kitchen.media.volume');
+        assert.equal(asked, 0);
     });
 
     it('link of a tablet: a dialog with the QR code; a new link shows the new one', async () => {

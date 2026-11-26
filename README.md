@@ -234,7 +234,9 @@ Satellites and Tablets: add, remove and rename displays there. The tab works whi
 
 - **Card**: the connection (from `connected`), the address of a satellite, the kind of display.
 - **Controls** (the button with the sliders on the card), only what the display has: the screen lock (with a PIN), the
-  brightness of the display and the volume of the player.
+  brightness of the display and the volume of the player. On a voice satellite the player belongs to
+  ioBroker.assistant: the volume slider writes the volume of that player (found by the address of the satellite,
+  shown as 0-100 %).
 - **Actions**: "Send the tiles again" on every card; on a tablet, while the web app runs, "Link and QR code" and "New
   link" (asks first; the old link stops working at once, also on the home screen of the tablet).
 - **Firmware update** (satellites with a release build of the firmware, which has the update entity "Firmware"): the
@@ -332,6 +334,8 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 - (sadam6752-tech) Firmware update from the tab Devices: the card of a satellite shows its firmware version and a newer
   one from the release pages; "Update the firmware" starts the installation on the satellite and follows it until the
   satellite is back. New states `satellites.<name>.firmware.*` (version, offered version, progress, check, install)
+- (sadam6752-tech) The card of a voice satellite has a volume slider too: it sets the volume of its player in
+  ioBroker.assistant
 
 ### 0.4.3 (2026-11-20)
 

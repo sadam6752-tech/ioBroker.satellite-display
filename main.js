@@ -1116,6 +1116,35 @@ class SatelliteDisplay extends utils.Adapter {
         return true;
     }
 
+    /**
+     * The player of a voice satellite belongs to ioBroker.assistant (the firmware has no media_play for this
+     * adapter). Its device there names the address of the satellite (native.esphome); the volume state of its player
+     * (role level.volume, 0…1) is what the volume slider of the card writes.
+     *
+     * @param {SatelliteConfig} sat - Satellite
+     * @returns {Promise<string | undefined>} Id of that state, undefined when there is none
+     */
+    async assistantVolumeOf(sat) {
+        if (!sat.host) {
+            return undefined;
+        }
+        try {
+            const devices = await this.getForeignObjectsAsync('assistant.*.satellites.*', 'device');
+            const device = Object.values(devices || {}).find(d => d?.native?.esphome === sat.host);
+            if (!device) {
+                return undefined;
+            }
+            const states = await this.getForeignObjectsAsync(`${device._id}.controls.*`, 'state');
+            return Object.values(states || {})
+                .filter(o => o?.common?.role === 'level.volume' && o.common.write !== false)
+                .map(o => o._id)
+                .sort()[0];
+        } catch (e) {
+            this.log.debug(`${sat.name}: no player of ioBroker.assistant found: ${e.message}`);
+            return undefined;
+        }
+    }
+
     /** @param {SatelliteConfig} sat - The satellite that connected */
     async onSatelliteReady(sat) {
         this.log.info(`${this.labelOf(sat)} connected`);
