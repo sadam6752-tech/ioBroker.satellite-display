@@ -57,6 +57,9 @@ import {
     tabletGrid,
     sizesOf,
     displayId,
+    drawnRadio,
+    RADIO_ACTIONS,
+    type RadioAction,
     type Grid,
     type Kind,
     type Size,
@@ -137,7 +140,37 @@ const KIND_KEYS: Record<Kind, string> = {
     flow: 'sd_kind_flow',
     trend: 'sd_kind_trend',
     camera: 'sd_kind_camera',
+    radio: 'sd_kind_radio',
 };
+
+/** The names of the functions of a radio tile */
+const RADIO_ACTION_KEYS: Record<RadioAction, string> = {
+    station: 'sd_radio_a_station',
+    now: 'sd_radio_a_now',
+    stop: 'sd_radio_a_stop',
+    next: 'sd_radio_a_next',
+    prev: 'sd_radio_a_prev',
+    sleep: 'sd_radio_a_sleep',
+    volUp: 'sd_radio_a_volup',
+    volDown: 'sd_radio_a_voldown',
+};
+
+/** A station or a player of ioBroker.webradio (webradio.N.info.stations / info.targets) */
+interface RadioItem {
+    id: string;
+    name: string;
+}
+
+function radioItems(val: unknown): RadioItem[] {
+    try {
+        const list: unknown = typeof val === 'string' ? JSON.parse(val) : val;
+        return (Array.isArray(list) ? list : [])
+            .filter((x): x is { id: string; name?: string } => !!x && typeof (x as { id?: unknown }).id === 'string')
+            .map(x => ({ id: x.id, name: String(x.name || x.id) }));
+    } catch {
+        return [];
+    }
+}
 /** Columns × rows of a size on a display with this grid (f: 2 × 4 on a satellite, 4 × 3 on a tablet) */
 function sizeLabel(size: Size, grid: Grid): string {
     const [cols, rows] = cellsOf(size, grid) ?? [0, 0];
@@ -257,6 +290,10 @@ interface TileEditorState extends ConfigGenericState {
     histories: Record<string, number[]>;
     /** Preview on the satellite: running, and what the adapter answered */
     preview: { on: boolean; text: string; error: boolean };
+    /** Stations and players of each webradio instance a radio tile uses; null = could not be read */
+    radio: Record<string, { stations: RadioItem[]; targets: RadioItem[] } | null>;
+    /** The installed instances of ioBroker.webradio (webradio.0, …), null = not read yet */
+    radioInstances: string[] | null;
 }
 
 class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
@@ -279,6 +316,8 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             commons: {},
             histories: {},
             preview: { on: false, text: '', error: false },
+            radio: {},
+            radioInstances: null,
         };
     }
 
@@ -606,6 +645,7 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
 
     /** Current values and names of the states of the visible page, for the preview */
     async readStates(): Promise<void> {
+        await this.readRadio();
         const socket = this.props.oContext.socket;
         const ids = new Set<string>();
         for (const t of this.pageTiles()) {
@@ -649,6 +689,62 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             commons: { ...s.commons, ...commons },
         }));
         await this.readHistories();
+    }
+
+    /** The stations and players of the webradio instances the radio tiles use (for their fields and their names) */
+    async readRadio(also?: string): Promise<void> {
+        const instances = new Set(
+            this.tiles()
+                .filter(t => t.type === 'radio')
+                .map(t => String(t.radioInstance || 'webradio.0').trim()),
+        );
+        if (also) {
+            instances.add(also);
+        }
+        const socket = this.props.oContext.socket;
+        if (instances.size && this.state.radioInstances === null) {
+            try {
+                const objs = await socket.getAdapterInstances('webradio', true);
+                const ids = (objs || []).map(o => o._id.replace(/^system\.adapter\./, '')).sort();
+                this.setState({ radioInstances: ids });
+            } catch {
+                this.setState({ radioInstances: [] });
+            }
+        }
+        const read: TileEditorState['radio'] = {};
+        for (const instance of instances) {
+            if (instance in this.state.radio) {
+                continue;
+            }
+            try {
+                const stations = await socket.getState(`${instance}.info.stations`);
+                const targets = await socket.getState(`${instance}.info.targets`);
+                read[instance] =
+                    stations || targets
+                        ? { stations: radioItems(stations?.val), targets: radioItems(targets?.val) }
+                        : null;
+            } catch {
+                read[instance] = null;
+            }
+        }
+        if (Object.keys(read).length) {
+            this.setState(s => ({ radio: { ...s.radio, ...read } }));
+        }
+    }
+
+    /** The name a radio tile shows when it has none of its own: its station, or what it does */
+    radioName(t: TileRow): string {
+        const action = t.radioAction || 'station';
+        if (action === 'station') {
+            const list = this.state.radio[String(t.radioInstance || 'webradio.0').trim()];
+            return list?.stations.find(s => s.id === t.station)?.name || t.station || '';
+        }
+        return I18n.t(RADIO_ACTION_KEYS[action]);
+    }
+
+    /** A tile as the display draws it: a radio tile as the kind of its action */
+    drawn(t: TileRow): TileRow {
+        return t.type === 'radio' ? drawnRadio(t, this.radioName(t)) : t;
     }
 
     /** The history of the chart tiles of the page from the history adapter of the settings (as the satellite gets it) */
@@ -1005,7 +1101,11 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
             state3: EXTRA_STATES.state3.includes(type) ? t.state3 || '' : '',
             state4: EXTRA_STATES.state4.includes(type) ? t.state4 || '' : '',
             state5: EXTRA_STATES.state5.includes(type) ? t.state5 || '' : '',
+            ...(type === 'radio' ? { radioAction: t.radioAction || 'station' } : {}),
         });
+        if (type === 'radio') {
+            void this.readRadio(String(t.radioInstance || 'webradio.0').trim());
+        }
     }
 
     changePage(index: number, page: number): void {
@@ -3225,7 +3325,9 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                                 userSelect: 'none',
                             }}
                         >
-                            {tablet ? this.renderTabletFace(tile, w, h) : this.renderTileFace(tile, w, h)}
+                            {tablet
+                                ? this.renderTabletFace(this.drawn(tile), w, h)
+                                : this.renderTileFace(this.drawn(tile), w, h)}
                         </div>
                     );
                 })}
@@ -3490,6 +3592,94 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
         );
     }
 
+    /** A tile of ioBroker.webradio: what it does, its station, its player and the webradio instance */
+    renderRadioFields(index: number, t: TileRow): React.JSX.Element {
+        const action = t.radioAction || 'station';
+        const instance = String(t.radioInstance || 'webradio.0').trim();
+        const lists = this.state.radio[instance];
+        const tablet = this.isTablet(t.satellite);
+        const withCurrent = (items: RadioItem[], id: string | undefined): RadioItem[] =>
+            id && !items.some(x => x.id === id) ? [...items, { id, name: id }] : items;
+        return (
+            <>
+                <TextField
+                    select
+                    variant="standard"
+                    label={I18n.t('sd_radio_action')}
+                    value={action}
+                    onChange={e => this.update(index, { radioAction: e.target.value as RadioAction })}
+                >
+                    {(Object.keys(RADIO_ACTIONS) as RadioAction[]).map(a => (
+                        <MenuItem
+                            key={a}
+                            value={a}
+                        >
+                            {I18n.t(RADIO_ACTION_KEYS[a])}
+                        </MenuItem>
+                    ))}
+                </TextField>
+                {action === 'station' ? (
+                    <TextField
+                        select
+                        variant="standard"
+                        label={I18n.t('sd_radio_station')}
+                        value={t.station || ''}
+                        onChange={e => this.update(index, { station: e.target.value })}
+                    >
+                        {withCurrent(lists?.stations ?? [], t.station).map(s => (
+                            <MenuItem
+                                key={s.id}
+                                value={s.id}
+                            >
+                                {s.name}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                ) : null}
+                <TextField
+                    select
+                    variant="standard"
+                    label={I18n.t('sd_radio_player')}
+                    value={t.radioTarget || ''}
+                    helperText={tablet ? I18n.t('sd_radio_player_tablet') : I18n.t('sd_radio_player_hint')}
+                    onChange={e => this.update(index, { radioTarget: e.target.value })}
+                >
+                    {tablet ? null : <MenuItem value="">{I18n.t('sd_radio_this_display')}</MenuItem>}
+                    {withCurrent(lists?.targets ?? [], t.radioTarget).map(p => (
+                        <MenuItem
+                            key={p.id}
+                            value={p.id}
+                        >
+                            {p.name}
+                        </MenuItem>
+                    ))}
+                </TextField>
+                <TextField
+                    select
+                    variant="standard"
+                    label={I18n.t('sd_radio_instance')}
+                    value={instance}
+                    helperText={lists === null ? I18n.t('sd_radio_no_list', instance) : ''}
+                    error={lists === null}
+                    onChange={e => {
+                        const value = e.target.value;
+                        this.update(index, { radioInstance: value === 'webradio.0' ? '' : value });
+                        void this.readRadio(value);
+                    }}
+                >
+                    {[...new Set([...(this.state.radioInstances ?? []), instance])].sort().map(id => (
+                        <MenuItem
+                            key={id}
+                            value={id}
+                        >
+                            {id}
+                        </MenuItem>
+                    ))}
+                </TextField>
+            </>
+        );
+    }
+
     /** The second state of a level (its amount) or a battery (its power) with its unit in one line */
     renderSecondAmount(index: number, t: TileRow, label: string): React.JSX.Element {
         return (
@@ -3640,7 +3830,8 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                 {t.type === 'flow' ? this.renderFlowParts(index, t) : null}
                 {t.type === 'map' ? this.renderMapFields(index, t) : null}
                 {t.type === 'camera' ? this.renderCameraFields(index, t) : null}
-                {['group', 'trend', 'flow', 'map', 'camera'].includes(t.type)
+                {t.type === 'radio' ? this.renderRadioFields(index, t) : null}
+                {['group', 'trend', 'flow', 'map', 'camera', 'radio'].includes(t.type)
                     ? null
                     : this.renderStateField(index, t, 'state', stateLabel)}
                 {t.type === 'dimmer' ? this.renderStateField(index, t, 'state2', 'sd_onoff_state') : null}
@@ -3654,12 +3845,13 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                         variant="standard"
                         sx={{ flex: 2 }}
                         label={I18n.t('sd_label')}
-                        placeholder={this.state.names[t.state] || ''}
+                        placeholder={t.type === 'radio' ? this.radioName(t) : this.state.names[t.state] || ''}
                         value={t.label || ''}
                         slotProps={{ htmlInput: { maxLength: 24 } }}
                         onChange={e => this.update(index, { label: e.target.value })}
                     />
                     {t.type !== 'dimmer' &&
+                    t.type !== 'radio' &&
                     t.type !== 'button' &&
                     t.type !== 'switch' &&
                     t.type !== 'map' &&
@@ -3675,7 +3867,11 @@ class TileEditor extends ConfigGeneric<ConfigGenericProps, TileEditorState> {
                     ) : null}
                 </Box>
                 {t.type !== 'group' &&
-                (t.type === 'button' || t.type === 'switch' || t.type === 'status' || t.size !== 'q') ? (
+                (t.type === 'button' ||
+                    t.type === 'switch' ||
+                    t.type === 'status' ||
+                    t.type === 'radio' ||
+                    t.size !== 'q') ? (
                     <TextField
                         select
                         variant="standard"

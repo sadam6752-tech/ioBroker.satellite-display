@@ -47,6 +47,16 @@ const {
     mediaStateOf,
     showsChange,
 } = require('./lib/values');
+const {
+    RADIO_ACTIONS,
+    VOLUME_STEP,
+    radioLabel,
+    playerOf,
+    nextSleep,
+    stepVolume,
+    stationNames,
+    nowText,
+} = require('./lib/radio');
 
 /** After a touch the tile shows the real state again after this time (when the device did not follow) */
 const RESYNC_MS = 3000;
@@ -76,6 +86,7 @@ const DEFAULT_PWA_PORT = 8094;
  *   battery (tile_item)
  * @property {Map<string, Partial<ioBroker.StateCommon>>} commons - Common part of the object of each state of an item
  * @property {number[]} lastItemColors - Colour last sent with tile_item_color, by index
+ * @property {{playing: boolean, station: string, title: string}} [radioNow] - What the player of a radio tile does
  */
 
 /**
@@ -112,6 +123,10 @@ class SatelliteDisplay extends utils.Adapter {
         this.bound = [];
         /** @type {Map<string, Bound[]>} state id → tiles that show it */
         this.byState = new Map();
+        /** @type {Map<string, Map<string, string>>} webradio instance → its station names ("now playing" tiles) */
+        this.radioNames = new Map();
+        /** @type {Set<string>} the subscribed webradio.N.info.stations */
+        this.radioStationStates = new Set();
         /** @type {Set<ioBroker.Timeout | undefined>} */
         this.timers = new Set();
         this.lang = 'en';
@@ -157,7 +172,7 @@ class SatelliteDisplay extends utils.Adapter {
         if (await this.followRenames(displays)) {
             return; // the tiles follow a rename: the settings are saved and the instance starts again
         }
-        const tiles = normalizeTiles(this.config.tiles, displays, problems);
+        const tiles = await this.resolveRadio(normalizeTiles(this.config.tiles, displays, problems), displays, true);
         for (const p of problems) {
             this.log.warn(p);
         }
@@ -179,6 +194,7 @@ class SatelliteDisplay extends utils.Adapter {
         await this.createObjects(displays);
         this.dataDir = utils.getAbsoluteInstanceDataDir(this);
         await this.tabletTiles.start();
+        await this.readRadioNames(tiles);
         await this.bindTiles(tiles);
         await this.tabletTiles.bind(this.bound);
         for (const folder of ['satellites', 'tablets']) {
@@ -859,7 +875,8 @@ class SatelliteDisplay extends utils.Adapter {
         /** @type {string[]} */
         const problems = [];
         const rows = /** @type {Record<string, unknown>[]} */ (Array.isArray(msg.tiles) ? msg.tiles : []);
-        const tiles = normalizeTiles(rows, [sat], problems);
+        const tiles = await this.resolveRadio(normalizeTiles(rows, [sat], problems), [sat], false);
+        await this.readRadioNames(tiles);
         const bound = await this.boundOf(tiles, false);
         const old = this.previews.get(sat.id);
         if (old) {
@@ -1146,6 +1163,175 @@ class SatelliteDisplay extends utils.Adapter {
         } catch (e) {
             this.log.debug(`${sat.name}: no player of ioBroker.assistant found: ${e.message}`);
             return undefined;
+        }
+    }
+
+    /**
+     * The radio tiles get the states of their player in ioBroker.webradio and the type they are drawn as (switch,
+     * status or button, lib/radio.js). A tile whose player cannot be found is left out with a warning.
+     *
+     * @param {Tile[]} tiles - Tiles from normalizeTiles
+     * @param {SatelliteConfig[]} displays - Displays
+     * @param {boolean} warn - Warn about a player that is not found
+     * @returns {Promise<Tile[]>} The tiles, the radio tiles ready to bind
+     */
+    async resolveRadio(tiles, displays, warn) {
+        if (!tiles.some(t => t.radio)) {
+            return tiles;
+        }
+        /** @type {Map<string, ioBroker.Object[]>} players of each webradio instance */
+        const players = new Map();
+        /** @type {Map<string, string[]>} host → its devices in ioBroker.assistant */
+        const assistant = new Map();
+        /** @type {Tile[]} */
+        const result = [];
+        for (const tile of tiles) {
+            const radio = tile.radio;
+            if (!radio) {
+                result.push(tile);
+                continue;
+            }
+            const sat = displays.find(d => d.id === tile.satellite);
+            let base = radio.target ? `${radio.instance}.targets.${radio.target}` : '';
+            if (!base && sat) {
+                if (!players.has(radio.instance)) {
+                    const objs = await this.getForeignObjectsAsync(`${radio.instance}.targets.*`, 'channel').catch(
+                        () => ({}),
+                    );
+                    players.set(radio.instance, Object.values(objs || {}));
+                }
+                if (sat.host && !assistant.has(sat.host)) {
+                    const devices = await this.getForeignObjectsAsync('assistant.*.satellites.*', 'device').catch(
+                        () => ({}),
+                    );
+                    assistant.set(
+                        sat.host,
+                        Object.values(devices || {})
+                            .filter(d => d?.native?.esphome === sat.host)
+                            .map(d => d._id),
+                    );
+                }
+                base = playerOf(
+                    players.get(radio.instance) ?? [],
+                    `${this.namespace}.satellites.${sat.id}.media.url`,
+                    assistant.get(sat.host) ?? [],
+                );
+            }
+            if (!base) {
+                if (warn) {
+                    this.log.warn(
+                        `Tile ${tile.row}: ${radio.instance} has no player for ${sat?.name ?? tile.satellite}, the radio tile is left out (choose a player in the tile)`,
+                    );
+                }
+                continue;
+            }
+            let label = tile.label;
+            if (!label && radio.action === 'station') {
+                const name = await this.getForeignStateAsync(`${radio.instance}.stations.${radio.station}.name`).catch(
+                    () => null,
+                );
+                label = String(name?.val || radio.station);
+            }
+            result.push({
+                ...tile,
+                type: RADIO_ACTIONS[radio.action],
+                label: label || radioLabel(radio.action, this.lang),
+                state: `${base}.playing`,
+                state2: `${base}.station`,
+                state3: `${base}.title`,
+                radio: { ...radio, target: base.split('.').pop() || '' },
+            });
+        }
+        return result;
+    }
+
+    /**
+     * A value of the player of a radio tile changed: a station lights while it plays there, "now playing" shows the
+     * title (or the station).
+     *
+     * @param {Bound} b - Radio tile
+     * @param {SatelliteLink | TabletLink} link - Its display
+     * @param {string} id - State that changed
+     * @param {unknown} val - New value
+     */
+    pushRadio(b, link, id, val) {
+        const radio = /** @type {NonNullable<Tile['radio']>} */ (b.tile.radio);
+        b.radioNow ??= { playing: false, station: '', title: '' };
+        const now = b.radioNow;
+        if (id === b.tile.state) {
+            now.playing = isOn(val);
+        } else if (id === b.tile.state2) {
+            now.station = String(val ?? '');
+        } else if (id === b.tile.state3) {
+            now.title = String(val ?? '');
+        }
+        const { page, slot } = b.tile;
+        if (radio.action === 'station') {
+            link.call('tile_state', { page, slot, on: now.playing && now.station === radio.station });
+        } else if (radio.action === 'now') {
+            link.call('tile_state', { page, slot, on: now.playing });
+            link.call('tile_text', {
+                page,
+                slot,
+                value: nowText(now, this.radioNames.get(radio.instance) ?? new Map()),
+            });
+        }
+    }
+
+    /**
+     * A touch on a radio tile: play or stop the station, stop, next, previous, sleep timer, volume.
+     *
+     * @param {SatelliteConfig} sat - Display
+     * @param {Bound} b - Radio tile
+     * @param {{input: string, value: number}} input - The touch
+     */
+    async onRadioInput(sat, b, input) {
+        const radio = /** @type {NonNullable<Tile['radio']>} */ (b.tile.radio);
+        const base = `${radio.instance}.targets.${radio.target}`;
+        /** @type {[string, ioBroker.StateValue] | null} */
+        let write = null;
+        if (radio.action === 'station' && input.input === 'switch') {
+            write = input.value > 0 ? [`${base}.station`, radio.station] : [`${base}.stop`, true];
+        } else if (input.input === 'press') {
+            if (radio.action === 'stop' || radio.action === 'next' || radio.action === 'prev') {
+                write = [`${base}.${radio.action}`, true];
+            } else if (radio.action === 'sleep') {
+                const sleep = await this.getForeignStateAsync(`${base}.sleep`).catch(() => null);
+                write = [`${base}.sleep`, nextSleep(sleep?.val)];
+            } else if (radio.action === 'volUp' || radio.action === 'volDown') {
+                const volume = await this.getForeignStateAsync(`${base}.volume`).catch(() => null);
+                write = [
+                    `${base}.volume`,
+                    stepVolume(volume?.val, radio.action === 'volUp' ? VOLUME_STEP : -VOLUME_STEP),
+                ];
+            }
+        }
+        if (!write) {
+            return;
+        }
+        try {
+            await this.setForeignStateAsync(write[0], write[1], false);
+            this.log.debug(`${sat.name}: radio ${radio.action} ${write[0]} ← ${JSON.stringify(write[1])}`);
+        } catch (e) {
+            this.log.warn(`${sat.name}: writing ${write[0]} failed: ${e.message}`);
+        }
+    }
+
+    /**
+     * The names of the stations of each webradio instance a radio tile uses ("now playing" shows them while the
+     * station sends no title).
+     *
+     * @param {Tile[]} tiles - Bound tiles
+     */
+    async readRadioNames(tiles) {
+        for (const instance of new Set(tiles.map(t => t.radio?.instance).filter(Boolean))) {
+            const id = `${instance}.info.stations`;
+            const state = await this.getForeignStateAsync(id).catch(() => null);
+            this.radioNames.set(/** @type {string} */ (instance), stationNames(state?.val));
+            if (!this.radioStationStates.has(id)) {
+                this.radioStationStates.add(id);
+                await this.subscribeForeignStatesAsync(id);
+            }
         }
     }
 
@@ -1520,6 +1706,10 @@ class SatelliteDisplay extends utils.Adapter {
                 return;
             }
         }
+        if (b.tile.radio) {
+            this.pushRadio(b, link, id, val);
+            return;
+        }
         switch (b.tile.type) {
             case 'value': {
                 const mapped = stateText(val, b.common, this.lang);
@@ -1813,6 +2003,11 @@ class SatelliteDisplay extends utils.Adapter {
             return;
         }
         const { tile } = b;
+        if (tile.radio) {
+            await this.onRadioInput(sat, b, input);
+            this.resync(b);
+            return;
+        }
         if (tile.type === 'trend' && input.input === 'period') {
             await this.tabletTiles.onPeriod(b, input.value);
             return;
@@ -1855,7 +2050,15 @@ class SatelliteDisplay extends utils.Adapter {
                 this.log.warn(`${sat.name}: writing ${target.id} failed: ${e.message}`);
             }
         }
-        // the tile changed at once on the screen; when the device does not follow, show the real state again
+        this.resync(b);
+    }
+
+    /**
+     * The tile changed at once on the screen; when the device does not follow, it shows the real state again.
+     *
+     * @param {Bound} b - Tile
+     */
+    resync(b) {
         const timer = this.setTimeout(() => {
             this.timers.delete(timer);
             void this.pushAll(b);
@@ -1930,6 +2133,11 @@ class SatelliteDisplay extends utils.Adapter {
                 }
                 await this.setState(id, { val: false, ack: true });
             }
+            return;
+        }
+        // the stations of webradio changed: "now playing" names them
+        if (this.radioStationStates.has(id)) {
+            this.radioNames.set(id.split('.').slice(0, 2).join('.'), stationNames(state.val));
             return;
         }
         // the AIS targets and the anchor of the maps

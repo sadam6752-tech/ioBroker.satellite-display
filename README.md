@@ -61,6 +61,23 @@ the whole page 228 × 228.
 | Tank             | name, a tank filled along the scale, the value, optional a second amount (litres) | square, large             | –                                  |
 | Battery          | name, a battery filled along the scale, a bolt while charging, optional the power | all                       | –                                  |
 | Status           | icon, name, a value or a text; the icon and the tile light up while on            | small, square, wide       | –                                  |
+| Radio            | a station of ioBroker.webradio, "now playing", or stop, next, sleep, volume       | small, square, wide       | plays, stops, steps (see below)    |
+
+**Radio tiles** control [ioBroker.webradio](https://github.com/sadam6752-tech/ioBroker.webradio) (0.0.5 or newer) through
+its states, without any state of their own to choose. The function of the tile:
+
+- **Play a station**: one of the favourites of webradio. A touch plays it, a second touch stops it; the tile lights
+  up while that station plays.
+- **Now playing**: the title the station sends, else the station; lit while something plays.
+- **Stop**, **next station**, **previous station** (through the favourites), **louder** / **quieter** (10 % a touch),
+  **sleep timer** (each touch: 15, 30, 60 minutes, off).
+
+The player is the display itself when the tile names none: webradio finds a panel by its own player
+(`satellites.<name>.media.url`) and a voice satellite by its player in ioBroker.assistant. A tile can also control
+another player of webradio, e.g. a panel in the kitchen that switches the radio in the living room. A tablet plays
+nothing itself, so its radio tiles name a player. They are drawn as a switch, a status or a button tile, so a
+satellite needs no new firmware (now playing needs 2.4.0, as the status tile). The editor offers the stations and
+players of webradio; the name and the icon come by themselves.
 
 Four more kinds are drawn by **tablets only** (the web app and the ioBroker Visu app; a satellite leaves them out
 with a warning). A tablet has two more sizes for them: 3 × 2 and 4 × 3 cells.
@@ -336,6 +353,9 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
   satellite is back. New states `satellites.<name>.firmware.*` (version, offered version, progress, check, install)
 - (sadam6752-tech) The card of a voice satellite has a volume slider too: it sets the volume of its player in
   ioBroker.assistant
+- (sadam6752-tech) Radio tiles for ioBroker.webradio on satellites and tablets: play a station (a touch plays, a second
+  stops), now playing, stop, next, previous, sleep timer, louder, quieter; the player is the display itself or any
+  player of webradio. The editor offers the stations and players, the commands `addTile`/`updateTile` take them
 
 ### 0.4.3 (2026-11-20)
 

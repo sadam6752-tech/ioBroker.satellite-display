@@ -111,6 +111,7 @@ export type Kind =
     | 'level'
     | 'battery'
     | 'status'
+    | 'radio'
     | 'map'
     | 'flow'
     | 'trend'
@@ -162,6 +163,7 @@ export const KINDS: Record<Kind, Size[]> = {
     level: ['q', 'l'],
     battery: ['s', 'q', 'w', 'l'],
     status: ['s', 'q', 'w'],
+    radio: ['s', 'q', 'w'],
     map: [],
     flow: [],
     trend: [],
@@ -284,6 +286,51 @@ export interface TileRow {
     iconOnly?: boolean;
     /** A switch without its toggle (the whole tile switches); unset = the default of its size (showToggle) */
     hideToggle?: boolean;
+    /** A tile of ioBroker.webradio: what it does (RADIO_ACTIONS), its station, its player, the webradio instance */
+    radioAction?: RadioAction;
+    station?: string;
+    radioTarget?: string;
+    radioInstance?: string;
+}
+
+export type RadioAction = 'station' | 'now' | 'stop' | 'next' | 'prev' | 'sleep' | 'volUp' | 'volDown';
+
+/** What a radio tile does → the kind it is drawn as (lib/radio.js RADIO_ACTIONS) */
+export const RADIO_ACTIONS: Record<RadioAction, Kind> = {
+    station: 'switch',
+    now: 'status',
+    stop: 'button',
+    next: 'button',
+    prev: 'button',
+    sleep: 'button',
+    volUp: 'button',
+    volDown: 'button',
+};
+
+/** The icon of each action when the tile names none (lib/radio.js RADIO_ICONS) */
+export const RADIO_ICONS: Record<RadioAction, string> = {
+    station: 'music',
+    now: 'speaker',
+    stop: 'stop',
+    next: 'play',
+    prev: 'play',
+    sleep: 'weather-night',
+    volUp: 'speaker',
+    volDown: 'speaker',
+};
+
+/**
+ * A radio tile as the display draws it: the kind of its action, its default icon and name (the preview of the editor)
+ */
+export function drawnRadio(t: TileRow, label: string): TileRow {
+    const action = t.radioAction || 'station';
+    return {
+        ...t,
+        type: RADIO_ACTIONS[action] || 'button',
+        icon: t.icon || RADIO_ICONS[action] || '',
+        label: t.label || label,
+        hideToggle: true,
+    };
 }
 
 /**
@@ -349,6 +396,12 @@ export function problemOf(t: TileRow, tablet = false): string {
     }
     if (t.type === 'thermostat' && !String(t.state2 || '').trim()) {
         return 'sd_need_target';
+    }
+    if (t.type === 'radio' && (t.radioAction || 'station') === 'station' && !String(t.station || '').trim()) {
+        return 'sd_need_station';
+    }
+    if (t.type === 'radio' && tablet && !String(t.radioTarget || '').trim()) {
+        return 'sd_need_player';
     }
     return '';
 }
