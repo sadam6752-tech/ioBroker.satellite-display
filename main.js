@@ -222,6 +222,10 @@ class SatelliteDisplay extends utils.Adapter {
             port: sat.port,
             encryptionKey: sat.encryptionKey,
             clientInfo: `ioBroker.satellite-display ${this.namespace}`,
+            timers: {
+                setTimeout: (fn, ms) => this.setTimeout(fn, ms),
+                clearTimeout: timer => this.clearTimeout(/** @type {ioBroker.Timeout} */ (timer)),
+            },
         });
         link.on('incompatible', missing =>
             this.log.warn(

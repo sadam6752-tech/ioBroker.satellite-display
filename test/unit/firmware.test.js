@@ -283,6 +283,7 @@ function setup(sequence, starts = true) {
         baseOf: () => 'satellites.kitchen',
         getObjectAsync: async () => ({}),
         installs: 0,
+        delay: (/** @type {number} */ ms) => new Promise(resolve => globalThis.setTimeout(resolve, ms)),
         firmwareOf: () => sequence[Math.min(i++, sequence.length - 1)],
         installFirmware: () => {
             app.installs++;
