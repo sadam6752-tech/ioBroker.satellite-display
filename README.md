@@ -341,7 +341,7 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
     ### **WORK IN PROGRESS**
 -->
 
-### **WORK IN PROGRESS**
+### 0.4.4 (2026-11-27)
 
 - (sadam6752-tech) A thermostat can take the whole page of a satellite (size `f`, 2 × 4 cells, satellite firmware 2.6.0):
   a big arc with the temperature and − target + along the bottom; the tile editor offers it for a thermostat and draws
@@ -356,6 +356,7 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 - (sadam6752-tech) Radio tiles for ioBroker.webradio on satellites and tablets: play a station (a touch plays, a second
   stops), now playing, stop, next, previous, sleep timer, louder, quieter; the player is the display itself or any
   player of webradio. The editor offers the stations and players, the commands `addTile`/`updateTile` take them
+- (sadam6752-tech) The timers of the adapter instead of plain `setTimeout` (repository checker S5005)
 
 ### 0.4.3 (2026-11-20)
 
@@ -389,14 +390,6 @@ Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 - (sadam6752-tech) New tab Devices with the ioBroker Device Manager: every satellite and tablet as a card with its
   connection, screen lock, brightness and volume, "Send the tiles again", and for a tablet the link with the QR code
   and "New link"; the details show grid, pages and tiles, the bar above the cards the links of all tablets
-
-### 0.3.2 (2026-11-16)
-
-- (sadam6752-tech) Objects of a removed or renamed satellite or tablet, of the tablets when the web app is off and of
-  the screen lock when it is off are no longer deleted when they carry settings of other adapters (History, InfluxDB,
-  SQL): they stay with a warning in the log (review of the repository PR)
-- (sadam6752-tech) The API encryption key of a satellite is hidden in the settings (with a button to show it)
-- (sadam6752-tech) `@iobroker/testing` 6.3.2
 
 ## License
 

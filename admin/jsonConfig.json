@@ -299,7 +299,7 @@
                 "_tabletLinks": {
                     "type": "custom",
                     "i18n": true,
-                    "url": "custom/customComponents.js?v=0.4.3",
+                    "url": "custom/customComponents.js?v=0.4.4",
                     "name": "SatDisplay/Components/TabletLinks",
                     "guiApi": 2,
                     "bundlerType": "module",
@@ -344,7 +344,7 @@
                 "_tileEditor": {
                     "type": "custom",
                     "i18n": true,
-                    "url": "custom/customComponents.js?v=0.4.3",
+                    "url": "custom/customComponents.js?v=0.4.4",
                     "name": "SatDisplay/Components/TileEditor",
                     "guiApi": 2,
                     "bundlerType": "module",

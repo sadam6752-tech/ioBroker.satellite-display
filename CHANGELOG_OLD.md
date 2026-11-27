@@ -2,6 +2,14 @@
 
 Versions that no longer fit into the changelog of the [README](README.md) (it keeps the last five) are moved here.
 
+### 0.3.2 (2026-11-16)
+
+- (sadam6752-tech) Objects of a removed or renamed satellite or tablet, of the tablets when the web app is off and of
+  the screen lock when it is off are no longer deleted when they carry settings of other adapters (History, InfluxDB,
+  SQL): they stay with a warning in the log (review of the repository PR)
+- (sadam6752-tech) The API encryption key of a satellite is hidden in the settings (with a button to show it)
+- (sadam6752-tech) `@iobroker/testing` 6.3.2
+
 ### 0.3.1 (2026-11-14)
 
 - (sadam6752-tech) Tablets can show a clock with the date when idle (tab Tablets: on/off and the minutes); a touch
